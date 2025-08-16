@@ -4,7 +4,11 @@
       "command": "npx",
       "args": ["-y", "@modelcontextprotocol/server-filesystem"],
       "disabled": true,
-      "autoApprove": ["create_directory", "read_text_file", "list_allowed_directories"]
+      "autoApprove": [
+        "create_directory",
+        "read_text_file",
+        "list_allowed_directories"
+      ]
     },
     "browser-tools": {
       "command": "wsl",
@@ -22,7 +26,7 @@
       "command": "npx",
       "args": ["-y", "@modelcontextprotocol/server-sequential-thinking"],
       "disabled": false,
-      "autoApprove": []
+      "autoApprove": ["sequentialthinking"]
     },
     "git": {
       "command": "uvx",
@@ -45,7 +49,11 @@
     },
     "shadcn-ui": {
       "command": "npx",
-      "args": ["@jpisnice/shadcn-ui-mcp-server", "--github-api-key", "ghp_your_token_here"],
+      "args": [
+        "@jpisnice/shadcn-ui-mcp-server",
+        "--github-api-key",
+        "ghp_your_token_here"
+      ],
       "disabled": false,
       "autoApprove": []
     }
