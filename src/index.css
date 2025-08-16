@@ -1,4 +1,4 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 :root {
   --color-primary: #0ea5e9;
@@ -8,14 +8,17 @@
   --color-error: #ef4444;
 }
 
-[data-theme="dark"] {
+[data-theme='dark'] {
   --color-primary: #38bdf8;
   --color-secondary: #94a3b8;
 }
 
 @layer base {
   html {
-    font-family: system-ui, -apple-system, sans-serif;
+    font-family:
+      system-ui,
+      -apple-system,
+      sans-serif;
   }
 }
 
@@ -23,7 +26,7 @@
   .btn-primary {
     @apply bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-lg transition-colors;
   }
-  
+
   .card {
     @apply bg-white dark:bg-gray-800 rounded-lg shadow-md border border-gray-200 dark:border-gray-700 p-6;
   }
