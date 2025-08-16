@@ -65,12 +65,12 @@
 
 ## Subtasks
 
-### 15.1 Build unit test suite for core functionality
+- [ ] ### 15.1 Build unit test suite for core functionality
 
 **Context File:** `.kiro/specs/market-pulse/context/15.1-context.md`
 **Exit Criteria:** 100% unit test coverage for core functions, all tests pass, test buckets organized by feature
 
-#### 15.1.1 Set up comprehensive testing framework
+- [ ] ####  15.1.1 Set up comprehensive testing framework
 
 **Files to create:** `tests/setup/testSetup.ts`, `tests/utils/testHelpers.ts`, `tests/fixtures/testData.ts`
 **Commands:** `npm install -D @testing-library/jest-dom @testing-library/user-event jest-environment-jsdom c8 nyc`
@@ -103,7 +103,7 @@ interface TestHelpers {
 **Validation:** Test framework initializes correctly, utilities functional
 **Commit:** `test: set up comprehensive testing framework with utilities`
 
-#### 15.1.2 Create feature-based test organization
+- [ ] ####  15.1.2 Create feature-based test organization
 
 **Files to create:** `tests/unit/core/`, `tests/unit/widgets/`, `tests/unit/auth/`, `tests/unit/dashboard/`
 **Detailed Implementation:**
@@ -138,7 +138,7 @@ interface TestSuite {
 **Validation:** Test organization clear, buckets properly structured
 **Commit:** `test: organize tests into feature-based buckets`
 
-#### 15.1.3 Implement core functionality unit tests
+- [ ] ####  15.1.3 Implement core functionality unit tests
 
 **Files to create:** `tests/unit/core/dataService.test.ts`, `tests/unit/core/cacheService.test.ts`, `tests/unit/core/validationUtils.test.ts`
 **Detailed Implementation:**
@@ -170,7 +170,7 @@ describe('Core Functionality Tests', () => {
 **Validation:** Core functionality tests pass, coverage adequate
 **Commit:** `test: implement comprehensive core functionality unit tests`
 
-#### 15.1.4 Create React component unit tests
+- [ ] ####  15.1.4 Create React component unit tests
 
 **Files to create:** `tests/unit/components/Button.test.tsx`, `tests/unit/components/Modal.test.tsx`, `tests/unit/widgets/AssetWidget.test.tsx`
 **Detailed Implementation:**
@@ -204,7 +204,7 @@ describe('Component Tests', () => {
 **Validation:** Component tests pass, accessibility verified
 **Commit:** `test: create comprehensive React component unit tests`
 
-#### 15.1.5 Write API and service layer tests
+- [ ] ####  15.1.5 Write API and service layer tests
 
 **Files to create:** `tests/unit/services/apiService.test.ts`, `tests/unit/services/websocketService.test.ts`
 **Detailed Implementation:**
@@ -237,7 +237,7 @@ describe('Service Layer Tests', () => {
 **Validation:** Service tests pass, integration points verified
 **Commit:** `test: write comprehensive API and service layer tests`
 
-#### 15.1.6 Add performance and edge case tests
+- [ ] ####  15.1.6 Add performance and edge case tests
 
 **Files to create:** `tests/unit/performance/renderPerformance.test.ts`, `tests/unit/edge-cases/errorScenarios.test.ts`
 **Detailed Implementation:**
@@ -270,12 +270,12 @@ describe('Edge Case Tests', () => {
 
 **Requirements:** All requirements need unit test coverage
 
-### 15.2 Implement integration tests for API endpoints
+- [ ] ### 15.2 Implement integration tests for API endpoints
 
 **Context File:** `.kiro/specs/market-pulse/context/15.2-context.md`
 **Exit Criteria:** All API endpoints tested, database integrity verified, cache behavior validated, error scenarios covered
 
-#### 15.2.1 Set up integration testing environment
+- [ ] ####  15.2.1 Set up integration testing environment
 
 **Files to create:** `tests/integration/setup/integrationSetup.ts`, `tests/integration/fixtures/databaseFixtures.ts`
 **Commands:** `npm install -D supertest @testcontainers/node @testcontainers/redis`
@@ -308,7 +308,7 @@ interface DatabaseFixtures {
 **Validation:** Integration test environment working, containers start correctly
 **Commit:** `test: set up integration testing environment with Docker`
 
-#### 15.2.2 Test all API endpoints with real database
+- [ ] ####  15.2.2 Test all API endpoints with real database
 
 **Files to create:** `tests/integration/api/authEndpoints.test.ts`, `tests/integration/api/dashboardEndpoints.test.ts`
 **Detailed Implementation:**
@@ -341,7 +341,7 @@ describe('API Integration Tests', () => {
 **Validation:** All API endpoint tests pass, database operations verified
 **Commit:** `test: implement comprehensive API endpoint integration tests`
 
-#### 15.2.3 Test database operations and data integrity
+- [ ] ####  15.2.3 Test database operations and data integrity
 
 **Files to create:** `tests/integration/database/userModel.test.ts`, `tests/integration/database/dashboardModel.test.ts`
 **Detailed Implementation:**
@@ -373,7 +373,7 @@ describe('Database Integration Tests', () => {
 **Validation:** Database tests pass, data integrity maintained
 **Commit:** `test: add comprehensive database integration tests`
 
-#### 15.2.4 Test cache integration and behavior
+- [ ] ####  15.2.4 Test cache integration and behavior
 
 **Files to create:** `tests/integration/cache/redisCache.test.ts`, `tests/integration/cache/memoryFallback.test.ts`
 **Detailed Implementation:**
@@ -404,7 +404,7 @@ describe('Cache Integration Tests', () => {
 **Validation:** Cache integration tests pass, fallback mechanisms work
 **Commit:** `test: implement cache integration and fallback tests`
 
-#### 15.2.5 Test external API integrations
+- [ ] ####  15.2.5 Test external API integrations
 
 **Files to create:** `tests/integration/external/yahooFinanceApi.test.ts`, `tests/integration/external/newsAggregation.test.ts`
 **Detailed Implementation:**
@@ -436,7 +436,7 @@ describe('External API Integration Tests', () => {
 **Validation:** External API tests pass, integrations working correctly
 **Commit:** `test: add external API integration tests`
 
-#### 15.2.6 Test concurrent user scenarios
+- [ ] ####  15.2.6 Test concurrent user scenarios
 
 **Files to create:** `tests/integration/concurrency/multiUser.test.ts`, `tests/integration/concurrency/raceConditions.test.ts`
 **Detailed Implementation:**
@@ -469,12 +469,12 @@ describe('Concurrency Integration Tests', () => {
 
 **Requirements:** 1.1, 2.1, 3.1, 4.1, 5.1
 
-### 15.3 Build end-to-end test suite with Playwright
+- [ ] ### 15.3 Build end-to-end test suite with Playwright
 
 **Context File:** `.kiro/specs/market-pulse/context/15.3-context.md`
 **Exit Criteria:** Critical user workflows tested, responsive design validated, accessibility compliance verified, browser compatibility confirmed
 
-#### 15.3.1 Set up Playwright testing framework
+- [ ] ####  15.3.1 Set up Playwright testing framework
 
 **Files to create:** `tests/e2e/playwright.config.ts`, `tests/e2e/setup/e2eSetup.ts`
 **Commands:** `npm install -D @playwright/test playwright`
@@ -512,7 +512,7 @@ interface PageObjectModel {
 **Validation:** Playwright setup working, browsers launching correctly
 **Commit:** `test: set up Playwright E2E testing framework`
 
-#### 15.3.2 Create critical user workflow tests
+- [ ] ####  15.3.2 Create critical user workflow tests
 
 **Files to create:** `tests/e2e/workflows/userRegistration.spec.ts`, `tests/e2e/workflows/dashboardCreation.spec.ts`
 **Detailed Implementation:**
@@ -549,7 +549,7 @@ describe('Critical User Workflows', () => {
 **Validation:** User workflow tests pass, critical paths verified
 **Commit:** `test: create critical user workflow E2E tests`
 
-#### 15.3.3 Test responsive design across devices
+- [ ] ####  15.3.3 Test responsive design across devices
 
 **Files to create:** `tests/e2e/responsive/mobileLayout.spec.ts`, `tests/e2e/responsive/tabletLayout.spec.ts`
 **Detailed Implementation:**
@@ -583,7 +583,7 @@ describe('Responsive Design Tests', () => {
 **Validation:** Responsive tests pass, layouts work across devices
 **Commit:** `test: add responsive design E2E tests`
 
-#### 15.3.4 Implement accessibility compliance testing
+- [ ] ####  15.3.4 Implement accessibility compliance testing
 
 **Files to create:** `tests/e2e/accessibility/wcagCompliance.spec.ts`, `tests/e2e/accessibility/keyboardNavigation.spec.ts`
 **Commands:** `npm install -D @axe-core/playwright`
@@ -621,7 +621,7 @@ describe('Accessibility Compliance Tests', () => {
 **Validation:** Accessibility tests pass, WCAG-AA compliance verified
 **Commit:** `test: implement comprehensive accessibility E2E tests`
 
-#### 15.3.5 Test browser compatibility and performance
+- [ ] ####  15.3.5 Test browser compatibility and performance
 
 **Files to create:** `tests/e2e/performance/loadTimes.spec.ts`, `tests/e2e/compatibility/crossBrowser.spec.ts`
 **Detailed Implementation:**
@@ -669,7 +669,7 @@ describe('Performance Tests', () => {
 **Validation:** Performance tests pass, browser compatibility verified
 **Commit:** `test: add performance and browser compatibility E2E tests`
 
-#### 15.3.6 Create visual regression testing
+- [ ] ####  15.3.6 Create visual regression testing
 
 **Files to create:** `tests/e2e/visual/componentScreenshots.spec.ts`, `tests/e2e/visual/themeComparison.spec.ts`
 **Detailed Implementation:**

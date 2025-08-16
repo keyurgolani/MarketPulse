@@ -24,7 +24,7 @@ Create a robust news system that aggregates financial news from multiple sources
 
 ## Implementation Tasks
 
-### 11.1 Build News Widget and Article Display
+- [ ] ### 11.1 Build News Widget and Article Display
 
 **Context File:** `.kiro/specs/market-pulse/context/11.1-context.md`
 **Exit Criteria:** News widget functional, article display works, filtering effective, infinite scrolling smooth, tests pass
@@ -98,7 +98,7 @@ Create a robust news system that aggregates financial news from multiple sources
 
 _Requirements: 5.1, 5.2, 5.3_
 
-### 11.2 Implement News Caching and Real-time Updates
+- [ ] ### 11.2 Implement News Caching and Real-time Updates
 
 **Context File:** `.kiro/specs/market-pulse/context/11.2-context.md`
 **Exit Criteria:** Client-side caching works, background refresh functional, notifications operational, update indicators clear, tests comprehensive

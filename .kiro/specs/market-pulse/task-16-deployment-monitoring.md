@@ -24,7 +24,7 @@ Create a robust production deployment system with comprehensive monitoring, logg
 
 ## Implementation Tasks
 
-### 16.1 Set Up Production Build and Deployment Pipeline
+- [ ] ### 16.1 Set Up Production Build and Deployment Pipeline
 
 **Context File:** `.kiro/specs/market-pulse/context/16.1-context.md`
 **Exit Criteria:** Production builds optimized, deployment automated, environment configuration secure, rollback procedures work, tests pass
@@ -97,7 +97,7 @@ Create a robust production deployment system with comprehensive monitoring, logg
 
 _Requirements: All requirements need production deployment_
 
-### 16.2 Implement Monitoring and Logging
+- [ ] ### 16.2 Implement Monitoring and Logging
 
 **Context File:** `.kiro/specs/market-pulse/context/16.2-context.md`
 **Exit Criteria:** Monitoring captures all critical metrics, logging provides actionable insights, alerting works reliably, dashboards informative, tests comprehensive
@@ -171,7 +171,7 @@ _Requirements: All requirements need production deployment_
 
 _Requirements: 4.1, 4.2, 10.1_
 
-### 16.3 Production Operations and Maintenance
+- [ ] ### 16.3 Production Operations and Maintenance
 
 **Context File:** `.kiro/specs/market-pulse/context/16.3-context.md`
 **Exit Criteria:** Operations procedures documented, maintenance automated, backup/recovery works, scaling handles load, documentation complete, tests pass

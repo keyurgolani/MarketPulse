@@ -65,12 +65,12 @@
 
 ## Subtasks
 
-### 8.1 Implement user authentication system
+- [ ] ### 8.1 Implement user authentication system
 
 **Context File:** `.kiro/specs/market-pulse/context/8.1-context.md`
 **Exit Criteria:** Authentication working, JWT tokens secure, session management functional, tests pass
 
-#### 8.1.1 Set up authentication infrastructure
+- [ ] ####  8.1.1 Set up authentication infrastructure
 
 **Files to create:** `server/src/auth/AuthService.ts`, `server/src/middleware/authMiddleware.ts`
 **Commands:** `npm install jsonwebtoken bcryptjs @types/jsonwebtoken @types/bcryptjs`
@@ -103,7 +103,7 @@ interface AuthResult {
 **Validation:** Authentication service works correctly, tokens generated properly
 **Commit:** `feat: implement JWT-based authentication service`
 
-#### 8.1.2 Create user registration and login endpoints
+- [ ] ####  8.1.2 Create user registration and login endpoints
 
 **Files to create:** `server/src/controllers/authController.ts`, `server/src/routes/auth.ts`
 **Detailed Implementation:**
@@ -129,7 +129,7 @@ interface AuthController {
 **Validation:** Auth endpoints work correctly, validation functional
 **Commit:** `feat: create user registration and login endpoints`
 
-#### 8.1.3 Implement client-side authentication
+- [ ] ####  8.1.3 Implement client-side authentication
 
 **Files to create:** `src/services/AuthService.ts`, `src/hooks/useAuth.ts`, `src/stores/authStore.ts`
 **Detailed Implementation:**
@@ -165,7 +165,7 @@ interface AuthStore {
 **Validation:** Client auth works correctly, state management functional
 **Commit:** `feat: implement client-side authentication with state management`
 
-#### 8.1.4 Create authentication UI components
+- [ ] ####  8.1.4 Create authentication UI components
 
 **Files to create:** `src/components/auth/LoginForm.tsx`, `src/components/auth/RegisterForm.tsx`, `src/components/auth/ProtectedRoute.tsx`
 **Detailed Implementation:**
@@ -200,7 +200,7 @@ interface ProtectedRouteProps {
 **Validation:** Auth UI components work correctly, forms validate properly
 **Commit:** `feat: create authentication UI components with validation`
 
-#### 8.1.5 Add security measures and validation
+- [ ] ####  8.1.5 Add security measures and validation
 
 **Files to create:** `server/src/security/SecurityService.ts`, `src/utils/authValidation.ts`
 **Detailed Implementation:**
@@ -230,7 +230,7 @@ interface ValidationResult {
 **Validation:** Security measures work correctly, validation comprehensive
 **Commit:** `feat: add security measures and comprehensive validation`
 
-#### 8.1.6 Write comprehensive authentication tests
+- [ ] ####  8.1.6 Write comprehensive authentication tests
 
 **Files to create:** `server/src/__tests__/auth/AuthService.test.ts`, `src/hooks/__tests__/useAuth.test.ts`
 **Detailed Implementation:**
@@ -247,12 +247,12 @@ interface ValidationResult {
 
 **Requirements:** 7.1, 7.2, 13.1
 
-### 8.2 Create user preferences management
+- [ ] ### 8.2 Create user preferences management
 
 **Context File:** `.kiro/specs/market-pulse/context/8.2-context.md`
 **Exit Criteria:** Preferences system working, settings persist, UI responsive, accessibility maintained, tests pass
 
-#### 8.2.1 Implement preferences data model and storage
+- [ ] ####  8.2.1 Implement preferences data model and storage
 
 **Files to create:** `server/src/models/UserPreferences.ts`, `src/types/preferences.ts`
 **Detailed Implementation:**
@@ -289,7 +289,7 @@ interface NotificationPreferences {
 **Validation:** Preferences model works correctly, storage functional
 **Commit:** `feat: implement user preferences data model and storage`
 
-#### 8.2.2 Create preferences API endpoints
+- [ ] ####  8.2.2 Create preferences API endpoints
 
 **Files to create:** `server/src/controllers/preferencesController.ts`, `server/src/routes/preferences.ts`
 **Detailed Implementation:**
@@ -313,7 +313,7 @@ interface PreferencesController {
 **Validation:** Preferences API works correctly, validation functional
 **Commit:** `feat: create preferences API endpoints with validation`
 
-#### 8.2.3 Implement client-side preferences management
+- [ ] ####  8.2.3 Implement client-side preferences management
 
 **Files to create:** `src/hooks/usePreferences.ts`, `src/stores/preferencesStore.ts`
 **Detailed Implementation:**
@@ -340,7 +340,7 @@ interface UsePreferencesReturn {
 **Validation:** Client preferences management works correctly
 **Commit:** `feat: implement client-side preferences management`
 
-#### 8.2.4 Create preferences UI components
+- [ ] ####  8.2.4 Create preferences UI components
 
 **Files to create:** `src/components/settings/PreferencesPanel.tsx`, `src/components/settings/ThemeSettings.tsx`
 **Detailed Implementation:**
@@ -370,7 +370,7 @@ interface SettingsSection {
 **Validation:** Preferences UI works correctly, settings apply properly
 **Commit:** `feat: create comprehensive preferences UI components`
 
-#### 8.2.5 Implement preferences synchronization and persistence
+- [ ] ####  8.2.5 Implement preferences synchronization and persistence
 
 **Files to create:** `src/services/PreferencesSyncService.ts`, `src/utils/preferencesStorage.ts`
 **Detailed Implementation:**
@@ -394,7 +394,7 @@ interface PreferencesSyncService {
 **Validation:** Preferences sync works correctly, persistence functional
 **Commit:** `feat: implement preferences synchronization and persistence`
 
-#### 8.2.6 Write comprehensive preferences tests
+- [ ] ####  8.2.6 Write comprehensive preferences tests
 
 **Files to create:** `src/hooks/__tests__/usePreferences.test.ts`, `src/components/__tests__/PreferencesPanel.test.tsx`
 **Detailed Implementation:**
@@ -411,12 +411,12 @@ interface PreferencesSyncService {
 
 **Requirements:** 7.1, 7.2, 7.3
 
-### 8.3 Create dashboard personalization features
+- [ ] ### 8.3 Create dashboard personalization features
 
 **Context File:** `.kiro/specs/market-pulse/context/8.3-context.md`
 **Exit Criteria:** Dashboard customization working, layouts saved, sharing functional, performance optimized, tests pass
 
-#### 8.3.1 Implement dashboard customization system
+- [ ] ####  8.3.1 Implement dashboard customization system
 
 **Files to create:** `src/components/dashboard/DashboardCustomizer.tsx`, `src/hooks/useDashboardCustomization.ts`
 **Detailed Implementation:**
@@ -442,7 +442,7 @@ interface DashboardCustomizer {
 **Validation:** Dashboard customization works correctly, changes persist
 **Commit:** `feat: implement dashboard customization system`
 
-#### 8.3.2 Create personalized content recommendations
+- [ ] ####  8.3.2 Create personalized content recommendations
 
 **Files to create:** `src/services/RecommendationService.ts`, `src/hooks/useRecommendations.ts`
 **Detailed Implementation:**
@@ -466,7 +466,7 @@ interface RecommendationService {
 **Validation:** Recommendations work correctly, personalization functional
 **Commit:** `feat: create personalized content recommendation system`
 
-#### 8.3.3 Implement user activity tracking and analytics
+- [ ] ####  8.3.3 Implement user activity tracking and analytics
 
 **Files to create:** `src/services/AnalyticsService.ts`, `src/hooks/useAnalytics.ts`
 **Detailed Implementation:**
@@ -491,7 +491,7 @@ interface AnalyticsService {
 **Validation:** Analytics tracking works correctly, privacy maintained
 **Commit:** `feat: implement user activity tracking and analytics`
 
-#### 8.3.4 Create user profile and account management
+- [ ] ####  8.3.4 Create user profile and account management
 
 **Files to create:** `src/components/profile/UserProfile.tsx`, `src/components/profile/AccountSettings.tsx`
 **Detailed Implementation:**
@@ -521,7 +521,7 @@ interface AccountSettingsProps {
 **Validation:** Profile management works correctly, security functional
 **Commit:** `feat: create user profile and account management`
 
-#### 8.3.5 Implement data export and privacy controls
+- [ ] ####  8.3.5 Implement data export and privacy controls
 
 **Files to create:** `src/services/DataExportService.ts`, `src/components/privacy/PrivacyControls.tsx`
 **Detailed Implementation:**
@@ -550,7 +550,7 @@ interface PrivacyControlsProps {
 **Validation:** Data export works correctly, privacy controls functional
 **Commit:** `feat: implement data export and privacy controls`
 
-#### 8.3.6 Write comprehensive user management tests
+- [ ] ####  8.3.6 Write comprehensive user management tests
 
 **Files to create:** `src/components/__tests__/UserProfile.test.tsx`, `src/services/__tests__/RecommendationService.test.ts`
 **Detailed Implementation:**

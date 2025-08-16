@@ -65,12 +65,12 @@
 
 ## Subtasks
 
-### 5.1 Create base UI components with accessibility
+- [ ] ### 5.1 Create base UI components with accessibility
 
 **Context File:** `.kiro/specs/market-pulse/context/5.1-context.md`
 **Exit Criteria:** Base components functional, WCAG-AA compliant, keyboard navigation working, screen reader compatible, tests pass
 
-#### 5.1.1 Set up component library infrastructure
+- [ ] ####  5.1.1 Set up component library infrastructure
 
 **Files to create:** `src/components/ui/index.ts`, `src/components/ui/Button.tsx`, `src/components/ui/Input.tsx`
 **Commands:** `npm install @headlessui/react @heroicons/react clsx`
@@ -86,7 +86,7 @@
 **Validation:** Components render correctly, TypeScript types work
 **Commit:** `feat: create base UI component library infrastructure`
 
-#### 5.1.2 Implement Button component with variants and states
+- [ ] ####  5.1.2 Implement Button component with variants and states
 
 **Files to create:** `src/components/ui/Button.tsx`, `src/components/ui/Button.test.tsx`
 **Detailed Implementation:**
@@ -116,7 +116,7 @@ interface ButtonProps {
 **Validation:** Button works correctly, accessibility tests pass
 **Commit:** `feat: implement accessible Button component with variants`
 
-#### 5.1.3 Create Input and Form components
+- [ ] ####  5.1.3 Create Input and Form components
 
 **Files to create:** `src/components/ui/Input.tsx`, `src/components/ui/Label.tsx`, `src/components/ui/FormField.tsx`
 **Detailed Implementation:**
@@ -145,7 +145,7 @@ interface InputProps {
 **Validation:** Form components work correctly, validation functional
 **Commit:** `feat: create accessible Input and Form components`
 
-#### 5.1.4 Implement Modal and Dialog components
+- [ ] ####  5.1.4 Implement Modal and Dialog components
 
 **Files to create:** `src/components/ui/Modal.tsx`, `src/components/ui/Dialog.tsx`, `src/hooks/useModal.ts`
 **Detailed Implementation:**
@@ -172,7 +172,7 @@ interface ModalProps {
 **Validation:** Modal works correctly, accessibility compliant
 **Commit:** `feat: implement accessible Modal and Dialog components`
 
-#### 5.1.5 Create Dropdown and Menu components
+- [ ] ####  5.1.5 Create Dropdown and Menu components
 
 **Files to create:** `src/components/ui/Dropdown.tsx`, `src/components/ui/Menu.tsx`, `src/components/ui/Select.tsx`
 **Detailed Implementation:**
@@ -205,7 +205,7 @@ interface DropdownItem {
 **Validation:** Dropdown components work correctly, keyboard navigation functional
 **Commit:** `feat: create accessible Dropdown and Menu components`
 
-#### 5.1.6 Write comprehensive component tests
+- [ ] ####  5.1.6 Write comprehensive component tests
 
 **Files to create:** `src/components/ui/__tests__/Button.test.tsx`, `src/components/ui/__tests__/Input.test.tsx`, `src/components/ui/__tests__/Modal.test.tsx`
 **Detailed Implementation:**
@@ -222,12 +222,12 @@ interface DropdownItem {
 
 **Requirements:** 6.1, 6.2, 11.1
 
-### 5.2 Implement responsive layout system
+- [ ] ### 5.2 Implement responsive layout system
 
 **Context File:** `.kiro/specs/market-pulse/context/5.2-context.md`
 **Exit Criteria:** Layout system responsive, grid functional, breakpoints working, mobile-first design implemented, tests pass
 
-#### 5.2.1 Create responsive grid system
+- [ ] ####  5.2.1 Create responsive grid system
 
 **Files to create:** `src/components/layout/Grid.tsx`, `src/components/layout/Container.tsx`, `src/components/layout/Flex.tsx`
 **Detailed Implementation:**
@@ -258,7 +258,7 @@ interface ContainerProps {
 **Validation:** Grid system works correctly, responsive behavior verified
 **Commit:** `feat: create responsive grid and layout system`
 
-#### 5.2.2 Implement Header and Navigation components
+- [ ] ####  5.2.2 Implement Header and Navigation components
 
 **Files to create:** `src/components/layout/Header.tsx`, `src/components/layout/Navigation.tsx`, `src/components/layout/MobileMenu.tsx`
 **Detailed Implementation:**
@@ -289,7 +289,7 @@ interface NavigationProps {
 **Validation:** Header and navigation work correctly, mobile responsive
 **Commit:** `feat: implement responsive Header and Navigation components`
 
-#### 5.2.3 Create Sidebar and Panel components
+- [ ] ####  5.2.3 Create Sidebar and Panel components
 
 **Files to create:** `src/components/layout/Sidebar.tsx`, `src/components/layout/Panel.tsx`, `src/hooks/useSidebar.ts`
 **Detailed Implementation:**
@@ -324,7 +324,7 @@ interface PanelProps {
 **Validation:** Sidebar and panels work correctly, responsive behavior verified
 **Commit:** `feat: create responsive Sidebar and Panel components`
 
-#### 5.2.4 Implement Footer and utility layout components
+- [ ] ####  5.2.4 Implement Footer and utility layout components
 
 **Files to create:** `src/components/layout/Footer.tsx`, `src/components/layout/Spacer.tsx`, `src/components/layout/Divider.tsx`
 **Detailed Implementation:**
@@ -353,7 +353,7 @@ interface SpacerProps {
 **Validation:** Footer and utility components work correctly
 **Commit:** `feat: implement Footer and utility layout components`
 
-#### 5.2.5 Create responsive breakpoint utilities
+- [ ] ####  5.2.5 Create responsive breakpoint utilities
 
 **Files to create:** `src/hooks/useBreakpoint.ts`, `src/utils/responsive.ts`, `src/components/layout/Responsive.tsx`
 **Detailed Implementation:**
@@ -385,7 +385,7 @@ interface ResponsiveProps {
 **Validation:** Responsive utilities work correctly, breakpoints functional
 **Commit:** `feat: create responsive breakpoint utilities and hooks`
 
-#### 5.2.6 Write comprehensive layout tests
+- [ ] ####  5.2.6 Write comprehensive layout tests
 
 **Files to create:** `src/components/layout/__tests__/Grid.test.tsx`, `src/components/layout/__tests__/Header.test.tsx`, `src/hooks/__tests__/useBreakpoint.test.ts`
 **Detailed Implementation:**
@@ -402,12 +402,12 @@ interface ResponsiveProps {
 
 **Requirements:** 6.3, 6.4, 11.2
 
-### 5.3 Create theme system with dark/light mode
+- [ ] ### 5.3 Create theme system with dark/light mode
 
 **Context File:** `.kiro/specs/market-pulse/context/5.3-context.md`
 **Exit Criteria:** Theme system functional, dark/light mode switching smooth, user preferences saved, CSS variables working, tests pass
 
-#### 5.3.1 Set up theme infrastructure and CSS variables
+- [ ] ####  5.3.1 Set up theme infrastructure and CSS variables
 
 **Files to create:** `src/styles/themes.css`, `src/utils/theme.ts`, `src/hooks/useTheme.ts`
 **Detailed Implementation:**
@@ -441,7 +441,7 @@ interface ResponsiveProps {
 **Validation:** Theme variables work correctly, switching functional
 **Commit:** `feat: create theme system infrastructure with CSS variables`
 
-#### 5.3.2 Implement ThemeProvider and theme context
+- [ ] ####  5.3.2 Implement ThemeProvider and theme context
 
 **Files to create:** `src/contexts/ThemeContext.tsx`, `src/providers/ThemeProvider.tsx`
 **Detailed Implementation:**
@@ -471,7 +471,7 @@ interface ThemeProviderProps {
 **Validation:** Theme context works correctly, state management functional
 **Commit:** `feat: implement ThemeProvider and theme context`
 
-#### 5.3.3 Create theme-aware component variants
+- [ ] ####  5.3.3 Create theme-aware component variants
 
 **Files to create:** `src/components/ui/ThemeToggle.tsx`, `src/utils/themeVariants.ts`
 **Detailed Implementation:**
@@ -507,7 +507,7 @@ const themeVariants = {
 **Validation:** Theme variants work correctly, transitions smooth
 **Commit:** `feat: create theme-aware component variants and utilities`
 
-#### 5.3.4 Implement smooth theme transitions
+- [ ] ####  5.3.4 Implement smooth theme transitions
 
 **Files to create:** `src/styles/transitions.css`, `src/utils/themeTransitions.ts`
 **Commands:** `npm install framer-motion`
@@ -539,7 +539,7 @@ const themeVariants = {
 **Validation:** Transitions work smoothly, reduced motion respected
 **Commit:** `feat: implement smooth theme transitions with accessibility`
 
-#### 5.3.5 Add theme customization and user preferences
+- [ ] ####  5.3.5 Add theme customization and user preferences
 
 **Files to create:** `src/components/settings/ThemeSettings.tsx`, `src/utils/themeCustomization.ts`
 **Detailed Implementation:**
@@ -570,7 +570,7 @@ interface ThemeSettingsProps {
 **Validation:** Theme customization works correctly, preferences saved
 **Commit:** `feat: add theme customization and user preferences`
 
-#### 5.3.6 Write comprehensive theme system tests
+- [ ] ####  5.3.6 Write comprehensive theme system tests
 
 **Files to create:** `src/hooks/__tests__/useTheme.test.ts`, `src/components/ui/__tests__/ThemeToggle.test.tsx`
 **Detailed Implementation:**

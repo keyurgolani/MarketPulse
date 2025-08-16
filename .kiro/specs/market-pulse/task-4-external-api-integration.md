@@ -65,12 +65,12 @@
 
 ## Subtasks
 
-### 4.1 Create Yahoo Finance API client with rate limiting
+- [ ] ### 4.1 Create Yahoo Finance API client with rate limiting
 
 **Context File:** `.kiro/specs/market-pulse/context/4.1-context.md`
 **Exit Criteria:** Yahoo Finance client works, rate limiting enforced, error handling comprehensive, tests pass
 
-#### 4.1.1 Set up Yahoo Finance API client infrastructure
+- [ ] ####  4.1.1 Set up Yahoo Finance API client infrastructure
 
 **Files to create:** `server/src/services/YahooFinanceService.ts`, `server/src/config/apiClients.ts`
 **Commands:** `npm install axios rate-limiter-flexible`
@@ -86,7 +86,7 @@
 **Validation:** API client initializes correctly, basic requests work
 **Commit:** `feat: create Yahoo Finance API client infrastructure`
 
-#### 4.1.2 Implement rate limiting and API key rotation
+- [ ] ####  4.1.2 Implement rate limiting and API key rotation
 
 **Files to create:** `server/src/services/RateLimitService.ts`, `server/src/utils/apiKeyManager.ts`
 **Detailed Implementation:**
@@ -101,7 +101,7 @@
 **Validation:** Rate limiting works correctly, key rotation functional
 **Commit:** `feat: implement rate limiting and API key rotation`
 
-#### 4.1.3 Create market data fetching methods
+- [ ] ####  4.1.3 Create market data fetching methods
 
 **Files to create:** `server/src/services/MarketDataService.ts`, `server/src/utils/dataTransformers.ts`
 **Detailed Implementation:**
@@ -116,7 +116,7 @@
 **Validation:** All market data methods work correctly, data format consistent
 **Commit:** `feat: implement market data fetching methods`
 
-#### 4.1.4 Add comprehensive error handling and logging
+- [ ] ####  4.1.4 Add comprehensive error handling and logging
 
 **Files to create:** `server/src/middleware/apiErrorHandler.ts`, `server/src/utils/apiLogger.ts`
 **Detailed Implementation:**
@@ -131,7 +131,7 @@
 **Validation:** Error handling works correctly, logging comprehensive
 **Commit:** `feat: add comprehensive API error handling and logging`
 
-#### 4.1.5 Implement caching layer for API responses
+- [ ] ####  4.1.5 Implement caching layer for API responses
 
 **Files to create:** `server/src/services/ApiCacheService.ts`, `server/src/utils/cacheStrategies.ts`
 **Detailed Implementation:**
@@ -146,7 +146,7 @@
 **Validation:** Caching works correctly, performance improved
 **Commit:** `feat: implement API response caching layer`
 
-#### 4.1.6 Write comprehensive API integration tests
+- [ ] ####  4.1.6 Write comprehensive API integration tests
 
 **Files to create:** `server/src/__tests__/yahooFinance.test.ts`, `server/src/__tests__/apiIntegration.test.ts`
 **Detailed Implementation:**
@@ -163,12 +163,12 @@
 
 **Requirements:** 3.1, 4.1, 4.2
 
-### 4.2 Implement Google Finance API fallback system
+- [ ] ### 4.2 Implement Google Finance API fallback system
 
 **Context File:** `.kiro/specs/market-pulse/context/4.2-context.md`
 **Exit Criteria:** Google Finance fallback works, automatic switching functional, data consistency maintained, tests pass
 
-#### 4.2.1 Create Google Finance API client
+- [ ] ####  4.2.1 Create Google Finance API client
 
 **Files to create:** `server/src/services/GoogleFinanceService.ts`, `server/src/adapters/GoogleFinanceAdapter.ts`
 **Detailed Implementation:**
@@ -183,7 +183,7 @@
 **Validation:** Google Finance client works correctly, data format consistent
 **Commit:** `feat: create Google Finance API client with adapters`
 
-#### 4.2.2 Implement automatic fallback mechanism
+- [ ] ####  4.2.2 Implement automatic fallback mechanism
 
 **Files to create:** `server/src/services/DataAggregationService.ts`, `server/src/utils/fallbackManager.ts`
 **Detailed Implementation:**
@@ -198,7 +198,7 @@
 **Validation:** Fallback mechanism works correctly, switching seamless
 **Commit:** `feat: implement automatic API fallback mechanism`
 
-#### 4.2.3 Create data consistency and validation layer
+- [ ] ####  4.2.3 Create data consistency and validation layer
 
 **Files to create:** `server/src/services/DataValidationService.ts`, `server/src/utils/dataConsistency.ts`
 **Detailed Implementation:**
@@ -213,7 +213,7 @@
 **Validation:** Data consistency maintained, validation works correctly
 **Commit:** `feat: create data consistency and validation layer`
 
-#### 4.2.4 Add source performance monitoring
+- [ ] ####  4.2.4 Add source performance monitoring
 
 **Files to create:** `server/src/services/SourceMonitoringService.ts`, `server/src/utils/performanceMetrics.ts`
 **Detailed Implementation:**
@@ -228,7 +228,7 @@
 **Validation:** Monitoring works correctly, metrics accurate
 **Commit:** `feat: add comprehensive source performance monitoring`
 
-#### 4.2.5 Implement intelligent source selection
+- [ ] ####  4.2.5 Implement intelligent source selection
 
 **Files to create:** `server/src/services/SourceSelectionService.ts`, `server/src/utils/selectionAlgorithms.ts`
 **Detailed Implementation:**
@@ -243,7 +243,7 @@
 **Validation:** Source selection works optimally, performance improved
 **Commit:** `feat: implement intelligent source selection algorithms`
 
-#### 4.2.6 Write comprehensive fallback system tests
+- [ ] ####  4.2.6 Write comprehensive fallback system tests
 
 **Files to create:** `server/src/__tests__/fallbackSystem.test.ts`, `server/src/__tests__/dataAggregation.test.ts`
 **Detailed Implementation:**
@@ -260,12 +260,12 @@
 
 **Requirements:** 3.2, 4.1, 4.3
 
-### 4.3 Create news aggregation service
+- [ ] ### 4.3 Create news aggregation service
 
 **Context File:** `.kiro/specs/market-pulse/context/4.3-context.md`
 **Exit Criteria:** News aggregation works, content filtering functional, sentiment analysis accurate, tests pass
 
-#### 4.3.1 Set up news API clients and sources
+- [ ] ####  4.3.1 Set up news API clients and sources
 
 **Files to create:** `server/src/services/NewsAggregationService.ts`, `server/src/adapters/NewsSourceAdapters.ts`
 **Commands:** `npm install cheerio node-html-parser`
@@ -281,7 +281,7 @@
 **Validation:** News sources work correctly, content extracted properly
 **Commit:** `feat: create news aggregation service with multiple sources`
 
-#### 4.3.2 Implement content filtering and categorization
+- [ ] ####  4.3.2 Implement content filtering and categorization
 
 **Files to create:** `server/src/services/ContentFilterService.ts`, `server/src/utils/contentClassification.ts`
 **Detailed Implementation:**
@@ -296,7 +296,7 @@
 **Validation:** Content filtering works correctly, categorization accurate
 **Commit:** `feat: implement content filtering and categorization`
 
-#### 4.3.3 Add sentiment analysis for news articles
+- [ ] ####  4.3.3 Add sentiment analysis for news articles
 
 **Files to create:** `server/src/services/SentimentAnalysisService.ts`, `server/src/utils/nlpProcessing.ts`
 **Commands:** `npm install natural sentiment`
@@ -312,7 +312,7 @@
 **Validation:** Sentiment analysis works correctly, scores accurate
 **Commit:** `feat: add sentiment analysis for news articles`
 
-#### 4.3.4 Create news search and recommendation engine
+- [ ] ####  4.3.4 Create news search and recommendation engine
 
 **Files to create:** `server/src/services/NewsSearchService.ts`, `server/src/utils/recommendationEngine.ts`
 **Detailed Implementation:**
@@ -327,7 +327,7 @@
 **Validation:** Search works correctly, recommendations relevant
 **Commit:** `feat: create news search and recommendation engine`
 
-#### 4.3.5 Implement news caching and performance optimization
+- [ ] ####  4.3.5 Implement news caching and performance optimization
 
 **Files to create:** `server/src/services/NewsCacheService.ts`, `server/src/utils/newsOptimization.ts`
 **Detailed Implementation:**
@@ -342,7 +342,7 @@
 **Validation:** News caching works correctly, performance optimized
 **Commit:** `feat: implement news caching and performance optimization`
 
-#### 4.3.6 Write comprehensive news service tests
+- [ ] ####  4.3.6 Write comprehensive news service tests
 
 **Files to create:** `server/src/__tests__/newsAggregation.test.ts`, `server/src/__tests__/sentimentAnalysis.test.ts`
 **Detailed Implementation:**

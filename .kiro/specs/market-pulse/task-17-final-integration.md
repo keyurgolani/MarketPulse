@@ -25,7 +25,7 @@ Deliver a production-ready application with clean, maintainable code, comprehens
 
 ## Implementation Tasks
 
-### 17.1 Code Consolidation and Refactoring
+- [ ] ### 17.1 Code Consolidation and Refactoring
 
 **Context File:** `.kiro/specs/market-pulse/context/17.1-context.md`
 **Exit Criteria:** No duplicate code, single responsibility maintained, unused code removed, linting passes with zero warnings, refactoring complete
@@ -102,7 +102,7 @@ Deliver a production-ready application with clean, maintainable code, comprehens
 
 _Requirements: All requirements benefit from clean, maintainable code_
 
-### 17.2 Production Deployment Validation and Monitoring
+- [ ] ### 17.2 Production Deployment Validation and Monitoring
 
 **Context File:** `.kiro/specs/market-pulse/context/17.2-context.md`
 **Exit Criteria:** Production deployment successful, all features functional, monitoring active, performance acceptable, validation complete
@@ -175,7 +175,7 @@ _Requirements: All requirements benefit from clean, maintainable code_
 
 _Requirements: All requirements need production validation_
 
-### 17.3 Comprehensive Documentation and Final Testing
+- [ ] ### 17.3 Comprehensive Documentation and Final Testing
 
 **Context File:** `.kiro/specs/market-pulse/context/17.3-context.md`
 **Exit Criteria:** Complete documentation available, all tests pass, manual testing complete, application ready for release
@@ -249,7 +249,7 @@ _Requirements: All requirements need production validation_
 
 _Requirements: All requirements need comprehensive documentation and final validation_
 
-### 17.4 Final Quality Assurance and Release Preparation
+- [ ] ### 17.4 Final Quality Assurance and Release Preparation
 
 **Context File:** `.kiro/specs/market-pulse/context/17.4-context.md`
 **Exit Criteria:** Zero critical issues, performance benchmarks met, security validated, application production-ready

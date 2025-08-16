@@ -24,7 +24,7 @@ Create a fully accessible and responsive application that works seamlessly acros
 
 ## Implementation Tasks
 
-### 13.1 Implement WCAG-AA Accessibility Compliance
+- [ ] ### 13.1 Implement WCAG-AA Accessibility Compliance
 
 **Context File:** `.kiro/specs/market-pulse/context/13.1-context.md`
 **Exit Criteria:** WCAG-AA compliance achieved, screen reader compatible, keyboard navigation works, color contrast meets standards, tests pass
@@ -99,7 +99,7 @@ Create a fully accessible and responsive application that works seamlessly acros
 
 _Requirements: 6.2, 6.3, 6.4_
 
-### 13.2 Implement Responsive Design Across All Devices
+- [ ] ### 13.2 Implement Responsive Design Across All Devices
 
 **Context File:** `.kiro/specs/market-pulse/context/13.2-context.md`
 **Exit Criteria:** Responsive design works 320px-4K, touch interactions optimized, mobile patterns implemented, performance good on mobile, tests pass
@@ -172,7 +172,7 @@ _Requirements: 6.2, 6.3, 6.4_
 
 _Requirements: 8.1, 8.2, 8.3, 8.4_
 
-### 13.3 Advanced Accessibility Features
+- [ ] ### 13.3 Advanced Accessibility Features
 
 **Context File:** `.kiro/specs/market-pulse/context/13.3-context.md`
 **Exit Criteria:** Advanced accessibility features work, user preferences respected, assistive technology compatible, internationalization ready, tests comprehensive

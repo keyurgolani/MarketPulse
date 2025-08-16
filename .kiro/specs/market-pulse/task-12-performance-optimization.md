@@ -24,7 +24,7 @@ Create a high-performance application that loads quickly, responds smoothly to u
 
 ## Implementation Tasks
 
-### 12.1 Implement Advanced Caching Strategies
+- [ ] ### 12.1 Implement Advanced Caching Strategies
 
 **Context File:** `.kiro/specs/market-pulse/context/12.1-context.md`
 **Exit Criteria:** Multi-level caching works, TTL management effective, cache invalidation reliable, performance improved significantly, tests pass
@@ -98,7 +98,7 @@ Create a high-performance application that loads quickly, responds smoothly to u
 
 _Requirements: 4.1, 4.2, 4.3, 4.4_
 
-### 12.2 Implement Code Splitting and Lazy Loading
+- [ ] ### 12.2 Implement Code Splitting and Lazy Loading
 
 **Context File:** `.kiro/specs/market-pulse/context/12.2-context.md`
 **Exit Criteria:** Bundle size reduced significantly, lazy loading smooth, code splitting effective, loading performance improved, tests pass
@@ -174,7 +174,7 @@ _Requirements: 4.1, 4.2, 4.3, 4.4_
 
 _Requirements: 8.4, 10.2_
 
-### 12.3 Memory Management and Performance Monitoring
+- [ ] ### 12.3 Memory Management and Performance Monitoring
 
 **Context File:** `.kiro/specs/market-pulse/context/12.3-context.md`
 **Exit Criteria:** Memory usage optimized, leak detection works, performance monitoring active, cleanup effective, tests comprehensive

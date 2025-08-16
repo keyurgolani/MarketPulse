@@ -24,7 +24,7 @@ Build a comprehensive charting system that provides dynamic, interactive visuali
 
 ## Implementation Tasks
 
-### 10.1 Implement Dynamic Chart Components
+- [ ] ### 10.1 Implement Dynamic Chart Components
 
 **Context File:** `.kiro/specs/market-pulse/context/10.1-context.md`
 **Exit Criteria:** Single reusable chart component created, dynamic Y-axis scaling works, technical indicators functional, duplicate implementations removed, tests pass
@@ -100,7 +100,7 @@ Build a comprehensive charting system that provides dynamic, interactive visuali
 
 _Requirements: 9.1, 9.2, 9.3, 9.4_
 
-### 10.2 Build Historical Data Visualization
+- [ ] ### 10.2 Build Historical Data Visualization
 
 **Context File:** `.kiro/specs/market-pulse/context/10.2-context.md`
 **Exit Criteria:** Time-series charts work across timeframes, zoom/pan functional, export works, performance optimized, tests comprehensive
@@ -174,7 +174,7 @@ _Requirements: 9.1, 9.2, 9.3, 9.4_
 
 _Requirements: 9.1, 9.2, 9.3_
 
-### 10.3 Create Responsive Chart Layouts
+- [ ] ### 10.3 Create Responsive Chart Layouts
 
 **Context File:** `.kiro/specs/market-pulse/context/10.3-context.md`
 **Exit Criteria:** Charts responsive across all devices, touch gestures work, performance optimized, accessibility maintained

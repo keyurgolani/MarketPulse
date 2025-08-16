@@ -10,7 +10,7 @@
 **Context File:** `.kiro/specs/market-pulse/context/3.1-context.md`
 **Exit Criteria:** All interfaces defined, validation schemas work, type safety enforced at compile time, tests pass
 
-### Task 3.1.1: Define shared type definitions and interfaces
+- [ ] ### Task 3.1.1: Define shared type definitions and interfaces
 
 **Files to create:** `src/types/api.ts`, `src/types/dashboard.ts`, `src/types/market.ts`, `src/types/user.ts`
 **Detailed Implementation:**
@@ -52,7 +52,7 @@
 **Commit:** `feat: define core TypeScript interfaces and API types`
 **Requirements:** Type safety foundation (Requirement 11)
 
-### Task 3.1.2: Create user and preference data models
+- [ ] ### Task 3.1.2: Create user and preference data models
 
 **Files to create:** `src/types/user.ts`, `server/src/models/types/user.ts`
 **Detailed Implementation:**
@@ -96,7 +96,7 @@
 **Commit:** `feat: create user and preference data models`
 **Requirements:** User preferences (Requirement 7, 6)
 
-### Task 3.1.3: Define dashboard and widget data structures
+- [ ] ### Task 3.1.3: Define dashboard and widget data structures
 
 **Files to create:** `src/types/dashboard.ts`, `src/types/widget.ts`
 **Detailed Implementation:**
@@ -171,7 +171,7 @@
 **Commit:** `feat: define dashboard and widget data structures`
 **Requirements:** Dashboard functionality (Requirement 1, 2, 9)
 
-### Task 3.1.4: Create market data and asset type definitions
+- [ ] ### Task 3.1.4: Create market data and asset type definitions
 
 **Files to create:** `src/types/market.ts`, `src/types/asset.ts`
 **Detailed Implementation:**
@@ -259,7 +259,7 @@
 **Commit:** `feat: create market data and asset type definitions`
 **Requirements:** Market data handling (Requirement 3, 4)
 
-### Task 3.1.5: Define news and content data models
+- [ ] ### Task 3.1.5: Define news and content data models
 
 **Files to create:** `src/types/news.ts`, `src/types/content.ts`
 **Detailed Implementation:**
@@ -321,7 +321,7 @@
 **Commit:** `feat: define news and content data models`
 **Requirements:** News integration (Requirement 5)
 
-### Task 3.1.6: Create validation schemas with Zod
+- [ ] ### Task 3.1.6: Create validation schemas with Zod
 
 **Files to create:** `src/utils/validation.ts`, `server/src/utils/validation.ts`
 **Commands:** `npm install zod`
@@ -395,7 +395,7 @@
 **Context File:** `.kiro/specs/market-pulse/context/3.2-context.md`
 **Exit Criteria:** API contracts defined, request/response types validated, OpenAPI documentation generated
 
-### Task 3.2.1: Define API endpoint contracts
+- [ ] ### Task 3.2.1: Define API endpoint contracts
 
 **Files to create:** `src/types/api-contracts.ts`, `server/src/types/api-contracts.ts`
 **Detailed Implementation:**
@@ -409,7 +409,7 @@
 **Commit:** `feat: define comprehensive API endpoint contracts`
 **Requirements:** API consistency (Requirement 3, 4, 13)
 
-### Task 3.2.2: Create request validation middleware
+- [ ] ### Task 3.2.2: Create request validation middleware
 
 **Files to create:** `server/src/middleware/validation.ts`, `server/src/utils/requestValidation.ts`
 **Detailed Implementation:**
@@ -423,7 +423,7 @@
 **Commit:** `feat: implement request validation middleware`
 **Requirements:** Input validation and security (Requirement 13)
 
-### Task 3.2.3: Generate OpenAPI documentation
+- [ ] ### Task 3.2.3: Generate OpenAPI documentation
 
 **Files to create:** `docs/api-spec.yaml`, `server/src/utils/swagger.ts`
 **Commands:** `npm install swagger-jsdoc swagger-ui-express`
@@ -443,7 +443,7 @@
 **Context File:** `.kiro/specs/market-pulse/context/3.3-context.md`
 **Exit Criteria:** Error types defined, logging structured, error handling comprehensive
 
-### Task 3.3.1: Define error types and error handling
+- [ ] ### Task 3.3.1: Define error types and error handling
 
 **Files to create:** `src/types/errors.ts`, `server/src/types/errors.ts`
 **Detailed Implementation:**
@@ -457,7 +457,7 @@
 **Commit:** `feat: define comprehensive error types and handling`
 **Requirements:** Error handling (Requirement 13)
 
-### Task 3.3.2: Implement structured logging types
+- [ ] ### Task 3.3.2: Implement structured logging types
 
 **Files to create:** `src/types/logging.ts`, `server/src/types/logging.ts`
 **Detailed Implementation:**
@@ -471,7 +471,7 @@
 **Commit:** `feat: implement structured logging types`
 **Requirements:** Monitoring and debugging (Requirement 13, 14)
 
-### Task 3.3.3: Write comprehensive type definition tests
+- [ ] ### Task 3.3.3: Write comprehensive type definition tests
 
 **Files to create:** `src/__tests__/types.test.ts`, `server/src/__tests__/types.test.ts`
 **Detailed Implementation:**

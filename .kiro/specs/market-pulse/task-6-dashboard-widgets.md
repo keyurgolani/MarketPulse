@@ -65,12 +65,12 @@
 
 ## Subtasks
 
-### 6.1 Create widget framework and base components
+- [ ] ### 6.1 Create widget framework and base components
 
 **Context File:** `.kiro/specs/market-pulse/context/6.1-context.md`
 **Exit Criteria:** Widget framework functional, base widget components created, configuration system working, tests pass
 
-#### 6.1.1 Set up widget framework infrastructure
+- [ ] ####  6.1.1 Set up widget framework infrastructure
 
 **Files to create:** `src/components/widgets/BaseWidget.tsx`, `src/components/widgets/WidgetContainer.tsx`, `src/hooks/useWidget.ts`
 **Commands:** `npm install react-grid-layout @types/react-grid-layout`
@@ -106,7 +106,7 @@ interface WidgetConfig {
 **Validation:** Widget framework initializes correctly, base components render
 **Commit:** `feat: create widget framework infrastructure with base components`
 
-#### 6.1.2 Implement widget configuration system
+- [ ] ####  6.1.2 Implement widget configuration system
 
 **Files to create:** `src/components/widgets/WidgetSettings.tsx`, `src/components/widgets/WidgetConfigModal.tsx`
 **Detailed Implementation:**
@@ -137,7 +137,7 @@ interface ConfigOption {
 **Validation:** Configuration system works correctly, settings persist
 **Commit:** `feat: implement widget configuration system with validation`
 
-#### 6.1.3 Create widget drag-and-drop functionality
+- [ ] ####  6.1.3 Create widget drag-and-drop functionality
 
 **Files to create:** `src/components/widgets/DraggableWidget.tsx`, `src/hooks/useDragDrop.ts`
 **Detailed Implementation:**
@@ -173,7 +173,7 @@ interface WidgetLayout {
 **Validation:** Drag-drop works smoothly, layout persists correctly
 **Commit:** `feat: implement widget drag-and-drop with responsive grid`
 
-#### 6.1.4 Add widget loading and error states
+- [ ] ####  6.1.4 Add widget loading and error states
 
 **Files to create:** `src/components/widgets/WidgetLoader.tsx`, `src/components/widgets/WidgetError.tsx`
 **Detailed Implementation:**
@@ -201,7 +201,7 @@ interface WidgetErrorProps {
 **Validation:** Loading states work correctly, error handling functional
 **Commit:** `feat: add widget loading states and error handling`
 
-#### 6.1.5 Implement widget data management
+- [ ] ####  6.1.5 Implement widget data management
 
 **Files to create:** `src/hooks/useWidgetData.ts`, `src/services/WidgetDataService.ts`
 **Detailed Implementation:**
@@ -233,7 +233,7 @@ interface WidgetDataResult<T> {
 **Validation:** Data management works correctly, caching functional
 **Commit:** `feat: implement widget data management with caching`
 
-#### 6.1.6 Write comprehensive widget framework tests
+- [ ] ####  6.1.6 Write comprehensive widget framework tests
 
 **Files to create:** `src/components/widgets/__tests__/BaseWidget.test.tsx`, `src/hooks/__tests__/useWidget.test.ts`
 **Detailed Implementation:**
@@ -250,12 +250,12 @@ interface WidgetDataResult<T> {
 
 **Requirements:** 1.1, 2.1, 2.2, 9.1
 
-### 6.2 Create asset list and price widgets
+- [ ] ### 6.2 Create asset list and price widgets
 
 **Context File:** `.kiro/specs/market-pulse/context/6.2-context.md`
 **Exit Criteria:** Asset widgets functional, price updates real-time, sorting/filtering working, performance optimized, tests pass
 
-#### 6.2.1 Implement asset list widget
+- [ ] ####  6.2.1 Implement asset list widget
 
 **Files to create:** `src/components/widgets/AssetListWidget.tsx`, `src/components/widgets/AssetRow.tsx`
 **Detailed Implementation:**
@@ -287,7 +287,7 @@ interface AssetRowProps {
 **Validation:** Asset list renders correctly, sorting and filtering work
 **Commit:** `feat: implement asset list widget with sorting and filtering`
 
-#### 6.2.2 Create price ticker widget
+- [ ] ####  6.2.2 Create price ticker widget
 
 **Files to create:** `src/components/widgets/PriceTickerWidget.tsx`, `src/components/widgets/PriceDisplay.tsx`
 **Detailed Implementation:**
@@ -318,7 +318,7 @@ interface PriceDisplayProps {
 **Validation:** Price ticker scrolls smoothly, animations work correctly
 **Commit:** `feat: create price ticker widget with smooth animations`
 
-#### 6.2.3 Implement watchlist widget
+- [ ] ####  6.2.3 Implement watchlist widget
 
 **Files to create:** `src/components/widgets/WatchlistWidget.tsx`, `src/hooks/useWatchlist.ts`
 **Detailed Implementation:**
@@ -352,7 +352,7 @@ interface UseWatchlistReturn {
 **Validation:** Watchlist functionality works correctly, persistence functional
 **Commit:** `feat: implement watchlist widget with management features`
 
-#### 6.2.4 Add real-time price updates
+- [ ] ####  6.2.4 Add real-time price updates
 
 **Files to create:** `src/hooks/useRealTimePrice.ts`, `src/services/PriceUpdateService.ts`
 **Detailed Implementation:**
@@ -383,7 +383,7 @@ interface PriceUpdate {
 **Validation:** Real-time updates work correctly, WebSocket connection stable
 **Commit:** `feat: add real-time price updates with WebSocket support`
 
-#### 6.2.5 Implement asset search and selection
+- [ ] ####  6.2.5 Implement asset search and selection
 
 **Files to create:** `src/components/widgets/AssetSearch.tsx`, `src/hooks/useAssetSearch.ts`
 **Detailed Implementation:**
@@ -413,7 +413,7 @@ interface SearchResult {
 **Validation:** Asset search works correctly, autocomplete functional
 **Commit:** `feat: implement asset search with autocomplete and filtering`
 
-#### 6.2.6 Write comprehensive asset widget tests
+- [ ] ####  6.2.6 Write comprehensive asset widget tests
 
 **Files to create:** `src/components/widgets/__tests__/AssetListWidget.test.tsx`, `src/hooks/__tests__/useRealTimePrice.test.ts`
 **Detailed Implementation:**
@@ -430,12 +430,12 @@ interface SearchResult {
 
 **Requirements:** 2.1, 3.1, 3.3, 9.2
 
-### 6.3 Create chart and visualization widgets
+- [ ] ### 6.3 Create chart and visualization widgets
 
 **Context File:** `.kiro/specs/market-pulse/context/6.3-context.md`
 **Exit Criteria:** Chart widgets functional, technical indicators working, interactive features operational, performance optimized, tests pass
 
-#### 6.3.1 Set up chart library and base chart component
+- [ ] ####  6.3.1 Set up chart library and base chart component
 
 **Files to create:** `src/components/widgets/ChartWidget.tsx`, `src/components/charts/BaseChart.tsx`
 **Commands:** `npm install chart.js react-chartjs-2 chartjs-adapter-date-fns`
@@ -467,7 +467,7 @@ interface ChartData {
 **Validation:** Chart library initializes correctly, base charts render
 **Commit:** `feat: set up Chart.js library with base chart components`
 
-#### 6.3.2 Implement price chart widget with technical indicators
+- [ ] ####  6.3.2 Implement price chart widget with technical indicators
 
 **Files to create:** `src/components/widgets/PriceChartWidget.tsx`, `src/utils/technicalIndicators.ts`
 **Detailed Implementation:**
@@ -499,7 +499,7 @@ interface TechnicalIndicator {
 **Validation:** Price charts render correctly, technical indicators functional
 **Commit:** `feat: implement price chart widget with technical indicators`
 
-#### 6.3.3 Create market summary and heatmap widgets
+- [ ] ####  6.3.3 Create market summary and heatmap widgets
 
 **Files to create:** `src/components/widgets/MarketSummaryWidget.tsx`, `src/components/widgets/HeatmapWidget.tsx`
 **Detailed Implementation:**
@@ -528,7 +528,7 @@ interface HeatmapWidgetProps extends BaseWidgetProps {
 **Validation:** Market widgets render correctly, heatmap interactive
 **Commit:** `feat: create market summary and heatmap widgets`
 
-#### 6.3.4 Implement volume and performance widgets
+- [ ] ####  6.3.4 Implement volume and performance widgets
 
 **Files to create:** `src/components/widgets/VolumeWidget.tsx`, `src/components/widgets/PerformanceWidget.tsx`
 **Detailed Implementation:**
@@ -558,7 +558,7 @@ interface PerformanceWidgetProps extends BaseWidgetProps {
 **Validation:** Volume and performance widgets functional, calculations accurate
 **Commit:** `feat: implement volume and performance analysis widgets`
 
-#### 6.3.5 Add chart interactivity and export features
+- [ ] ####  6.3.5 Add chart interactivity and export features
 
 **Files to create:** `src/components/charts/ChartControls.tsx`, `src/utils/chartExport.ts`
 **Detailed Implementation:**
@@ -590,7 +590,7 @@ interface ChartExportOptions {
 **Validation:** Chart interactivity works correctly, export functional
 **Commit:** `feat: add chart interactivity and export capabilities`
 
-#### 6.3.6 Write comprehensive chart widget tests
+- [ ] ####  6.3.6 Write comprehensive chart widget tests
 
 **Files to create:** `src/components/widgets/__tests__/ChartWidget.test.tsx`, `src/utils/__tests__/technicalIndicators.test.ts`
 **Detailed Implementation:**

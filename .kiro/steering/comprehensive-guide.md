@@ -4,16 +4,16 @@
 
 MarketPulse is a comprehensive financial dashboard platform that enables owner-configured suite of dynamic, curated dashboards that automatically surface for every user, while also giving each user the ability to create bespoke dashboards with custom asset watch-lists.
 
-### Purpose
+- [ ] ### Purpose
 
 - Provide real-time market monitoring and analytics platform
 - Aggregate data from multiple free sources (Yahoo Finance, Google Finance, etc.)
 - Deliver actionable intelligence for traders, investors, and market analysts
 - Ensure accessibility compliance (WCAG-AA) and responsive design across all devices
 
-### Key Features
+- [ ] ### Key Features
 
-#### Core Functionality
+- [ ] ####  Core Functionality
 
 - **Owner-configured default dashboards** - System-wide curated dashboards for all users
 - **Custom user dashboards** - Bespoke watch-lists and personalization options
@@ -21,7 +21,7 @@ MarketPulse is a comprehensive financial dashboard platform that enables owner-c
 - **Multi-source data aggregation** - Yahoo Finance, Google Finance integration with fallback
 - **Aggressive caching strategy** - API protection, rate limit management, and performance optimization
 
-#### User Experience
+- [ ] ####  User Experience
 
 - **WCAG-AA accessibility compliance** - Screen reader support, keyboard navigation, high contrast
 - **Dark mode support** - Smooth theme transitions with user preference persistence
@@ -29,23 +29,23 @@ MarketPulse is a comprehensive financial dashboard platform that enables owner-c
 - **Dynamic data visualization** - Charts with technical indicators, zoom/pan, export capabilities
 - **News integration** - Market news aggregation with asset tagging and sentiment analysis
 
-#### Technical Features
+- [ ] ####  Technical Features
 
 - **Multiple API key management** - Automatic rotation and fallback on rate limits
 - **Real-time updates** - WebSocket connections for live data streaming
 - **Performance optimization** - Lazy loading, virtualization, and memory management
 - **Comprehensive testing** - Unit, integration, E2E, accessibility, and performance testing
 
-### Target Users
+- [ ] ### Target Users
 
-#### Primary Users
+- [ ] ####  Primary Users
 
 - **Traders** - Need real-time data, price alerts, and technical analysis tools
 - **Investors** - Require portfolio tracking, historical data, and market news
 - **Market Analysts** - Use charts, technical indicators, and comprehensive market data
 - **Portfolio Managers** - Manage custom watchlists and monitor multiple assets
 
-#### Secondary Users
+- [ ] ####  Secondary Users
 
 - **System Administrators** - Configure default dashboards and manage API integrations
 - **Developers** - Maintain and extend the platform with new features
@@ -53,35 +53,35 @@ MarketPulse is a comprehensive financial dashboard platform that enables owner-c
 
 ## Technology Stack
 
-### Frontend Stack
+- [ ] ### Frontend Stack
 
-#### Core Framework
+- [ ] ####  Core Framework
 
 - **React 18** - Modern React with concurrent features and Suspense
 - **TypeScript 5.x** - Strict type safety and compile-time error detection
 - **Vite** - Fast development server and optimized production builds
 - **React Router 6** - Client-side routing with nested routes and data loading
 
-#### State Management
+- [ ] ####  State Management
 
 - **Zustand** - Lightweight state management for global application state
 - **React Query (TanStack Query)** - Server state management with caching and background refetch
 - **React Hook Form** - Performant forms with validation and error handling
 
-#### Styling and Design
+- [ ] ####  Styling and Design
 
 - **Tailwind CSS 3.x** - Utility-first CSS framework with custom design system
 - **Headless UI** - Unstyled, accessible UI components
 - **Framer Motion** - Smooth animations and micro-interactions
 - **Lucide React** - Consistent icon library with accessibility support
 
-#### Data Visualization
+- [ ] ####  Data Visualization
 
 - **Chart.js 4.x** - Flexible charting library with technical indicators
 - **Recharts** - React-specific charts with responsive design
 - **D3.js (selective imports)** - Custom visualizations and data manipulation
 
-#### Development Tools
+- [ ] ####  Development Tools
 
 - **ESLint** - Code linting with React and TypeScript rules
 - **Prettier** - Code formatting with consistent style
@@ -89,37 +89,37 @@ MarketPulse is a comprehensive financial dashboard platform that enables owner-c
 - **React Testing Library** - Component testing with accessibility focus
 - **Playwright** - End-to-end testing across browsers
 
-### Backend Stack
+- [ ] ### Backend Stack
 
-#### Core Framework
+- [ ] ####  Core Framework
 
 - **Node.js 18+** - JavaScript runtime with ES modules support
 - **Express.js 4.x** - Web framework with middleware ecosystem
 - **TypeScript 5.x** - Type safety for server-side code
 - **Zod** - Runtime type validation and schema parsing
 
-#### Database and Caching
+- [ ] ####  Database and Caching
 
 - **SQLite 3** - Embedded database for local data storage
 - **Redis** - In-memory caching with automatic fallback to memory cache
 - **Prisma** - Type-safe database ORM with migrations
 - **Node-cron** - Scheduled tasks for data refresh and cleanup
 
-#### External Integrations
+- [ ] ####  External Integrations
 
 - **Axios** - HTTP client with interceptors and retry logic
 - **WebSocket (ws)** - Real-time data streaming
 - **Rate Limiter Flexible** - Advanced rate limiting with multiple strategies
 - **Helmet** - Security middleware for Express applications
 
-#### Development and Testing
+- [ ] ####  Development and Testing
 
 - **Nodemon** - Development server with hot reload
 - **Jest** - Backend unit and integration testing
 - **Supertest** - HTTP assertion testing for APIs
 - **Winston** - Structured logging with multiple transports
 
-#### Version Control and Git Workflow
+- [ ] ####  Version Control and Git Workflow
 
 - **Git** - Distributed version control with conventional commits
 - **Husky** - Git hooks for pre-commit validation and testing
@@ -129,7 +129,7 @@ MarketPulse is a comprehensive financial dashboard platform that enables owner-c
 
 ## Project Structure
 
-### Current Organization
+- [ ] ### Current Organization
 
 ```text
 .
@@ -151,9 +151,9 @@ MarketPulse is a comprehensive financial dashboard platform that enables owner-c
 └── (MarketPulse implementation files to be created)
 ```
 
-### Planned MarketPulse Structure
+- [ ] ### Planned MarketPulse Structure
 
-#### Frontend Architecture (React/TypeScript)
+- [ ] ####  Frontend Architecture (React/TypeScript)
 
 ```text
 src/                                # Frontend source code
@@ -196,7 +196,7 @@ src/                                # Frontend source code
     └── images/                    # Images and logos
 ```
 
-#### Backend Architecture (Node.js/Express)
+- [ ] ####  Backend Architecture (Node.js/Express)
 
 ```text
 server/                            # Backend source code
@@ -239,25 +239,25 @@ server/                            # Backend source code
 
 ## Development Guidelines
 
-### Mandatory Requirements
+- [ ] ### Mandatory Requirements
 
-#### Zero-Error Policy
+- [ ] ####  Zero-Error Policy
 
 - **No compilation errors**: TypeScript must compile without errors
 - **No linting warnings**: ESLint must pass with zero warnings
 - **No console errors**: Browser console must be clean in development and production
 - **API contract integrity**: When updating APIs, always update both frontend and backend simultaneously
 
-#### Code Quality Standards
+- [ ] ####  Code Quality Standards
 
 - **Single responsibility**: Each file, function, and component handles one concern
 - **Explicit typing**: All public functions must have explicit return types
 - **Error boundaries**: Implement proper error handling with meaningful HTTP status codes
 - **Input validation**: Use Zod schemas for all API inputs and user data
 
-### Architecture Patterns
+- [ ] ### Architecture Patterns
 
-#### Frontend (React/TypeScript)
+- [ ] ####  Frontend (React/TypeScript)
 
 ```typescript
 // Component Pattern
@@ -275,7 +275,7 @@ export const useMarketData = (symbol: string): MarketDataResult => {
 };
 ```
 
-#### Backend (Node.js/Express)
+- [ ] ####  Backend (Node.js/Express)
 
 ```typescript
 // Controller Pattern
@@ -295,15 +295,15 @@ export class DashboardService {
 }
 ```
 
-#### State Management
+- [ ] ####  State Management
 
 - **Zustand**: Global application state (user preferences, theme)
 - **React Query**: Server state with caching (market data, API responses)
 - **Local state**: Component-specific state with useState/useReducer
 
-### File Organization Rules
+- [ ] ### File Organization Rules
 
-#### Naming Conventions
+- [ ] ####  Naming Conventions
 
 - **Components**: PascalCase (`AssetWidget.tsx`)
 - **Hooks**: camelCase with 'use' prefix (`useMarketData.ts`)
@@ -311,7 +311,7 @@ export class DashboardService {
 - **Types**: PascalCase (`MarketData.ts`)
 - **Constants**: UPPER_SNAKE_CASE (`API_ENDPOINTS.ts`)
 
-#### Directory Structure
+- [ ] ####  Directory Structure
 
 ```text
 src/
@@ -324,32 +324,32 @@ src/
 └── utils/                 # Pure utility functions
 ```
 
-### Code Improvement Guidelines
+- [ ] ### Code Improvement Guidelines
 
-#### File Enhancement Policy
+- [ ] ####  File Enhancement Policy
 - **Improve existing functionality** instead of creating alternative versions
 - **Never create files** with names like `enhanced*`, `*v2`, `improved*`, `*-new`, `*-updated`, etc.
 - **Always modify the original file** when enhancing functionality
 - **Maintain single source of truth** for each component or feature
 - **Refactor in place** rather than duplicating with variations
 
-### MarketPulse-Specific Rules
+- [ ] ### MarketPulse-Specific Rules
 
-#### Data Fetching Strategy
+- [ ] ####  Data Fetching Strategy
 
 - **Primary source**: Yahoo Finance API
 - **Fallback source**: Google Finance API
 - **Caching**: Redis (primary) → Memory cache (fallback)
 - **Rate limiting**: Automatic API key rotation on 429 responses
 
-#### UI/UX Requirements
+- [ ] ####  UI/UX Requirements
 
 - **Accessibility**: WCAG-AA compliance mandatory
 - **Responsive**: Mobile-first design with breakpoints at 640px, 768px, 1024px
 - **Performance**: Lazy load components, virtualize large lists
 - **Theme**: Support light/dark modes with smooth transitions
 
-#### API Design
+- [ ] ####  API Design
 
 ```typescript
 // Response format
@@ -367,16 +367,16 @@ app.use((error: Error, req: Request, res: Response, next: NextFunction) => {
 });
 ```
 
-### Development Workflow
+- [ ] ### Development Workflow
 
-#### Before Starting Any Task
+- [ ] ####  Before Starting Any Task
 
 1. Read existing code to understand patterns
 2. Check if similar functionality exists
 3. Plan the minimal implementation needed
 4. Identify what tests need to be written
 
-#### Implementation Process
+- [ ] ####  Implementation Process
 
 1. **Write types first**: Define TypeScript interfaces
 2. **Create tests**: Write failing tests for new functionality
@@ -384,7 +384,7 @@ app.use((error: Error, req: Request, res: Response, next: NextFunction) => {
 4. **Refactor**: Clean up and optimize
 5. **Validate**: Run full test suite and linting
 
-#### Git Commit Standards
+- [ ] ####  Git Commit Standards
 
 ```bash
 feat: add real-time price updates for dashboard widgets
@@ -394,9 +394,9 @@ test: add unit tests for dashboard configuration
 docs: update API documentation for asset endpoints
 ```
 
-### Testing Requirements
+- [ ] ### Testing Requirements
 
-#### Test Organization
+- [ ] ####  Test Organization
 
 ```text
 tests/
@@ -406,16 +406,16 @@ tests/
 └── e2e/workflows/          # User journeys
 ```
 
-#### Coverage Requirements
+- [ ] ####  Coverage Requirements
 
 - **Unit tests**: All services and utilities
 - **Integration tests**: All API endpoints
 - **E2E tests**: Critical user workflows
 - **Accessibility tests**: All interactive components
 
-### Validation Checklist
+- [ ] ### Validation Checklist
 
-#### Before Committing
+- [ ] ####  Before Committing
 
 - [ ] `npm run type-check` passes
 - [ ] `npm run lint` passes with zero warnings
@@ -424,7 +424,7 @@ tests/
 - [ ] Browser console shows no errors
 - [ ] Accessibility tests pass
 
-#### Before Deployment
+- [ ] ####  Before Deployment
 
 - [ ] All environment variables configured
 - [ ] Database migrations applied
@@ -434,7 +434,7 @@ tests/
 
 ## Common Commands
 
-### Development Commands
+- [ ] ### Development Commands
 
 ```bash
 # Install dependencies
@@ -458,7 +458,7 @@ npm run lint:fix
 npm run format
 ```
 
-### Testing Commands
+- [ ] ### Testing Commands
 
 ```bash
 # Run all tests
@@ -480,7 +480,7 @@ npm run test:coverage
 npm run test:watch
 ```
 
-### Build and Deployment Commands
+- [ ] ### Build and Deployment Commands
 
 ```bash
 # Production build
@@ -500,7 +500,7 @@ npm run db:migrate
 npm run db:seed
 ```
 
-### Quality Assurance Commands
+- [ ] ### Quality Assurance Commands
 
 ```bash
 # Full quality check (lint + type + test)
@@ -520,7 +520,7 @@ npm audit
 npm run audit:fix
 ```
 
-### Git Workflow Commands
+- [ ] ### Git Workflow Commands
 
 ```bash
 # Initialize repository with proper .gitignore
@@ -554,7 +554,7 @@ git tag v0.1.0-task-1-complete
 
 ## Code Style Guidelines
 
-### TypeScript Standards
+- [ ] ### TypeScript Standards
 
 - **Strict mode enabled** - No implicit any, strict null checks
 - **Interface over type** - Use interfaces for object shapes
@@ -562,7 +562,7 @@ git tag v0.1.0-task-1-complete
 - **Generic constraints** - Use extends for type safety
 - **Utility types** - Leverage built-in utility types (Pick, Omit, etc.)
 
-### React Best Practices
+- [ ] ### React Best Practices
 
 - **Functional components** - Use hooks instead of class components
 - **Custom hooks** - Extract reusable logic into custom hooks
@@ -570,7 +570,7 @@ git tag v0.1.0-task-1-complete
 - **Error boundaries** - Implement error boundaries for component trees
 - **Accessibility first** - ARIA labels, semantic HTML, keyboard navigation
 
-### Backend Standards
+- [ ] ### Backend Standards
 
 - **Express middleware** - Use middleware for cross-cutting concerns
 - **Error handling** - Centralized error handling with proper HTTP status codes
@@ -578,7 +578,7 @@ git tag v0.1.0-task-1-complete
 - **Async/await** - Use async/await over promises for readability
 - **Structured logging** - Use Winston with consistent log levels
 
-### File Organization
+- [ ] ### File Organization
 
 - **Single responsibility** - One concept per file
 - **Barrel exports** - Use index.ts files for clean imports
@@ -586,7 +586,7 @@ git tag v0.1.0-task-1-complete
 - **Co-location** - Keep related files close together
 - **Consistent naming** - Follow established naming conventions
 
-### Performance Guidelines
+- [ ] ### Performance Guidelines
 
 - **Code splitting** - Use dynamic imports for route-based splitting
 - **Lazy loading** - Implement lazy loading for heavy components
@@ -594,7 +594,7 @@ git tag v0.1.0-task-1-complete
 - **Bundle optimization** - Tree shaking and dead code elimination
 - **Caching strategies** - Implement multi-level caching
 
-### Security Best Practices
+- [ ] ### Security Best Practices
 
 - **Input sanitization** - Sanitize all user inputs
 - **HTTPS enforcement** - Use HTTPS in production
@@ -602,7 +602,7 @@ git tag v0.1.0-task-1-complete
 - **Rate limiting** - Implement rate limiting for API endpoints
 - **Environment variables** - Secure configuration management
 
-### Testing Standards
+- [ ] ### Testing Standards
 
 - **Test-driven development** - Write tests before implementation
 - **Feature-based organization** - Group tests by feature buckets
@@ -610,7 +610,7 @@ git tag v0.1.0-task-1-complete
 - **Mock external dependencies** - Use mocks for external APIs
 - **Accessibility testing** - Include a11y tests in the test suite
 
-### Systematic Testing Framework
+- [ ] ### Systematic Testing Framework
 
 - **test-results.md tracking** - Central documentation of all testing progress
 - **11 test categories** - Comprehensive coverage from structure to production
@@ -618,7 +618,7 @@ git tag v0.1.0-task-1-complete
 - **Zero-error policy** - No test marked complete until fully passing
 - **Step-by-step validation** - Sequential execution with progress tracking
 
-### Testing Workflow Commands
+- [ ] ### Testing Workflow Commands
 
 ```bash
 # Testing validation workflow
@@ -648,14 +648,14 @@ npm run build                  # Production build
 
 ## Testing and Validation Framework
 
-### Systematic Testing Approach
+- [ ] ### Systematic Testing Approach
 
 - **test-results.md tracking**: All testing progress documented with issues and fixes
 - **Step-by-step validation**: Each test category executed systematically
 - **Issue tracking**: All problems logged, fixed, and marked complete
 - **Comprehensive coverage**: 11 test categories covering all aspects of the application
 
-### Test Categories
+- [ ] ### Test Categories
 
 1. **Project Structure Tests** - Validate directory structure and file organization
 2. **Package Configuration Tests** - Verify dependencies and build configuration
@@ -669,7 +669,7 @@ npm run build                  # Production build
 10. **API Endpoint Tests** - Backend API functionality validation
 11. **Production Build Tests** - Production deployment readiness verification
 
-### Quality Gates
+- [ ] ### Quality Gates
 
 - **Zero-error policy**: No test can be marked complete with unresolved errors
 - **Regression prevention**: All existing functionality must continue working

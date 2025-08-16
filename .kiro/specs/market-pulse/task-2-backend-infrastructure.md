@@ -65,12 +65,12 @@
 
 ## Subtasks
 
-### 2.1 Initialize Express.js server with TypeScript configuration
+- [ ] ### 2.1 Initialize Express.js server with TypeScript configuration
 
 **Context File:** `.kiro/specs/market-pulse/context/2.1-context.md`
 **Exit Criteria:** Server starts without errors, health endpoint responds, TypeScript compiles, tests pass
 
-#### 2.1.1 Set up backend project structure and dependencies
+- [ ] ####  2.1.1 Set up backend project structure and dependencies
 
 **Files to create:** `server/package.json`, `server/tsconfig.json`, `server/src/index.ts`
 **Commands:** `cd server && npm init -y`, `npm install express cors helmet morgan winston`, `npm install -D @types/express @types/cors @types/node typescript nodemon ts-node`
@@ -83,7 +83,7 @@
 **Validation:** TypeScript compiles without errors, dependencies installed correctly
 **Commit:** `feat: initialize backend project structure with TypeScript`
 
-#### 2.1.2 Create Express server with security middleware
+- [ ] ####  2.1.2 Create Express server with security middleware
 
 **Files to create:** `server/src/app.ts`, `server/src/middleware/security.ts`, `server/src/middleware/errorHandler.ts`
 **Detailed Implementation:**
@@ -96,7 +96,7 @@
 **Validation:** Server starts without errors, security headers present in responses
 **Commit:** `feat: configure Express server with security middleware`
 
-#### 2.1.3 Implement environment configuration and validation
+- [ ] ####  2.1.3 Implement environment configuration and validation
 
 **Files to create:** `server/src/config/environment.ts`, `server/src/config/database.ts`, `server/.env.example`
 **Detailed Implementation:**
@@ -109,7 +109,7 @@
 **Validation:** Configuration loads correctly, validation catches missing variables
 **Commit:** `feat: implement type-safe environment configuration`
 
-#### 2.1.4 Create health check and system endpoints
+- [ ] ####  2.1.4 Create health check and system endpoints
 
 **Files to create:** `server/src/routes/system.ts`, `server/src/controllers/systemController.ts`
 **Detailed Implementation:**
@@ -122,7 +122,7 @@
 **Validation:** Health endpoints respond correctly, curl/wget tests pass
 **Commit:** `feat: implement system health check and monitoring endpoints`
 
-#### 2.1.5 Set up logging and monitoring infrastructure
+- [ ] ####  2.1.5 Set up logging and monitoring infrastructure
 
 **Files to create:** `server/src/utils/logger.ts`, `server/src/middleware/requestLogger.ts`
 **Detailed Implementation:**
@@ -135,7 +135,7 @@
 **Validation:** Logs generated correctly, structured format maintained
 **Commit:** `feat: configure structured logging and request monitoring`
 
-#### 2.1.6 Write comprehensive server tests
+- [ ] ####  2.1.6 Write comprehensive server tests
 
 **Files to create:** `server/src/__tests__/app.test.ts`, `server/src/__tests__/system.test.ts`
 **Commands:** `npm install -D jest supertest @types/jest @types/supertest`
@@ -151,12 +151,12 @@
 
 **Requirements:** 3.1, 4.1
 
-### 2.2 Implement SQLite database schema and connection management
+- [ ] ### 2.2 Implement SQLite database schema and connection management
 
 **Context File:** `.kiro/specs/market-pulse/context/2.2-context.md`
 **Exit Criteria:** Database connects successfully, migrations run, CRUD operations work, tests pass
 
-#### 2.2.1 Set up SQLite database connection and configuration
+- [ ] ####  2.2.1 Set up SQLite database connection and configuration
 
 **Files to create:** `server/src/config/database.ts`, `server/src/utils/database.ts`
 **Commands:** `npm install sqlite3 better-sqlite3`, `npm install -D @types/sqlite3`
@@ -170,7 +170,7 @@
 **Validation:** Database connection established, file created correctly
 **Commit:** `feat: configure SQLite database connection and management`
 
-#### 2.2.2 Design and create database schema
+- [ ] ####  2.2.2 Design and create database schema
 
 **Files to create:** `server/migrations/001_initial_schema.sql`, `server/src/models/schema.ts`
 **Detailed Implementation:**
@@ -183,7 +183,7 @@
 **Validation:** Schema creates without errors, relationships enforced
 **Commit:** `feat: design and implement database schema with relationships`
 
-#### 2.2.3 Implement database migration system
+- [ ] ####  2.2.3 Implement database migration system
 
 **Files to create:** `server/src/utils/migrations.ts`, `server/scripts/migrate.ts`
 **Detailed Implementation:**
@@ -196,7 +196,7 @@
 **Validation:** Migrations run successfully, version tracking works
 **Commit:** `feat: implement database migration system with versioning`
 
-#### 2.2.4 Create database models and ORM layer
+- [ ] ####  2.2.4 Create database models and ORM layer
 
 **Files to create:** `server/src/models/User.ts`, `server/src/models/Dashboard.ts`, `server/src/models/Widget.ts`, `server/src/models/Asset.ts`
 **Detailed Implementation:**
@@ -209,7 +209,7 @@
 **Validation:** Models work correctly, CRUD operations tested
 **Commit:** `feat: implement database models with CRUD operations`
 
-#### 2.2.5 Add database error handling and logging
+- [ ] ####  2.2.5 Add database error handling and logging
 
 **Files to create:** `server/src/middleware/databaseErrorHandler.ts`, `server/src/utils/databaseLogger.ts`
 **Detailed Implementation:**
@@ -222,7 +222,7 @@
 **Validation:** Error handling works correctly, logs generated properly
 **Commit:** `feat: add database error handling and monitoring`
 
-#### 2.2.6 Write database integration tests
+- [ ] ####  2.2.6 Write database integration tests
 
 **Files to create:** `server/src/__tests__/database.test.ts`, `server/src/__tests__/models.test.ts`
 **Detailed Implementation:**
@@ -237,12 +237,12 @@
 
 **Requirements:** 1.1, 2.1, 2.2
 
-### 2.3 Set up Redis caching layer with fallback to memory cache
+- [ ] ### 2.3 Set up Redis caching layer with fallback to memory cache
 
 **Context File:** `.kiro/specs/market-pulse/context/2.3-context.md`
 **Exit Criteria:** Cache service works with Redis and memory fallback, statistics endpoint functional, tests pass
 
-#### 2.3.1 Install and configure Redis connection
+- [ ] ####  2.3.1 Install and configure Redis connection
 
 **Files to create:** `server/src/config/redis.ts`, `server/src/services/RedisService.ts`
 **Commands:** `npm install redis`, `npm install -D @types/redis`
@@ -256,7 +256,7 @@
 **Validation:** Redis connects successfully, health checks pass
 **Commit:** `feat: configure Redis connection with health monitoring`
 
-#### 2.3.2 Implement memory cache fallback system
+- [ ] ####  2.3.2 Implement memory cache fallback system
 
 **Files to create:** `server/src/services/MemoryCacheService.ts`, `server/src/services/CacheService.ts`
 **Detailed Implementation:**
@@ -269,7 +269,7 @@
 **Validation:** Fallback works correctly, memory cache functional
 **Commit:** `feat: implement memory cache fallback system`
 
-#### 2.3.3 Create cache service with TTL management
+- [ ] ####  2.3.3 Create cache service with TTL management
 
 **Files to create:** `server/src/services/CacheManager.ts`, `server/src/utils/cacheUtils.ts`
 **Detailed Implementation:**
@@ -282,7 +282,7 @@
 **Validation:** Cache operations work correctly, TTL enforced properly
 **Commit:** `feat: implement cache service with TTL management`
 
-#### 2.3.4 Add cache statistics and monitoring endpoints
+- [ ] ####  2.3.4 Add cache statistics and monitoring endpoints
 
 **Files to create:** `server/src/controllers/cacheController.ts`, `server/src/routes/cache.ts`
 **Detailed Implementation:**
@@ -295,7 +295,7 @@
 **Validation:** Statistics endpoints work, metrics accurate
 **Commit:** `feat: add cache statistics and monitoring endpoints`
 
-#### 2.3.5 Implement cache warming and background refresh
+- [ ] ####  2.3.5 Implement cache warming and background refresh
 
 **Files to create:** `server/src/services/CacheWarmingService.ts`, `server/src/utils/backgroundTasks.ts`
 **Detailed Implementation:**
@@ -308,7 +308,7 @@
 **Validation:** Cache warming works, background refresh functional
 **Commit:** `feat: implement cache warming and background refresh`
 
-#### 2.3.6 Write comprehensive cache tests
+- [ ] ####  2.3.6 Write comprehensive cache tests
 
 **Files to create:** `server/src/__tests__/cache.test.ts`, `server/src/__tests__/cacheService.test.ts`
 **Detailed Implementation:**

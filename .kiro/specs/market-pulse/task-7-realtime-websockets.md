@@ -65,12 +65,12 @@
 
 ## Subtasks
 
-### 7.1 Set up WebSocket server infrastructure
+- [ ] ### 7.1 Set up WebSocket server infrastructure
 
 **Context File:** `.kiro/specs/market-pulse/context/7.1-context.md`
 **Exit Criteria:** WebSocket server running, connection handling working, message routing functional, tests pass
 
-#### 7.1.1 Install and configure WebSocket server
+- [ ] ####  7.1.1 Install and configure WebSocket server
 
 **Files to create:** `server/src/websocket/WebSocketServer.ts`, `server/src/websocket/ConnectionManager.ts`
 **Commands:** `npm install ws @types/ws socket.io @types/socket.io`
@@ -106,7 +106,7 @@ interface ConnectionManager {
 **Validation:** WebSocket server starts correctly, connections accepted
 **Commit:** `feat: set up WebSocket server with Socket.IO and connection management`
 
-#### 7.1.2 Implement message routing and event handling
+- [ ] ####  7.1.2 Implement message routing and event handling
 
 **Files to create:** `server/src/websocket/MessageRouter.ts`, `server/src/websocket/EventHandlers.ts`
 **Detailed Implementation:**
@@ -140,7 +140,7 @@ interface EventHandler {
 **Validation:** Message routing works correctly, event handlers functional
 **Commit:** `feat: implement WebSocket message routing and event handling`
 
-#### 7.1.3 Create subscription management system
+- [ ] ####  7.1.3 Create subscription management system
 
 **Files to create:** `server/src/websocket/SubscriptionManager.ts`, `server/src/websocket/RoomManager.ts`
 **Detailed Implementation:**
@@ -172,7 +172,7 @@ interface Subscription {
 **Validation:** Subscription system works correctly, room management functional
 **Commit:** `feat: create subscription management system with room support`
 
-#### 7.1.4 Add WebSocket authentication and security
+- [ ] ####  7.1.4 Add WebSocket authentication and security
 
 **Files to create:** `server/src/websocket/WebSocketAuth.ts`, `server/src/middleware/websocketSecurity.ts`
 **Detailed Implementation:**
@@ -203,7 +203,7 @@ interface SecurityConfig {
 **Validation:** Authentication works correctly, security measures functional
 **Commit:** `feat: add WebSocket authentication and security measures`
 
-#### 7.1.5 Implement connection monitoring and health checks
+- [ ] ####  7.1.5 Implement connection monitoring and health checks
 
 **Files to create:** `server/src/websocket/ConnectionMonitor.ts`, `server/src/websocket/HealthChecker.ts`
 **Detailed Implementation:**
@@ -235,7 +235,7 @@ interface ConnectionMetrics {
 **Validation:** Monitoring works correctly, health checks functional
 **Commit:** `feat: implement connection monitoring and health checks`
 
-#### 7.1.6 Write comprehensive WebSocket server tests
+- [ ] ####  7.1.6 Write comprehensive WebSocket server tests
 
 **Files to create:** `server/src/__tests__/websocket/WebSocketServer.test.ts`, `server/src/__tests__/websocket/SubscriptionManager.test.ts`
 **Detailed Implementation:**
@@ -252,12 +252,12 @@ interface ConnectionMetrics {
 
 **Requirements:** 3.3, 3.4, 10.4
 
-### 7.2 Create client-side WebSocket integration
+- [ ] ### 7.2 Create client-side WebSocket integration
 
 **Context File:** `.kiro/specs/market-pulse/context/7.2-context.md`
 **Exit Criteria:** Client WebSocket connection working, auto-reconnection functional, state management integrated, tests pass
 
-#### 7.2.1 Set up client WebSocket connection
+- [ ] ####  7.2.1 Set up client WebSocket connection
 
 **Files to create:** `src/services/WebSocketService.ts`, `src/hooks/useWebSocket.ts`
 **Commands:** `npm install socket.io-client`
@@ -293,7 +293,7 @@ interface UseWebSocketReturn {
 **Validation:** WebSocket client connects correctly, state management works
 **Commit:** `feat: create client WebSocket service with connection management`
 
-#### 7.2.2 Implement real-time data subscriptions
+- [ ] ####  7.2.2 Implement real-time data subscriptions
 
 **Files to create:** `src/hooks/useRealTimeData.ts`, `src/services/DataSubscriptionService.ts`
 **Detailed Implementation:**
@@ -326,7 +326,7 @@ interface RealTimeDataResult<T> {
 **Validation:** Real-time subscriptions work correctly, data updates received
 **Commit:** `feat: implement real-time data subscriptions with React hooks`
 
-#### 7.2.3 Create connection state management
+- [ ] ####  7.2.3 Create connection state management
 
 **Files to create:** `src/stores/websocketStore.ts`, `src/components/ConnectionStatus.tsx`
 **Detailed Implementation:**
@@ -358,7 +358,7 @@ interface ConnectionStatusProps {
 **Validation:** Connection state management works correctly, UI updates properly
 **Commit:** `feat: create WebSocket connection state management with UI`
 
-#### 7.2.4 Implement message handling and processing
+- [ ] ####  7.2.4 Implement message handling and processing
 
 **Files to create:** `src/services/MessageProcessor.ts`, `src/utils/messageValidation.ts`
 **Detailed Implementation:**
@@ -392,7 +392,7 @@ interface ProcessedMessage {
 **Validation:** Message processing works correctly, validation functional
 **Commit:** `feat: implement message handling and processing pipeline`
 
-#### 7.2.5 Add error handling and recovery mechanisms
+- [ ] ####  7.2.5 Add error handling and recovery mechanisms
 
 **Files to create:** `src/services/WebSocketErrorHandler.ts`, `src/hooks/useConnectionRecovery.ts`
 **Detailed Implementation:**
@@ -424,7 +424,7 @@ interface ConnectionRecoveryOptions {
 **Validation:** Error handling works correctly, recovery mechanisms functional
 **Commit:** `feat: add WebSocket error handling and recovery mechanisms`
 
-#### 7.2.6 Write comprehensive client WebSocket tests
+- [ ] ####  7.2.6 Write comprehensive client WebSocket tests
 
 **Files to create:** `src/services/__tests__/WebSocketService.test.ts`, `src/hooks/__tests__/useRealTimeData.test.ts`
 **Detailed Implementation:**
@@ -441,12 +441,12 @@ interface ConnectionRecoveryOptions {
 
 **Requirements:** 3.3, 10.4
 
-### 7.3 Integrate real-time updates with UI components
+- [ ] ### 7.3 Integrate real-time updates with UI components
 
 **Context File:** `.kiro/specs/market-pulse/context/7.3-context.md`
 **Exit Criteria:** UI components update in real-time, animations smooth, performance optimized, accessibility maintained, tests pass
 
-#### 7.3.1 Update widgets with real-time data integration
+- [ ] ####  7.3.1 Update widgets with real-time data integration
 
 **Files to create:** `src/components/widgets/RealTimeAssetWidget.tsx`, `src/hooks/useRealTimeWidget.ts`
 **Detailed Implementation:**
@@ -477,7 +477,7 @@ interface UseRealTimeWidgetOptions {
 **Validation:** Widgets update in real-time, animations smooth
 **Commit:** `feat: integrate real-time data updates with widget components`
 
-#### 7.3.2 Implement price change animations and highlights
+- [ ] ####  7.3.2 Implement price change animations and highlights
 
 **Files to create:** `src/components/animations/PriceChangeAnimation.tsx`, `src/hooks/usePriceAnimation.ts`
 **Detailed Implementation:**
@@ -509,7 +509,7 @@ interface UsePriceAnimationOptions {
 **Validation:** Price animations work smoothly, accessibility maintained
 **Commit:** `feat: implement price change animations with accessibility support`
 
-#### 7.3.3 Create real-time chart updates
+- [ ] ####  7.3.3 Create real-time chart updates
 
 **Files to create:** `src/components/charts/RealTimeChart.tsx`, `src/hooks/useRealTimeChart.ts`
 **Detailed Implementation:**
@@ -540,7 +540,7 @@ interface ChartDataBuffer {
 **Validation:** Real-time charts update smoothly, performance optimized
 **Commit:** `feat: create real-time chart updates with performance optimization`
 
-#### 7.3.4 Add connection status indicators to UI
+- [ ] ####  7.3.4 Add connection status indicators to UI
 
 **Files to create:** `src/components/ui/ConnectionIndicator.tsx`, `src/components/ui/DataFreshnessIndicator.tsx`
 **Detailed Implementation:**
@@ -570,7 +570,7 @@ interface DataFreshnessIndicatorProps {
 **Validation:** Status indicators work correctly, user feedback clear
 **Commit:** `feat: add connection status and data freshness indicators`
 
-#### 7.3.5 Implement performance optimization for real-time updates
+- [ ] ####  7.3.5 Implement performance optimization for real-time updates
 
 **Files to create:** `src/utils/realTimeOptimization.ts`, `src/hooks/useOptimizedUpdates.ts`
 **Detailed Implementation:**
@@ -601,7 +601,7 @@ interface PerformanceMetrics {
 **Validation:** Performance optimization works correctly, metrics improved
 **Commit:** `feat: implement performance optimization for real-time updates`
 
-#### 7.3.6 Write comprehensive real-time UI tests
+- [ ] ####  7.3.6 Write comprehensive real-time UI tests
 
 **Files to create:** `src/components/__tests__/RealTimeWidget.test.tsx`, `src/hooks/__tests__/useRealTimeChart.test.ts`
 **Detailed Implementation:**

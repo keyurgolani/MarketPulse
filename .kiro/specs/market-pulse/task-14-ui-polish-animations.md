@@ -24,7 +24,7 @@ Create a visually appealing and smooth user interface with professional animatio
 
 ## Implementation Tasks
 
-### 14.1 Implement Smooth Animations and Transitions
+- [ ] ### 14.1 Implement Smooth Animations and Transitions
 
 **Context File:** `.kiro/specs/market-pulse/context/14.1-context.md`
 **Exit Criteria:** Animations smooth at 60fps, transitions enhance UX, micro-interactions delightful, performance optimized, tests pass
@@ -98,7 +98,7 @@ Create a visually appealing and smooth user interface with professional animatio
 
 _Requirements: 7.2, 10.1, 10.2_
 
-### 14.2 Build Comprehensive Loading and Error States
+- [ ] ### 14.2 Build Comprehensive Loading and Error States
 
 **Context File:** `.kiro/specs/market-pulse/context/14.2-context.md`
 **Exit Criteria:** Loading states prevent layout shifts, error handling graceful, retry mechanisms work, user feedback clear, tests comprehensive
@@ -172,7 +172,7 @@ _Requirements: 7.2, 10.1, 10.2_
 
 _Requirements: 10.1, 10.2, 10.3, 10.4_
 
-### 14.3 Advanced UI Polish and Refinements
+- [ ] ### 14.3 Advanced UI Polish and Refinements
 
 **Context File:** `.kiro/specs/market-pulse/context/14.3-context.md`
 **Exit Criteria:** UI polish enhances professional appearance, interactions feel premium, performance optimized, accessibility maintained, tests pass

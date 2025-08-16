@@ -23,7 +23,7 @@ Create a flexible dashboard layout system with configurable widgets that allow u
 
 ## Implementation Tasks
 
-### 9.1 Implement Dashboard Layout and Navigation
+- [ ] ### 9.1 Implement Dashboard Layout and Navigation
 
 **Context File:** `.kiro/specs/market-pulse/context/9.1-context.md`
 **Exit Criteria:** Dashboard grid responsive, navigation functional, creation/editing works, tests pass
@@ -97,7 +97,7 @@ Create a flexible dashboard layout system with configurable widgets that allow u
 
 _Requirements: 1.1, 1.2, 2.1, 2.2, 8.1, 8.2_
 
-### 9.2 Build Configurable Widget System
+- [ ] ### 9.2 Build Configurable Widget System
 
 **Context File:** `.kiro/specs/market-pulse/context/9.2-context.md`
 **Exit Criteria:** Base widget system functional, configuration UI works, drag-and-drop operational, tests comprehensive
@@ -171,7 +171,7 @@ _Requirements: 1.1, 1.2, 2.1, 2.2, 8.1, 8.2_
 
 _Requirements: 2.2, 2.3, 9.1, 9.2, 9.3_
 
-### 9.3 Create Asset List and Grid Widgets
+- [ ] ### 9.3 Create Asset List and Grid Widgets
 
 **Context File:** `.kiro/specs/market-pulse/context/9.3-context.md`
 **Exit Criteria:** Asset widgets display real-time data, sorting/filtering works, watchlist management functional, tests pass
