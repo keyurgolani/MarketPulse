@@ -1,7 +1,16 @@
 import { Request, Response } from 'express';
 import { asyncHandler } from '@/middleware/errorHandler';
 import { cacheService } from '@/services/CacheService';
+import { enhancedCacheService } from '@/services/EnhancedCacheService';
+import { CacheMonitoringService } from '@/services/CacheMonitoringService';
+import { getInvalidationPatterns } from '@/config/cache';
 import { logger } from '@/utils/logger';
+
+// Initialize monitoring service
+const monitoringService = new CacheMonitoringService(
+  cacheService,
+  enhancedCacheService
+);
 
 export const getCacheStats = asyncHandler(
   async (req: Request, res: Response) => {
@@ -276,3 +285,113 @@ export const reconnectRedis = asyncHandler(
     });
   }
 );
+
+export const getEnhancedStats = asyncHandler(
+  async (req: Request, res: Response) => {
+    const health = await enhancedCacheService.getHealth();
+    const summary = monitoringService.getPerformanceSummary();
+
+    res.json({
+      success: true,
+      data: {
+        health,
+        summary,
+      },
+      timestamp: new Date().toISOString(),
+    });
+  }
+);
+
+export const getDashboard = asyncHandler(
+  async (req: Request, res: Response) => {
+    const dashboardData = await monitoringService.getDashboardData();
+
+    res.json({
+      success: true,
+      data: dashboardData,
+      timestamp: new Date().toISOString(),
+    });
+  }
+);
+
+export const invalidateByType = asyncHandler(
+  async (req: Request, res: Response) => {
+    const { type } = req.params;
+    const validTypes = ['assets', 'news', 'all'] as const;
+
+    if (!validTypes.includes(type as 'assets' | 'news' | 'all')) {
+      res.status(400).json({
+        success: false,
+        error: `Invalid invalidation type. Must be one of: ${validTypes.join(', ')}`,
+        timestamp: new Date().toISOString(),
+      });
+      return;
+    }
+
+    const patterns = getInvalidationPatterns(type as 'assets' | 'news' | 'all');
+    const deleted = await enhancedCacheService.invalidateByPattern(patterns);
+
+    logger.info(`Cache invalidated by type: ${type}`, {
+      ip: req.ip,
+      userAgent: req.get('User-Agent'),
+      type,
+      patterns,
+      deleted,
+    });
+
+    res.json({
+      success: true,
+      message: `Invalidated ${deleted} cache entries for type: ${type}`,
+      data: {
+        type,
+        patterns,
+        deleted,
+      },
+      timestamp: new Date().toISOString(),
+    });
+  }
+);
+
+export const markRateLimited = asyncHandler(
+  async (req: Request, res: Response) => {
+    const { key, duration = 3600 } = req.body;
+
+    if (!key) {
+      res.status(400).json({
+        success: false,
+        error: 'Cache key is required',
+        timestamp: new Date().toISOString(),
+      });
+      return;
+    }
+
+    enhancedCacheService.markRateLimited(key, duration);
+
+    logger.info(`Key marked as rate limited: ${key}`, {
+      ip: req.ip,
+      userAgent: req.get('User-Agent'),
+      key,
+      duration,
+    });
+
+    res.json({
+      success: true,
+      message: `Key marked as rate limited: ${key}`,
+      data: {
+        key,
+        duration,
+      },
+      timestamp: new Date().toISOString(),
+    });
+  }
+);
+
+export const getMetrics = asyncHandler(async (req: Request, res: Response) => {
+  const metrics = enhancedCacheService.getMetrics();
+
+  res.json({
+    success: true,
+    data: metrics,
+    timestamp: new Date().toISOString(),
+  });
+});

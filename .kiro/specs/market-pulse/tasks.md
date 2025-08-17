@@ -2,577 +2,700 @@
 
 ## Overview
 
-This implementation plan is divided into detailed task files for better organization and maintainability. Each uber-level task has its own dedicated file with comprehensive implementation details.
+This implementation plan follows a logical development sequence, building from foundational infrastructure through core functionality to advanced features and deployment. Each task builds upon previous work and maintains clear dependencies.
+
+## Development Phases
+
+### Phase 1: Foundation & Infrastructure (Tasks 1-3)
+
+Core project setup, backend infrastructure, and type definitions
+
+### Phase 2: Data Layer & External Integration (Tasks 4-6)
+
+External APIs, caching systems, and core API endpoints
+
+### Phase 3: Frontend Architecture & UI Foundation (Tasks 7-8)
+
+React setup, state management, and design system
+
+### Phase 4: Core Features & Visualization (Tasks 9-12)
+
+Dashboard system, charts, news integration, and real-time updates
+
+### Phase 5: Polish & Production (Tasks 13-17)
+
+Responsive design, animations, testing, deployment, and final polish
 
 ## Task Files Structure
 
-- [ ] ### Individual Task Files
+### Phase 1: Foundation & Infrastructure
 
-- [x] ** Task1: Project Setup and Core Infrastructure](./task-1-project-setup.md)** ✅
+- [x] **[Task 1: Project Setup and Core Infrastructure](./task-1-project-setup.md)** ✅
   - Git repository initialization
   - React/TypeScript/Vite setup
   - Build tools and linting configuration
   - Testing framework setup
   - Pre-commit hooks and code quality
 
-- [x] ** Task2: Backend Core Infrastructure and Database Setup](./task-2-backend-infrastructure.md)** ✅
+- [x] **[Task 2: Backend Core Infrastructure and Database Setup](./task-2-backend-infrastructure.md)** ✅
   - Express.js server with TypeScript
   - SQLite database schema and migrations
   - Redis caching with memory fallback
   - Health monitoring and logging
 
-- [x] ** Task3: Data Models and Type Definitions](./task-3-data-models.md)** ✅
+- [x] **[Task 3: Data Models and Type Definitions](./task-3-data-models.md)** ✅
   - TypeScript interfaces and validation
   - API contracts and request/response types
   - Error handling and logging types
   - Comprehensive type safety
 
-- [ ] ** Task4: External API Integration and Data Aggregation](./task-4-external-api-integration.md)**
+### Phase 2: Data Layer & External Integration
+
+- [x] **[Task 4: External API Integration and Data Aggregation](./task-4-external-api-integration.md)** ✅
   - Yahoo Finance API client
   - Google Finance fallback system
   - News aggregation service
   - Rate limiting and caching
 
-- [ ] ** Task5: Frontend Core Components and UI Foundation](./task-5-frontend-components.md)**
-  - Base UI components with accessibility
-  - Responsive layout system
-  - Theme system with dark/light mode
-  - Component testing and validation
+- [x] **[Task 5: Caching System and Performance Optimization](./task-5-caching-performance.md)** ✅
+  - Multi-level caching with TTL management
+  - Cache monitoring and performance metrics
+  - Background refresh and invalidation
+
+- [ ] **[Task 6: Core API Endpoints](./task-6-core-api-endpoints.md)**
+  - Dashboard management API endpoints
+  - Asset data API endpoints with caching
+  - News API endpoints with filtering
+
+### Phase 3: Frontend Architecture & UI Foundation
+
+- [ ] **[Task 7: Frontend Core Architecture and State Management](./task-7-frontend-architecture.md)**
+  - React application structure with routing
+  - Zustand state management implementation
+  - React Query for server state management
+
+- [ ] **[Task 8: Design System and Accessibility Foundation](./task-8-design-system-accessibility.md)**
+  - Accessible design system with Tailwind CSS
+  - Dark mode with smooth transitions
+  - Accessible UI components library
+
+### Phase 4: Core Features & Visualization
+
+- [ ] **[Task 9: Dashboard and Widget System](./task-9-dashboard-widgets.md)**
+  - Dashboard layout and navigation system
+  - Configurable widget system with drag-and-drop
+  - Asset list and grid widgets with real-time updates
+
+- [ ] **[Task 10: Data Visualization and Charts](./task-10-data-visualization.md)**
+  - Unified chart component with technical indicators
+  - Historical data visualization with zoom/pan
+  - Responsive chart layouts for all devices
+
+- [ ] **[Task 11: News and Content Integration](./task-11-news-integration.md)**
+  - News widget and article display
+  - News caching and real-time updates
+  - Content filtering and categorization
+
+- [ ] **[Task 12: Real-time Data and WebSocket Integration](./task-12-realtime-websockets.md)**
+  - WebSocket connection management
+  - Real-time UI update system
+  - Live data streaming and synchronization
+
+### Phase 5: Polish & Production
+
+- [ ] **[Task 13: Responsive Design and Mobile Optimization](./task-13-responsive-mobile.md)**
+  - Responsive layouts for all screen sizes
+  - Mobile optimization and touch interactions
+  - Performance optimization for mobile devices
+
+- [ ] **[Task 14: User Interface Polish and Animations](./task-14-ui-polish-animations.md)**
+  - Smooth animations and transitions
+  - Comprehensive loading and error states
+  - Advanced UI polish and refinements
+
+- [ ] **[Task 15: Comprehensive Testing Suite Implementation](./task-15-testing-qa.md)**
+  - Unit, integration, and E2E testing
+  - Performance and accessibility testing
+  - Validation and debugging scripts
+
+- [ ] **[Task 16: Production Deployment and Monitoring](./task-16-deployment-monitoring.md)**
+  - Production build and deployment pipeline
+  - Monitoring and logging systems
+  - Operations and maintenance procedures
+
+- [ ] **[Task 17: Code Quality, Refactoring, and Final Polish](./task-17-final-integration.md)**
+  - Code consolidation and refactoring
+  - Production deployment validation
+  - Comprehensive documentation and final testing
 
 ## Task Execution Guidelines
 
-**Before starting any task:**
+### Before Starting Any Task
 
-1. Check if `.kiro/specs/market-pulse/context/{task-number}-context.md` exists
-2. If it exists, load context and resume from last checkpoint
-3. If not, create the context file with task objective
-4. Perform comprehensive code analysis to identify best approach for implementation or potential issue spots
-5. Update context file after every sub-step with progress and changes
+1. **Context Management**
+   - Check if `.kiro/specs/market-pulse/context/{task-number}-context.md` exists
+   - If exists, load context and resume from last checkpoint
+   - If not, create context file with task objective and current state analysis
+   - Perform comprehensive code analysis to identify best implementation approach
 
-**During task execution:**
+2. **Dependency Verification**
+   - Verify all prerequisite tasks are completed
+   - Check that required infrastructure and dependencies are in place
+   - Validate that previous task outputs are functioning correctly
 
-- Update task context file continuously with objective, gathered context, and changes made
-- Run linting, compilation, build, and deployment checks after every change
-- Use browser console logs and Puppeteer for validation
-- Ensure backend-frontend integration symmetry
-- Add timeouts to commands that might hang
-- Reference project context file for known failing commands and alternatives
-- Follow test-driven development: write tests before implementing components
+### During Task Execution
 
-**Strict TypeScript Guidelines:**
+- **Continuous Documentation**: Update task context file with objective, progress, and changes
+- **Quality Assurance**: Run linting, compilation, build, and deployment checks after every change
+- **Integration Testing**: Ensure backend-frontend integration symmetry
+- **Validation**: Use browser console logs and automated scripts for validation
+- **Reference Management**: Use project context file for known issues and solutions
+- **Test-Driven Development**: Write tests before implementing components
 
-- **Never use `any` type** - Always identify and use the correct specific type
-- **Explicit return types** - All public functions must have explicit return types
-- **Strict null checks** - Handle null and undefined cases explicitly
-- **Type guards** - Use type guards for runtime type checking
-- **Generic constraints** - Use extends for type safety in generics
-- Break large files into single-responsibility modules
-- Remove unused code and refactor for readability
-- **Improve existing functionality** instead of creating alternative versions (no `enhanced*`, `*v2`, `improved*` files)
-- **Always modify original files** when enhancing functionality to maintain single source of truth
-- **Create git commits** at substantial milestones within each task
-- Use conventional commit messages (feat:, fix:, refactor:, test:, docs:)
+### Strict TypeScript Guidelines
 
-**Task completion criteria:**
+- **Zero `any` Policy**: Never use `any` type - always identify and use correct specific types
+- **Explicit Return Types**: All public functions must have explicit return types
+- **Strict Null Checks**: Handle null and undefined cases explicitly
+- **Type Guards**: Use type guards for runtime type checking
+- **Generic Constraints**: Use extends for type safety in generics
+- **Single Responsibility**: Break large files into focused, single-responsibility modules
+- **Code Enhancement**: Improve existing functionality instead of creating alternatives
+- **No Duplicate Files**: Never create `enhanced*`, `*v2`, `improved*`, `*-new` files
+- **Single Source of Truth**: Always modify original files when enhancing functionality
 
-- All linting, compilation, build, and deployment errors resolved
-- Application loads cleanly in production (`./script/deploy.sh production`)
-- All features work including animations and interactions
-- Browser console shows no errors
-- Tests pass for implemented functionality
-- Context file updated with final status
-- No regression in existing functionality
-- **Git commit created** with descriptive message following conventional commit format
-- Working directory clean and changes properly versioned
+### Task Completion Criteria
 
-**Testing validation requirements:**
+- **Zero Errors**: All linting, compilation, build, and deployment errors resolved
+- **Production Ready**: Application loads cleanly in production (`./scripts/deploy.sh production`)
+- **Full Functionality**: All features work including animations and interactions
+- **Clean Console**: Browser console shows no errors or warnings
+- **Test Coverage**: Tests pass for all implemented functionality
+- **Documentation**: Context file updated with final status and lessons learned
+- **No Regression**: Existing functionality continues to work
+- **Version Control**: Git commit created with conventional commit message format
+- **Clean State**: Working directory clean and changes properly versioned
 
-- **test-results.md updated** - All test outcomes documented with issues and fixes
-- **Systematic test execution** - Run all applicable test categories for the task
-- **Issue resolution** - All identified problems fixed and marked complete
-- **Zero-error completion** - No test marked done until fully passing
-- **Regression testing** - Verify existing functionality still works after changes
+### Testing and Validation Requirements
 
-**Validation methodology:**
+- **Systematic Testing**: Execute all applicable test categories for the task
+- **Issue Tracking**: Document all problems in test-results.md with fixes
+- **Zero-Error Completion**: No test marked done until fully passing
+- **Regression Prevention**: Verify existing functionality after changes
+- **Comprehensive Validation**: Use browser console, automated scripts, and manual testing
 
-- **test-results.md tracking** - Document all testing progress and outcomes
-- **Systematic test execution** - Run applicable tests from 11 test categories
-- **Issue-driven development** - Log all problems, fix systematically, mark complete
-- Use browser console logs and Puppeteer scripts as primary validation
-- Run full test suite after each change
-- Validate end-to-end application behavior
-- Check responsive design across all device types
-- Verify accessibility compliance
-- **Zero-error policy** - No task complete until all tests pass
-
-## Project Context File
+## Project Context Management
 
 Maintain `.kiro/specs/market-pulse/project-context.md` with:
 
-- Commands that have failed and their working alternatives
-- Temporary/debug/test files and their purposes
-- Validation scripts that can be reused
-- Known issues and their solutions
-- Components with duplicate implementations that need consolidation
+- **Command Alternatives**: Failed commands and their working alternatives
+- **File Tracking**: Temporary/debug/test files and their purposes
+- **Reusable Scripts**: Validation scripts that can be reused across tasks
+- **Issue Solutions**: Known issues and their documented solutions
+- **Code Consolidation**: Components with duplicate implementations needing consolidation
 
-## Task Summary
+## Task Execution Status
 
-- [ ] ### Task Execution Status
+### Phase 1: Foundation & Infrastructure ✅
 
-- [ ] Task 1: Project Setup and Core Infrastructure
+- [x] Task 1: Project Setup and Core Infrastructure ✅
 - [x] Task 2: Backend Core Infrastructure and Database Setup ✅
 - [x] Task 3: Data Models and Type Definitions ✅
+
+### Phase 2: Data Layer & External Integration
+
 - [x] Task 4: External API Integration and Data Aggregation ✅
-- [ ] Task 5: Frontend Core Components and UI Foundation
-- [ ] Task 6: Dashboard Widgets and Data Visualization
-- [ ] Task 7: Real-time Data and WebSocket Integration
-- [ ] Task 8: User Management and Preferences
+- [x] Task 5: Caching System and Performance Optimization ✅
+- [ ] Task 6: Core API Endpoints
+
+### Phase 3: Frontend Architecture & UI Foundation
+
+- [ ] Task 7: Frontend Core Architecture and State Management
+- [ ] Task 8: Design System and Accessibility Foundation
+
+### Phase 4: Core Features & Visualization
+
 - [ ] Task 9: Dashboard and Widget System
 - [ ] Task 10: Data Visualization and Charts
 - [ ] Task 11: News and Content Integration
-- [ ] Task 12: Performance Optimization and Caching
-- [ ] Task 13: Accessibility and Responsive Design
+- [ ] Task 12: Real-time Data and WebSocket Integration
+
+### Phase 5: Polish & Production
+
+- [ ] Task 13: Responsive Design and Mobile Optimization
 - [ ] Task 14: User Interface Polish and Animations
 - [ ] Task 15: Comprehensive Testing Suite Implementation
 - [ ] Task 16: Production Deployment and Monitoring
 - [ ] Task 17: Code Quality, Refactoring, and Final Polish
 
-- [ ] ### All Task Files
-
-- [ ] ** Task6: Dashboard Widgets and Data Visualization](./task-6-dashboard-widgets.md)** ✅
-  - Dashboard layout and navigation system
-  - Configurable widget system with drag-and-drop
-  - Asset list and grid widgets with real-time updates
-
-- [ ] ** Task7: Real-time Data and WebSocket Integration](./task-7-realtime-websockets.md)** ✅
-  - WebSocket connection management
-  - Real-time UI update system
-  - Live data streaming and synchronization
-
-- [ ] ** Task8: User Management and Preferences](./task-8-user-management.md)** ✅
-  - User authentication and session management
-  - User preferences and settings system
-  - Profile management and customization
-
-- [ ] ** Task9: Dashboard and Widget System](./task-9-dashboard-widgets.md)** ✅
-  - Responsive dashboard grid system
-  - Widget marketplace and templates
-  - Asset display and watchlist management
-
-- [ ] ** Task10: Data Visualization and Charts](./task-10-data-visualization.md)** ✅
-  - Unified chart component with technical indicators
-  - Historical data visualization with zoom/pan
-  - Responsive chart layouts for all devices
-
-- [ ] ** Task11: News and Content Integration](./task-11-news-integration.md)** ✅
-  - News widget and article display
-  - News caching and real-time updates
-  - Content filtering and categorization
-
-- [ ] ** Task12: Performance Optimization and Caching](./task-12-performance-optimization.md)** ✅
-  - Advanced caching strategies
-  - Code splitting and lazy loading
-  - Memory management and performance monitoring
-
-- [ ] ** Task13: Accessibility and Responsive Design](./task-13-accessibility-responsive.md)** ✅
-  - WCAG-AA accessibility compliance
-  - Responsive design across all devices
-  - Advanced accessibility features
-
-- [ ] ** Task14: User Interface Polish and Animations](./task-14-ui-polish-animations.md)** ✅
-  - Smooth animations and transitions
-  - Comprehensive loading and error states
-  - Advanced UI polish and refinements
-
-- [ ] ** Task15: Comprehensive Testing Suite Implementation](./task-15-testing-qa.md)** ✅
-  - Unit, integration, and E2E testing
-  - Performance and accessibility testing
-  - Validation and debugging scripts
-
-- [ ] ** Task16: Production Deployment and Monitoring](./task-16-deployment-monitoring.md)** ✅
-  - Production build and deployment pipeline
-  - Monitoring and logging systems
-  - Operations and maintenance procedures
-
-- [ ] ** Task17: Code Quality, Refactoring, and Final Polish](./task-17-final-integration.md)** ✅
-  - Code consolidation and refactoring
-  - Production deployment validation
-  - Comprehensive documentation and final testing
-
 ## How to Use This Structure
 
-1. **Start with Task 1** - Always begin with project setup to establish the foundation
-2. **Follow the sequence** - Tasks are designed to build upon each other
-3. **Use individual task files** - Each task file contains detailed implementation steps
-4. **Track progress** - Update context files and maintain project documentation
-5. **Test continuously** - Run validation after each subtask completion
-6. **Commit frequently** - Create git commits at major milestones within each task
+1. **Sequential Execution**: Follow phases in order - each builds upon the previous
+2. **Phase Completion**: Complete all tasks in a phase before moving to the next
+3. **Context Tracking**: Use individual task files for detailed implementation steps
+4. **Progress Documentation**: Update context files and maintain project documentation
+5. **Continuous Testing**: Run validation after each subtask completion
+6. **Frequent Commits**: Create git commits at major milestones within each task
+7. **Dependency Management**: Verify prerequisites before starting each task
 
 ## Requirements Coverage
 
-Each task file includes a "Requirements Coverage" section that maps the implementation to the original requirements from the requirements.md file. This ensures complete feature coverage and traceability. types: `ApiResponse<T>`, `PaginatedResponse<T>`, `ErrorResponse` - Define utility types for form handling, validation, and state management - Add comprehensive JSDoc documentation for all interfaces - **Validation:** TypeScript compiles without errors, interfaces properly typed - **Commit:** `feat: define core TypeScript interfaces and API types`
+Each task file includes a "Requirements Coverage" section that maps the implementation to the original requirements from the requirements.md file. This ensures complete feature coverage and traceability. ## Detailed Task Breakdown
 
-    - [ ] 3.1.2 Implement Zod validation schemas
+### Phase 1: Foundation & Infrastructure
 
-      - **Files to create:** `src/utils/validation.ts`, `server/src/utils/validation.ts`
-      - **Commands:** `npm install zod`, `cd server && npm install zod`
-      - Create Zod schemas for all data models with strict validation rules
-      - Implement runtime type validation for API inputs and outputs
-      - Add custom validation functions for business logic constraints
-      - Create schema composition and transformation utilities
-      - **Validation:** Validation schemas work correctly, runtime type safety enforced
-      - **Commit:** `feat: implement Zod validation schemas for runtime type safety`
+#### Task 1: Project Setup and Core Infrastructure ✅
 
-    - [ ] 3.1.3 Create utility types and helper functions
+_Already completed - foundational setup with React, TypeScript, Vite, and development tools_
 
-      - **Files to create:** `src/types/utils.ts`, `src/utils/typeGuards.ts`
-      - Define utility types: `Optional<T>`, `Partial<T>`, `DeepPartial<T>`, `NonNullable<T>`
-      - Create type guards for runtime type checking
-      - Implement type assertion functions with proper error handling
-      - Add generic types for common patterns (pagination, sorting, filtering)
-      - **Validation:** Utility types work correctly, type guards function properly
-      - **Commit:** `feat: add utility types and type guard functions`
+#### Task 2: Backend Core Infrastructure and Database Setup ✅
 
-    - [ ] 3.1.4 Define error handling and response types
+_Already completed - Express server, SQLite database, Redis caching, and logging_
 
-      - **Files to create:** `src/types/errors.ts`, `server/src/types/errors.ts`
-      - Create error type hierarchy with specific error classes
-      - Define HTTP error response formats with proper status codes
-      - Implement error serialization and deserialization
-      - Add error context and debugging information types
-      - **Validation:** Error types work correctly, proper error handling enforced
-      - **Commit:** `feat: define comprehensive error handling types`
+#### Task 3: Data Models and Type Definitions ✅
 
-    - [ ] 3.1.5 Create form and validation types
+_Already completed - TypeScript interfaces, Zod validation, and comprehensive type safety_
 
-      - **Files to create:** `src/types/forms.ts`, `src/types/validation.ts`
-      - Define form field types with validation rules
-      - Create form state management types for React Hook Form
-      - Implement validation error types and display formats
-      - Add form submission and loading state types
-      - **Validation:** Form types work with React Hook Form, validation integrated
-      - **Commit:** `feat: create form and validation type definitions`
+### Phase 2: Data Layer & External Integration
 
-    - [ ] 3.1.6 Write comprehensive type tests
+#### Task 4: External API Integration and Data Aggregation ✅
 
-      - **Files to create:** `src/__tests__/types.test.ts`, `src/__tests__/validation.test.ts`
-      - Create tests for all validation schemas and type guards
-      - Test type safety and compile-time error detection
-      - Write tests for utility types and helper functions
-      - Test error handling and response type serialization
-      - **Validation:** All type tests pass, type safety verified
-      - **Commit:** `test: add comprehensive type and validation tests`
+_Already completed - Yahoo Finance API, Google Finance fallback, news aggregation, and rate limiting_
 
-    - _Requirements: 1.1, 2.1, 3.1, 5.1_
+#### Task 5: Caching System and Performance Optimization
 
-- [ ] 3.2 Implement database models with ORM integration
-  - **Context File:** `.kiro/specs/market-pulse/context/3.2-context.md`
-  - **Exit Criteria:** Database models work correctly, relationships enforced, CRUD operations tested, data integrity maintained
+- **Context File:** `.kiro/specs/market-pulse/context/5-context.md`
+- **Objective:** Implement multi-level caching with TTL management and performance monitoring
 
-  - [ ] 3.2.1 Create User model with authentication support
-    - **Files to create:** `server/src/models/User.ts`, `server/src/models/BaseModel.ts`
-    - Implement User model with fields: id, username, email, preferences, created_at, updated_at
-    - Add password hashing and authentication methods
-    - Implement user preference management and serialization
-    - Create base model class with common CRUD operations
-    - **Validation:** User model works correctly, authentication methods functional
-    - **Commit:** `feat: implement User model with authentication support`
+- [ ] 5.1 Implement aggressive caching strategy with TTL management
+  - **Context File:** `.kiro/specs/market-pulse/context/5.1-context.md`
+  - **Exit Criteria:** Multi-level caching works, TTL management functional, cache warming effective, tests comprehensive
+  - Build multi-level caching with configurable TTL for different data types
+  - Implement cache warming and background refresh mechanisms
+  - Create cache invalidation triggers and manual refresh endpoints
+  - Add cache statistics and monitoring dashboard
+  - **Validation:** Cache hit/miss ratios optimal, performance improved
+  - **Commit:** `feat: implement multi-level caching with TTL management`
+  - _Requirements: 4.1, 4.2, 4.3, 4.4_
 
-  - [ ] 3.2.2 Create Dashboard and Widget models
-    - **Files to create:** `server/src/models/Dashboard.ts`, `server/src/models/Widget.ts`
-    - Implement Dashboard model with user relationships and configuration
-    - Create Widget model with dashboard relationships and settings
-    - Add dashboard sharing and permission management
-    - Implement widget positioning and layout management
-    - **Validation:** Dashboard and Widget models work, relationships enforced
-    - **Commit:** `feat: implement Dashboard and Widget models with relationships`
+- [ ] 5.2 Add cache monitoring and performance metrics
+  - **Context File:** `.kiro/specs/market-pulse/context/5.2-context.md`
+  - **Exit Criteria:** Performance metrics tracked, monitoring dashboard functional, alerts configured
+  - Implement cache hit/miss ratio tracking
+  - Create performance monitoring for API response times
+  - Add memory usage monitoring and cleanup routines
+  - Build performance dashboard with real-time metrics
+  - **Validation:** Monitoring works correctly, performance optimized
+  - **Commit:** `feat: add cache monitoring and performance metrics`
+  - _Requirements: 4.1, 4.2_
 
-  - [ ] 3.2.3 Create Asset and MarketData models
-    - **Files to create:** `server/src/models/Asset.ts`, `server/src/models/MarketData.ts`
-    - Implement Asset model with symbol, name, type, and metadata
-    - Create MarketData model for historical and real-time price data
-    - Add asset categorization and tagging functionality
-    - Implement data aggregation and calculation methods
-    - **Validation:** Asset models work correctly, data calculations accurate
-    - **Commit:** `feat: implement Asset and MarketData models`
+#### Task 6: Core API Endpoints
 
-  - [ ] 3.2.4 Create NewsArticle and CacheMetadata models
-    - **Files to create:** `server/src/models/NewsArticle.ts`, `server/src/models/CacheMetadata.ts`
-    - Implement NewsArticle model with content, tags, and asset relationships
-    - Create CacheMetadata model for cache management and statistics
-    - Add article sentiment analysis and relevance scoring
-    - Implement cache expiration and invalidation tracking
-    - **Validation:** News and cache models functional, relationships work
-    - **Commit:** `feat: implement NewsArticle and CacheMetadata models`
+- **Context File:** `.kiro/specs/market-pulse/context/6-context.md`
+- **Objective:** Build comprehensive API endpoints with authentication, validation, and caching
 
-  - [ ] 3.2.5 Add model validation and sanitization
-    - **Files to create:** `server/src/middleware/modelValidation.ts`, `server/src/utils/sanitization.ts`
-    - Implement data validation at the model level using Zod schemas
-    - Add input sanitization to prevent XSS and injection attacks
-    - Create model-level business rule validation
-    - Implement data transformation and normalization
-    - **Validation:** Model validation works, data sanitization effective
-    - **Commit:** `feat: add model validation and data sanitization`
+- [ ] 6.1 Implement dashboard management API endpoints
+  - **Context File:** `.kiro/specs/market-pulse/context/6.1-context.md`
+  - **Exit Criteria:** CRUD endpoints functional, authentication working, validation comprehensive
+  - Create CRUD endpoints for dashboard operations
+  - Implement user authentication and authorization middleware
+  - Add validation for dashboard configuration and widget settings
+  - Build comprehensive error handling and logging
+  - **Validation:** All endpoints tested, security enforced
+  - **Commit:** `feat: implement dashboard management API endpoints`
+  - _Requirements: 1.1, 1.2, 1.3, 2.1, 2.2, 2.3_
 
-  - [ ] 3.2.6 Write comprehensive model tests
-    - **Files to create:** `server/src/__tests__/models/User.test.ts`, `server/src/__tests__/models/Dashboard.test.ts`, etc.
-    - Create unit tests for all model CRUD operations
-    - Test model relationships and constraint enforcement
-    - Write tests for validation and sanitization functions
-    - Test model business logic and calculated fields
-    - **Validation:** All model tests pass, coverage adequate
-    - **Commit:** `test: add comprehensive model and relationship tests`
+- [ ] 6.2 Build asset data API endpoints with caching
+  - **Context File:** `.kiro/specs/market-pulse/context/6.2-context.md`
+  - **Exit Criteria:** Asset endpoints functional, caching integrated, real-time updates working
+  - Implement `/api/assets/:symbols` endpoint with cache integration
+  - Create `/api/assets/:symbol/history` for historical data
+  - Add real-time data refresh endpoint `/api/cache/refresh`
+  - Build asset search and filtering capabilities
+  - **Validation:** Endpoints performant, caching effective
+  - **Commit:** `feat: build asset data API endpoints with caching`
+  - _Requirements: 3.1, 3.2, 3.3, 4.4_
 
-  - _Requirements: 1.1, 2.1, 2.2_
+- [ ] 6.3 Create news API endpoints
+  - **Context File:** `.kiro/specs/market-pulse/context/6.3-context.md`
+  - **Exit Criteria:** News endpoints functional, filtering works, caching optimized
+  - Implement `/api/news` endpoint with filtering and pagination
+  - Add news article caching and refresh mechanisms
+  - Create asset-specific news filtering
+  - Build news search and categorization
+  - **Validation:** News data accurate, performance optimized
+  - **Commit:** `feat: create news API endpoints with filtering`
+  - _Requirements: 5.1, 5.2, 5.3, 5.4_
 
-- [x] 4. External API Integration and Rate Limiting ✅
-  - **Context File:** `.kiro/specs/market-pulse/context/4-context.md`
-  - **Objective:** Build robust external API integration with multiple key management and fallback mechanisms
+### Phase 3: Frontend Architecture & UI Foundation
 
-  - [ ] 4.1 Implement data source configuration and API key management
-    - **Context File:** `.kiro/specs/market-pulse/context/4.1-context.md`
-    - **Exit Criteria:** Multiple API keys per source configured, automatic fallback works, rate limiting prevents throttling, tests validate key rotation
-    - Write tests for API key rotation and rate limiting scenarios
-    - Create configuration system for multiple data sources (Yahoo Finance, Google Finance)
-    - Implement secure API key storage and rotation mechanism with multiple keys per source
-    - Build rate limiting service with automatic key fallback on rate limit detection
-    - Add circuit breaker pattern for failing API sources
-    - Implement comprehensive logging and monitoring for API usage
-    - _Requirements: 3.2, 4.1, 4.2, 4.4_
+#### Task 7: Frontend Core Architecture and State Management
 
-  - [ ] 4.2 Build data aggregation service for market data
-    - **Context File:** `.kiro/specs/market-pulse/context/4.2-context.md`
-    - **Exit Criteria:** Data fetched from multiple sources, normalization works correctly, error handling robust, tests cover all scenarios
-    - Write comprehensive tests for data aggregation and normalization
-    - Implement service to fetch real-time asset data from multiple sources
-    - Create data normalization and validation for different API formats
-    - Add error handling and circuit breaker patterns for failing sources
-    - Implement retry logic with exponential backoff
-    - Add data quality validation and anomaly detection
-    - _Requirements: 3.1, 3.2, 3.3_
+- **Context File:** `.kiro/specs/market-pulse/context/7-context.md`
+- **Objective:** Establish React architecture with routing, state management, and server state handling
 
-  - [ ] 4.3 Implement news aggregation service
-    - **Context File:** `.kiro/specs/market-pulse/context/4.3-context.md`
-    - **Exit Criteria:** News fetched from multiple sources, article tagging works, caching effective, tests comprehensive
-    - Write tests for news aggregation and article processing
-    - Build service to fetch and aggregate news from multiple sources
-    - Implement article tagging with relevant asset symbols using NLP
-    - Create sentiment analysis integration for article classification
-    - Add duplicate article detection and deduplication
-    - Implement news source reliability scoring
-    - _Requirements: 5.1, 5.2, 5.3_
+- [ ] 7.1 Set up React application structure with routing
+  - **Context File:** `.kiro/specs/market-pulse/context/7.1-context.md`
+  - **Exit Criteria:** React app structured, routing functional, error boundaries working
+  - Initialize React app with TypeScript and React Router
+  - Create main application layout and routing structure
+  - Set up error boundaries for component-level error handling
+  - Build navigation system with active states
+  - **Validation:** Routing works, error handling comprehensive
+  - **Commit:** `feat: set up React application structure with routing`
+  - _Requirements: 6.1, 8.1, 10.1_
 
-- [ ] 5. Caching System and Performance Optimization
-  - [ ] 5.1 Implement aggressive caching strategy with TTL management
-    - Build multi-level caching with configurable TTL for different data types
-    - Implement cache warming and background refresh mechanisms
-    - Create cache invalidation triggers and manual refresh endpoints
-    - _Requirements: 4.1, 4.2, 4.3, 4.4_
+- [ ] 7.2 Implement state management with Zustand
+  - **Context File:** `.kiro/specs/market-pulse/context/7.2-context.md`
+  - **Exit Criteria:** Global state working, persistence functional, synchronization effective
+  - Create global state stores for user preferences, dashboards, and market data
+  - Implement state persistence and hydration
+  - Add state synchronization with backend APIs
+  - Build state debugging and development tools
+  - **Validation:** State management robust, persistence working
+  - **Commit:** `feat: implement state management with Zustand`
+  - _Requirements: 1.1, 2.1, 7.3_
 
-  - [ ] 5.2 Add cache monitoring and performance metrics
-    - Implement cache hit/miss ratio tracking
-    - Create performance monitoring for API response times
-    - Add memory usage monitoring and cleanup routines
-    - _Requirements: 4.1, 4.2_
+- [ ] 7.3 Set up React Query for server state management
+  - **Context File:** `.kiro/specs/market-pulse/context/7.3-context.md`
+  - **Exit Criteria:** Server state cached, background refetch working, error handling comprehensive
+  - Configure React Query with caching and background refetch
+  - Implement query invalidation and optimistic updates
+  - Add error handling and retry mechanisms for API calls
+  - Build query debugging and development tools
+  - **Validation:** Server state management efficient, caching optimal
+  - **Commit:** `feat: set up React Query for server state management`
+  - _Requirements: 3.3, 4.4, 10.2_
 
-- [ ] 6. Core API Endpoints
-  - [ ] 6.1 Implement dashboard management API endpoints
-    - Create CRUD endpoints for dashboard operations
-    - Implement user authentication and authorization middleware
-    - Add validation for dashboard configuration and widget settings
-    - _Requirements: 1.1, 1.2, 1.3, 2.1, 2.2, 2.3_
+#### Task 8: Design System and Accessibility Foundation
 
-  - [ ] 6.2 Build asset data API endpoints with caching
-    - Implement `/api/assets/:symbols` endpoint with cache integration
-    - Create `/api/assets/:symbol/history` for historical data
-    - Add real-time data refresh endpoint `/api/cache/refresh`
-    - _Requirements: 3.1, 3.2, 3.3, 4.4_
+- **Context File:** `.kiro/specs/market-pulse/context/8-context.md`
+- **Objective:** Create accessible design system with WCAG-AA compliance and dark mode support
 
-  - [ ] 6.3 Create news API endpoints
-    - Implement `/api/news` endpoint with filtering and pagination
-    - Add news article caching and refresh mechanisms
-    - Create asset-specific news filtering
-    - _Requirements: 5.1, 5.2, 5.3, 5.4_
+- [ ] 8.1 Create accessible design system with Tailwind CSS
+  - **Context File:** `.kiro/specs/market-pulse/context/8.1-context.md`
+  - **Exit Criteria:** Design system WCAG-AA compliant, typography optimized, utilities comprehensive
+  - Build color palette with WCAG-AA compliant contrast ratios
+  - Create typography system optimized for financial data display
+  - Implement spacing, sizing, and layout utilities
+  - Add accessibility utilities and helper classes
+  - **Validation:** Accessibility compliance verified, design consistent
+  - **Commit:** `feat: create accessible design system with Tailwind CSS`
+  - _Requirements: 6.1, 6.2, 6.3_
 
-- [ ] 7. Frontend Core Architecture and State Management
-  - [ ] 7.1 Set up React application structure with routing
-    - Initialize React app with TypeScript and React Router
-    - Create main application layout and routing structure
-    - Set up error boundaries for component-level error handling
-    - _Requirements: 6.1, 8.1, 10.1_
+- [ ] 8.2 Implement dark mode with smooth transitions
+  - **Context File:** `.kiro/specs/market-pulse/context/8.2-context.md`
+  - **Exit Criteria:** Dark mode functional, transitions smooth, persistence working
+  - Create theme context and toggle functionality
+  - Implement smooth theme transitions with CSS animations
+  - Add theme persistence across browser sessions
+  - Build theme customization options
+  - **Validation:** Theme switching smooth, preferences saved
+  - **Commit:** `feat: implement dark mode with smooth transitions`
+  - _Requirements: 7.1, 7.2, 7.3_
 
-  - [ ] 7.2 Implement state management with Zustand
-    - Create global state stores for user preferences, dashboards, and market data
-    - Implement state persistence and hydration
-    - Add state synchronization with backend APIs
-    - _Requirements: 1.1, 2.1, 7.3_
+- [ ] 8.3 Build accessible UI components library
+  - **Context File:** `.kiro/specs/market-pulse/context/8.3-context.md`
+  - **Exit Criteria:** Components accessible, keyboard navigation working, screen reader support complete
+  - Create button, input, modal, and navigation components with full keyboard support
+  - Implement focus management and screen reader announcements
+  - Add ARIA labels and semantic HTML structure
+  - Build component testing with accessibility validation
+  - **Validation:** All components WCAG-AA compliant, keyboard accessible
+  - **Commit:** `feat: build accessible UI components library`
+  - _Requirements: 6.2, 6.3, 6.4_
 
-  - [ ] 7.3 Set up React Query for server state management
-    - Configure React Query with caching and background refetch
-    - Implement query invalidation and optimistic updates
-    - Add error handling and retry mechanisms for API calls
-    - _Requirements: 3.3, 4.4, 10.2_
+### Phase 4: Core Features & Visualization
 
-- [ ] 8. Design System and Accessibility Foundation
-  - [ ] 8.1 Create accessible design system with Tailwind CSS
-    - Build color palette with WCAG-AA compliant contrast ratios
-    - Create typography system optimized for financial data display
-    - Implement spacing, sizing, and layout utilities
-    - _Requirements: 6.1, 6.2, 6.3_
+#### Task 9: Dashboard and Widget System
 
-  - [ ] 8.2 Implement dark mode with smooth transitions
-    - Create theme context and toggle functionality
-    - Implement smooth theme transitions with CSS animations
-    - Add theme persistence across browser sessions
-    - _Requirements: 7.1, 7.2, 7.3_
+- **Context File:** `.kiro/specs/market-pulse/context/9-context.md`
+- **Objective:** Build responsive dashboard system with configurable widgets and asset management
 
-  - [ ] 8.3 Build accessible UI components library
-    - Create button, input, modal, and navigation components with full keyboard support
-    - Implement focus management and screen reader announcements
-    - Add ARIA labels and semantic HTML structure
-    - _Requirements: 6.2, 6.3, 6.4_
+- [ ] 9.1 Implement dashboard layout and navigation
+  - **Context File:** `.kiro/specs/market-pulse/context/9.1-context.md`
+  - **Exit Criteria:** Dashboard grid responsive, navigation functional, editing interface working
+  - Create responsive dashboard grid system
+  - Build navigation component with tab switching and active states
+  - Implement dashboard creation and editing interfaces
+  - Add dashboard templates and presets
+  - **Validation:** Layout responsive, navigation intuitive
+  - **Commit:** `feat: implement dashboard layout and navigation`
+  - _Requirements: 1.1, 1.2, 2.1, 2.2, 8.1, 8.2_
 
-- [ ] 9. Dashboard and Widget System
-  - [ ] 9.1 Implement dashboard layout and navigation
-    - Create responsive dashboard grid system
-    - Build navigation component with tab switching and active states
-    - Implement dashboard creation and editing interfaces
-    - _Requirements: 1.1, 1.2, 2.1, 2.2, 8.1, 8.2_
+- [ ] 9.2 Build configurable widget system
+  - **Context File:** `.kiro/specs/market-pulse/context/9.2-context.md`
+  - **Exit Criteria:** Widget system flexible, configuration working, drag-and-drop functional
+  - Create base widget component with common functionality
+  - Implement widget configuration and customization interfaces
+  - Add drag-and-drop widget positioning (optional enhancement)
+  - Build widget marketplace and templates
+  - **Validation:** Widgets configurable, positioning smooth
+  - **Commit:** `feat: build configurable widget system`
+  - _Requirements: 2.2, 2.3, 9.1, 9.2, 9.3_
 
-  - [ ] 9.2 Build configurable widget system
-    - Create base widget component with common functionality
-    - Implement widget configuration and customization interfaces
-    - Add drag-and-drop widget positioning (optional enhancement)
-    - _Requirements: 2.2, 2.3, 9.1, 9.2, 9.3_
+- [ ] 9.3 Create asset list and grid widgets
+  - **Context File:** `.kiro/specs/market-pulse/context/9.3-context.md`
+  - **Exit Criteria:** Asset widgets functional, real-time updates working, watchlist management complete
+  - Build asset display components with real-time price updates
+  - Implement sortable and filterable data tables
+  - Add asset selection and watchlist management
+  - Create asset comparison and analysis tools
+  - **Validation:** Asset data accurate, updates real-time
+  - **Commit:** `feat: create asset list and grid widgets`
+  - _Requirements: 2.1, 2.2, 3.1, 3.3, 9.2_
 
-  - [ ] 9.3 Create asset list and grid widgets
-    - Build asset display components with real-time price updates
-    - Implement sortable and filterable data tables
-    - Add asset selection and watchlist management
-    - _Requirements: 2.1, 2.2, 3.1, 3.3, 9.2_
+#### Task 10: Data Visualization and Charts
 
-- [ ] 10. Data Visualization and Charts
-  - **Context File:** `.kiro/specs/market-pulse/context/10-context.md`
-  - **Objective:** Create unified, reusable chart components with dynamic scaling and technical indicators
+- **Context File:** `.kiro/specs/market-pulse/context/10-context.md`
+- **Objective:** Create unified, reusable chart components with dynamic scaling and technical indicators
 
-  - [ ] 10.1 Implement dynamic chart components with Chart.js/Recharts
-    - **Context File:** `.kiro/specs/market-pulse/context/10.1-context.md`
-    - **Exit Criteria:** Single reusable chart component created, dynamic Y-axis scaling works, technical indicators functional, duplicate chart implementations removed, tests pass
-    - Write comprehensive tests for chart component and technical indicators
-    - **CRITICAL:** Identify and consolidate any duplicate chart implementations into single reusable component
-    - Create unified chart component with configurable chart types (line, candlestick, bar)
-    - Implement dynamic Y-axis scaling with automatic min/max bounds for better visibility
-    - Add technical indicators overlay (moving averages, RSI, MACD) with configurable parameters
-    - Ensure chart component follows single responsibility principle
-    - Add accessibility features for screen readers and keyboard navigation
-    - _Requirements: 9.1, 9.2, 9.3, 9.4_
+- [ ] 10.1 Implement dynamic chart components with Chart.js/Recharts
+  - **Context File:** `.kiro/specs/market-pulse/context/10.1-context.md`
+  - **Exit Criteria:** Single reusable chart component created, dynamic Y-axis scaling works, technical indicators functional, duplicate chart implementations removed, tests pass
+  - Write comprehensive tests for chart component and technical indicators
+  - **CRITICAL:** Identify and consolidate any duplicate chart implementations into single reusable component
+  - Create unified chart component with configurable chart types (line, candlestick, bar)
+  - Implement dynamic Y-axis scaling with automatic min/max bounds for better visibility
+  - Add technical indicators overlay (moving averages, RSI, MACD) with configurable parameters
+  - Ensure chart component follows single responsibility principle
+  - Add accessibility features for screen readers and keyboard navigation
+  - **Validation:** Charts render correctly, indicators accurate
+  - **Commit:** `feat: implement dynamic chart components with technical indicators`
+  - _Requirements: 9.1, 9.2, 9.3, 9.4_
 
-  - [ ] 10.2 Build historical data visualization
-    - **Context File:** `.kiro/specs/market-pulse/context/10.2-context.md`
-    - **Exit Criteria:** Time-series charts work across timeframes, zoom/pan functional, export works, performance optimized, tests comprehensive
-    - Write tests for historical data visualization and user interactions
-    - Create time-series charts with multiple timeframe support (1D, 1W, 1M, 3M, 1Y)
-    - Implement zoom and pan functionality for detailed analysis
-    - Add chart export and sharing capabilities (PNG, SVG, PDF)
-    - Optimize rendering performance for large datasets using virtualization
-    - Add data point tooltips with detailed information
-    - _Requirements: 9.1, 9.2, 9.3_
+- [ ] 10.2 Build historical data visualization
+  - **Context File:** `.kiro/specs/market-pulse/context/10.2-context.md`
+  - **Exit Criteria:** Time-series charts work across timeframes, zoom/pan functional, export works, performance optimized, tests comprehensive
+  - Write tests for historical data visualization and user interactions
+  - Create time-series charts with multiple timeframe support (1D, 1W, 1M, 3M, 1Y)
+  - Implement zoom and pan functionality for detailed analysis
+  - Add chart export and sharing capabilities (PNG, SVG, PDF)
+  - Optimize rendering performance for large datasets using virtualization
+  - Add data point tooltips with detailed information
+  - **Validation:** Historical data accurate, interactions smooth
+  - **Commit:** `feat: build historical data visualization with zoom/pan`
+  - _Requirements: 9.1, 9.2, 9.3_
 
-  - [ ] 10.3 Create responsive chart layouts
-    - **Context File:** `.kiro/specs/market-pulse/context/10.3-context.md`
-    - **Exit Criteria:** Charts responsive across all devices, touch gestures work, performance optimized, accessibility maintained
-    - Write tests for responsive behavior and touch interactions
-    - Implement responsive chart sizing for different screen sizes with breakpoint system
-    - Add touch gestures for mobile chart interaction (pinch, zoom, pan)
-    - Optimize chart performance for large datasets with lazy loading
-    - Ensure charts maintain accessibility across all device types
-    - Add loading states and error handling for chart data
-    - _Requirements: 8.1, 8.2, 8.3, 8.4_
+- [ ] 10.3 Create responsive chart layouts
+  - **Context File:** `.kiro/specs/market-pulse/context/10.3-context.md`
+  - **Exit Criteria:** Charts responsive across all devices, touch gestures work, performance optimized, accessibility maintained
+  - Write tests for responsive behavior and touch interactions
+  - Implement responsive chart sizing for different screen sizes with breakpoint system
+  - Add touch gestures for mobile chart interaction (pinch, zoom, pan)
+  - Optimize chart performance for large datasets with lazy loading
+  - Ensure charts maintain accessibility across all device types
+  - Add loading states and error handling for chart data
+  - **Validation:** Charts responsive, touch interactions smooth
+  - **Commit:** `feat: create responsive chart layouts with touch support`
+  - _Requirements: 8.1, 8.2, 8.3, 8.4_
 
-- [ ] 11. News and Content Integration
-  - [ ] 11.1 Build news widget and article display
-    - Create news article list component with infinite scrolling
-    - Implement article preview and full content display
-    - Add news filtering by asset symbols and date ranges
-    - _Requirements: 5.1, 5.2, 5.3_
+#### Task 11: News and Content Integration
 
-  - [ ] 11.2 Implement news caching and real-time updates
-    - Add client-side caching for news articles
-    - Implement background refresh for news content
-    - Create news update notifications and indicators
-    - _Requirements: 5.4, 5.5_
+- **Context File:** `.kiro/specs/market-pulse/context/11-context.md`
+- **Objective:** Build comprehensive news system with caching, filtering, and real-time updates
 
-- [ ] 12. Real-time Data Updates and WebSocket Integration
-  - [ ] 12.1 Implement WebSocket connection for live data
-    - Set up WebSocket server for real-time price updates
-    - Create client-side WebSocket connection management
-    - Add connection retry and error handling
-    - _Requirements: 3.3, 3.4_
+- [ ] 11.1 Build news widget and article display
+  - **Context File:** `.kiro/specs/market-pulse/context/11.1-context.md`
+  - **Exit Criteria:** News widget functional, article display working, filtering comprehensive
+  - Create news article list component with infinite scrolling
+  - Implement article preview and full content display
+  - Add news filtering by asset symbols and date ranges
+  - Build news search and categorization
+  - **Validation:** News display accurate, filtering effective
+  - **Commit:** `feat: build news widget and article display`
+  - _Requirements: 5.1, 5.2, 5.3_
 
-  - [ ] 12.2 Build real-time UI update system
-    - Implement selective component updates for price changes
-    - Add visual indicators for data freshness and updates
-    - Create smooth animations for price change highlights
-    - _Requirements: 3.3, 10.4_
+- [ ] 11.2 Implement news caching and real-time updates
+  - **Context File:** `.kiro/specs/market-pulse/context/11.2-context.md`
+  - **Exit Criteria:** News caching effective, real-time updates working, notifications functional
+  - Add client-side caching for news articles
+  - Implement background refresh for news content
+  - Create news update notifications and indicators
+  - Build news sentiment analysis display
+  - **Validation:** News updates real-time, caching optimal
+  - **Commit:** `feat: implement news caching and real-time updates`
+  - _Requirements: 5.4, 5.5_
 
-- [ ] 13. Responsive Design and Mobile Optimization
-  - [ ] 13.1 Implement responsive layouts for all screen sizes
-    - Create mobile-first responsive design with breakpoint system
-    - Implement touch-optimized navigation and interactions
-    - Add mobile-specific UI patterns and gestures
-    - _Requirements: 8.1, 8.2, 8.3, 8.4_
+#### Task 12: Real-time Data and WebSocket Integration
 
-  - [ ] 13.2 Optimize performance for mobile devices
-    - Implement lazy loading for images and heavy components
-    - Add service worker for offline functionality
-    - Optimize bundle size and loading performance
-    - _Requirements: 8.4_
+- **Context File:** `.kiro/specs/market-pulse/context/12-context.md`
+- **Objective:** Implement WebSocket connections for live data streaming and real-time UI updates
 
-- [ ] 14. User Interface Polish and Animations
-  - [ ] 14.1 Implement smooth animations and transitions
-    - Add Framer Motion for component animations
-    - Create loading states with skeleton screens
-    - Implement smooth page transitions and micro-interactions
-    - _Requirements: 7.2, 10.1, 10.2_
+- [ ] 12.1 Implement WebSocket connection for live data
+  - **Context File:** `.kiro/specs/market-pulse/context/12.1-context.md`
+  - **Exit Criteria:** WebSocket server functional, client connections stable, error handling robust
+  - Set up WebSocket server for real-time price updates
+  - Create client-side WebSocket connection management
+  - Add connection retry and error handling
+  - Build connection monitoring and health checks
+  - **Validation:** WebSocket connections stable, data streaming
+  - **Commit:** `feat: implement WebSocket connection for live data`
+  - _Requirements: 3.3, 3.4_
 
-  - [ ] 14.2 Build comprehensive loading and error states
-    - Create loading indicators that prevent layout shifts
-    - Implement error boundaries with user-friendly error messages
-    - Add retry mechanisms and error recovery options
-    - _Requirements: 10.1, 10.2, 10.3, 10.4_
+- [ ] 12.2 Build real-time UI update system
+  - **Context File:** `.kiro/specs/market-pulse/context/12.2-context.md`
+  - **Exit Criteria:** UI updates selective, visual indicators working, animations smooth
+  - Implement selective component updates for price changes
+  - Add visual indicators for data freshness and updates
+  - Create smooth animations for price change highlights
+  - Build real-time data synchronization across components
+  - **Validation:** UI updates efficient, animations smooth
+  - **Commit:** `feat: build real-time UI update system`
+  - _Requirements: 3.3, 10.4_
 
-- [ ] 15. Comprehensive Testing Suite Implementation
-  - **Context File:** `.kiro/specs/market-pulse/context/15-context.md`
-  - **Objective:** Build comprehensive test framework with feature-based test buckets and validation scripts
+### Phase 5: Polish & Production
 
-  - [ ] 15.1 Build unit test suite for core functionality
-    - **Context File:** `.kiro/specs/market-pulse/context/15.1-context.md`
-    - **Exit Criteria:** 100% unit test coverage for core functions, all tests pass, test buckets organized by feature
-    - Create comprehensive unit tests for all utility functions and services
-    - Test React components with React Testing Library including accessibility
-    - Implement backend API unit tests with proper mocking and error scenarios
-    - **Organize tests into feature buckets:** core, asset-graph, news, dashboard-layout, authentication, caching
-    - Add performance benchmarks for critical functions
-    - Ensure tests fail appropriately for edge cases and error conditions
-    - _Requirements: All requirements need unit test coverage_
+#### Task 13: Responsive Design and Mobile Optimization
 
-  - [ ] 15.2 Implement integration tests for API endpoints
-    - **Context File:** `.kiro/specs/market-pulse/context/15.2-context.md`
-    - **Exit Criteria:** All API endpoints tested, database integrity verified, cache behavior validated, error scenarios covered
-    - Create integration tests for all API endpoints with real database
-    - Test database operations and data integrity across transactions
-    - Add cache integration testing with Redis and memory fallback
-    - Test API rate limiting and key rotation mechanisms
-    - Validate error handling and recovery scenarios
-    - Add tests for concurrent user scenarios
-    - _Requirements: 1.1, 2.1, 3.1, 4.1, 5.1_
+- **Context File:** `.kiro/specs/market-pulse/context/13-context.md`
+- **Objective:** Ensure responsive design across all devices with mobile optimization
 
-  - [ ] 15.3 Build end-to-end test suite with Playwright
-    - **Context File:** `.kiro/specs/market-pulse/context/15.3-context.md`
-    - **Exit Criteria:** Critical user workflows tested, responsive design validated, accessibility compliance verified, browser compatibility confirmed
-    - Create E2E tests for critical user workflows (dashboard creation, asset management, news viewing)
-    - Test responsive design across different devices and screen sizes
-    - Add comprehensive accessibility testing with automated tools (axe-core)
+- [ ] 13.1 Implement responsive layouts for all screen sizes
+  - **Context File:** `.kiro/specs/market-pulse/context/13.1-context.md`
+  - **Exit Criteria:** Layouts responsive, touch interactions working, mobile patterns implemented
+  - Create mobile-first responsive design with breakpoint system
+  - Implement touch-optimized navigation and interactions
+  - Add mobile-specific UI patterns and gestures
+  - Build responsive grid system for all components
+  - **Validation:** All screen sizes supported, interactions smooth
+  - **Commit:** `feat: implement responsive layouts for all screen sizes`
+  - _Requirements: 8.1, 8.2, 8.3, 8.4_
+
+- [ ] 13.2 Optimize performance for mobile devices
+  - **Context File:** `.kiro/specs/market-pulse/context/13.2-context.md`
+  - **Exit Criteria:** Performance optimized, lazy loading working, offline functionality available
+  - Implement lazy loading for images and heavy components
+  - Add service worker for offline functionality
+  - Optimize bundle size and loading performance
+  - Build performance monitoring for mobile devices
+  - **Validation:** Mobile performance optimal, loading fast
+  - **Commit:** `feat: optimize performance for mobile devices`
+  - _Requirements: 8.4_
+
+#### Task 14: User Interface Polish and Animations
+
+- **Context File:** `.kiro/specs/market-pulse/context/14-context.md`
+- **Objective:** Add smooth animations, loading states, and comprehensive error handling
+
+- [ ] 14.1 Implement smooth animations and transitions
+  - **Context File:** `.kiro/specs/market-pulse/context/14.1-context.md`
+  - **Exit Criteria:** Animations smooth, loading states comprehensive, micro-interactions polished
+  - Add Framer Motion for component animations
+  - Create loading states with skeleton screens
+  - Implement smooth page transitions and micro-interactions
+  - Build animation system with consistent timing
+  - **Validation:** Animations smooth, loading states informative
+  - **Commit:** `feat: implement smooth animations and transitions`
+  - _Requirements: 7.2, 10.1, 10.2_
+
+- [ ] 14.2 Build comprehensive loading and error states
+  - **Context File:** `.kiro/specs/market-pulse/context/14.2-context.md`
+  - **Exit Criteria:** Loading states prevent layout shift, error handling comprehensive, recovery options available
+  - Create loading indicators that prevent layout shifts
+  - Implement error boundaries with user-friendly error messages
+  - Add retry mechanisms and error recovery options
+  - Build comprehensive error logging and reporting
+  - **Validation:** Error handling robust, recovery mechanisms working
+  - **Commit:** `feat: build comprehensive loading and error states`
+  - _Requirements: 10.1, 10.2, 10.3, 10.4_
+
+#### Task 15: Comprehensive Testing Suite Implementation
+
+- **Context File:** `.kiro/specs/market-pulse/context/15-context.md`
+- **Objective:** Build comprehensive test framework with feature-based test buckets and validation scripts
+
+- [ ] 15.1 Build unit test suite for core functionality
+  - **Context File:** `.kiro/specs/market-pulse/context/15.1-context.md`
+  - **Exit Criteria:** 100% unit test coverage for core functions, all tests pass, test buckets organized by feature
+  - Create comprehensive unit tests for all utility functions and services
+  - Test React components with React Testing Library including accessibility
+  - Implement backend API unit tests with proper mocking and error scenarios
+  - **Organize tests into feature buckets:** core, asset-graph, news, dashboard-layout, authentication, caching
+  - Add performance benchmarks for critical functions
+  - Ensure tests fail appropriately for edge cases and error conditions
+  - **Validation:** All unit tests pass, coverage comprehensive
+  - **Commit:** `test: build comprehensive unit test suite`
+  - _Requirements: All requirements need unit test coverage_
+
+- [ ] 15.2 Implement integration tests for API endpoints
+  - **Context File:** `.kiro/specs/market-pulse/context/15.2-context.md`
+  - **Exit Criteria:** All API endpoints tested, database integrity verified, cache behavior validated, error scenarios covered
+  - Create integration tests for all API endpoints with real database
+  - Test database operations and data integrity across transactions
+  - Add cache integration testing with Redis and memory fallback
+  - Test API rate limiting and key rotation mechanisms
+  - Validate error handling and recovery scenarios
+  - Add tests for concurrent user scenarios
+  - **Validation:** Integration tests comprehensive, API behavior verified
+  - **Commit:** `test: implement comprehensive integration tests`
+  - _Requirements: 1.1, 2.1, 3.1, 4.1, 5.1_
+
+- [ ] 15.3 Build end-to-end test suite with Playwright
+  - **Context File:** `.kiro/specs/market-pulse/context/15.3-context.md`
+  - **Exit Criteria:** Critical user workflows tested, responsive design validated, accessibility compliance verified, browser compatibility confirmed
+  - Create E2E tests for critical user workflows (dashboard creation, asset management, news viewing)
+  - Test responsive design across different devices and screen sizes
+  - Add comprehensive accessibility testing with automated tools
+  - Test browser compatibility across major browsers
+  - Build visual regression testing for UI consistency
+  - **Validation:** E2E tests cover critical workflows, accessibility verified
+  - **Commit:** `test: build comprehensive E2E test suite`
+  - _Requirements: 6.1, 6.2, 6.3, 6.4_
+
+#### Task 16: Production Deployment and Monitoring
+
+- **Context File:** `.kiro/specs/market-pulse/context/16-context.md`
+- **Objective:** Build production deployment pipeline with monitoring and operations procedures
+
+- [ ] 16.1 Build production deployment pipeline
+  - **Context File:** `.kiro/specs/market-pulse/context/16.1-context.md`
+  - **Exit Criteria:** Deployment pipeline functional, environment configuration complete, security measures implemented
+  - Create production build configuration with optimization
+  - Implement environment-specific configuration management
+  - Add security headers and HTTPS enforcement
+  - Build automated deployment scripts and validation
+  - **Validation:** Production deployment successful, security configured
+  - **Commit:** `feat: build production deployment pipeline`
+  - _Requirements: 10.1, 10.2, 10.3, 10.4_
+
+- [ ] 16.2 Implement monitoring and logging systems
+  - **Context File:** `.kiro/specs/market-pulse/context/16.2-context.md`
+  - **Exit Criteria:** Monitoring comprehensive, logging structured, alerts configured, dashboards functional
+  - Add comprehensive application monitoring and health checks
+  - Implement structured logging with log aggregation
+  - Create performance monitoring and alerting
+  - Build operational dashboards and metrics
+  - **Validation:** Monitoring working, alerts functional
+  - **Commit:** `feat: implement monitoring and logging systems`
+  - _Requirements: 10.1, 10.2_
+
+#### Task 17: Code Quality, Refactoring, and Final Polish
+
+- **Context File:** `.kiro/specs/market-pulse/context/17-context.md`
+- **Objective:** Final code consolidation, refactoring, and comprehensive validation
+
+- [ ] 17.1 Code consolidation and refactoring
+  - **Context File:** `.kiro/specs/market-pulse/context/17.1-context.md`
+  - **Exit Criteria:** Code consolidated, duplicates removed, architecture clean, documentation complete
+  - Identify and consolidate duplicate implementations
+  - Refactor code for consistency and maintainability
+  - Remove unused code and optimize imports
+  - Update documentation and code comments
+  - **Validation:** Code quality high, architecture clean
+  - **Commit:** `refactor: consolidate code and remove duplicates`
+  - _Requirements: All requirements_
+
+- [ ] 17.2 Final production validation and testing
+  - **Context File:** `.kiro/specs/market-pulse/context/17.2-context.md`
+  - **Exit Criteria:** Production deployment validated, all tests passing, performance optimized, documentation complete
+  - Run comprehensive test suite and fix any issues
+  - Validate production deployment and performance
+  - Complete final accessibility and security audits
+  - Update all documentation and deployment guides
+  - **Validation:** Production ready, all tests passing
+  - **Commit:** `feat: complete final production validation`
+  - \_Requirements: All requirements_cessibility testing with automated tools (axe-core)
     - Test browser compatibility across Chrome, Firefox, Safari, Edge
     - Validate keyboard navigation and screen reader compatibility
     - Add visual regression testing for UI consistency

@@ -9,6 +9,11 @@ import {
   setCacheValue,
   deleteCacheValue,
   reconnectRedis,
+  getEnhancedStats,
+  getDashboard,
+  invalidateByType,
+  markRateLimited,
+  getMetrics,
 } from '@/controllers/cacheController';
 
 const router = Router();
@@ -79,5 +84,41 @@ router.delete('/value/:key', deleteCacheValue);
  * @access Public
  */
 router.post('/reconnect', reconnectRedis);
+
+/**
+ * @route GET /api/cache/enhanced-stats
+ * @desc Get enhanced cache statistics with performance metrics
+ * @access Public
+ */
+router.get('/enhanced-stats', getEnhancedStats);
+
+/**
+ * @route GET /api/cache/dashboard
+ * @desc Get cache monitoring dashboard data
+ * @access Public
+ */
+router.get('/dashboard', getDashboard);
+
+/**
+ * @route POST /api/cache/invalidate/:type
+ * @desc Invalidate cache by type (assets, news, all)
+ * @access Public
+ */
+router.post('/invalidate/:type', invalidateByType);
+
+/**
+ * @route POST /api/cache/rate-limited
+ * @desc Mark a key as rate limited for adaptive TTL
+ * @body { key: string, duration?: number }
+ * @access Public
+ */
+router.post('/rate-limited', markRateLimited);
+
+/**
+ * @route GET /api/cache/metrics
+ * @desc Get current cache performance metrics
+ * @access Public
+ */
+router.get('/metrics', getMetrics);
 
 export { router as cacheRoutes };
