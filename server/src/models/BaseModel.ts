@@ -12,9 +12,9 @@ export interface BaseModelInterface {
 export abstract class BaseModel<T extends BaseModelInterface> {
   protected db: Database;
   protected tableName: string;
-  protected schema: z.ZodSchema<any>;
+  protected schema: z.ZodSchema<T>;
 
-  constructor(tableName: string, schema: z.ZodSchema<any>) {
+  constructor(tableName: string, schema: z.ZodSchema<T>) {
     this.db = getDatabase();
     this.tableName = tableName;
     this.schema = schema;
@@ -30,7 +30,7 @@ export abstract class BaseModel<T extends BaseModelInterface> {
   /**
    * Validate data against schema
    */
-  protected validate(data: any): T {
+  protected validate(data: unknown): T {
     try {
       return this.schema.parse(data);
     } catch (error) {
@@ -42,34 +42,45 @@ export abstract class BaseModel<T extends BaseModelInterface> {
   /**
    * Sanitize data for database insertion
    */
-  protected sanitize(data: Partial<T>): Record<string, any> {
-    const sanitized: Record<string, any> = {};
-    
+  protected sanitize(data: Partial<T>): Record<string, unknown> {
+    const sanitized: Record<string, unknown> = {};
+
     for (const [key, value] of Object.entries(data)) {
       if (value !== undefined) {
         // Convert objects to JSON strings for storage
-        if (typeof value === 'object' && value !== null && !(value instanceof Date)) {
+        if (
+          typeof value === 'object' &&
+          value !== null &&
+          !(value instanceof Date)
+        ) {
           sanitized[key] = JSON.stringify(value);
         } else {
           sanitized[key] = value;
         }
       }
     }
-    
+
     return sanitized;
   }
 
   /**
    * Deserialize data from database
    */
-  protected deserialize(data: any): T | null {
+  protected deserialize(data: unknown): T | null {
     if (!data) return null;
 
-    const deserialized: any = { ...data };
+    const deserialized: Record<string, unknown> = {
+      ...(data as Record<string, unknown>),
+    };
 
     // Parse JSON fields back to objects
     for (const [key, value] of Object.entries(deserialized)) {
-      if (typeof value === 'string' && (key.includes('config') || key.includes('metadata') || key.includes('preferences'))) {
+      if (
+        typeof value === 'string' &&
+        (key.includes('config') ||
+          key.includes('metadata') ||
+          key.includes('preferences'))
+      ) {
         try {
           deserialized[key] = JSON.parse(value);
         } catch {
@@ -84,11 +95,13 @@ export abstract class BaseModel<T extends BaseModelInterface> {
   /**
    * Create a new record
    */
-  public async create(data: Omit<T, 'id' | 'created_at' | 'updated_at'>): Promise<T> {
+  public async create(
+    data: Omit<T, 'id' | 'created_at' | 'updated_at'>
+  ): Promise<T> {
     try {
       const id = this.generateId();
       const now = new Date().toISOString();
-      
+
       const recordData = {
         id,
         ...data,
@@ -100,13 +113,15 @@ export abstract class BaseModel<T extends BaseModelInterface> {
       const sanitized = this.sanitize(validated);
 
       const columns = Object.keys(sanitized).join(', ');
-      const placeholders = Object.keys(sanitized).map(() => '?').join(', ');
+      const placeholders = Object.keys(sanitized)
+        .map(() => '?')
+        .join(', ');
       const values = Object.values(sanitized);
 
       const query = `INSERT INTO ${this.tableName} (${columns}) VALUES (${placeholders})`;
-      
+
       await this.db.run(query, values);
-      
+
       logger.info(`Created ${this.tableName} record with id: ${id}`);
       return validated;
     } catch (error) {
@@ -132,10 +147,14 @@ export abstract class BaseModel<T extends BaseModelInterface> {
   /**
    * Find all records with optional conditions
    */
-  public async findAll(conditions?: Record<string, any>, limit?: number, offset?: number): Promise<T[]> {
+  public async findAll(
+    conditions?: Record<string, unknown>,
+    limit?: number,
+    offset?: number
+  ): Promise<T[]> {
     try {
       let query = `SELECT * FROM ${this.tableName}`;
-      const params: any[] = [];
+      const params: unknown[] = [];
 
       if (conditions && Object.keys(conditions).length > 0) {
         const whereClause = Object.keys(conditions)
@@ -158,7 +177,9 @@ export abstract class BaseModel<T extends BaseModelInterface> {
       }
 
       const results = await this.db.all(query, params);
-      return results.map(result => this.deserialize(result)).filter(Boolean) as T[];
+      return results
+        .map(result => this.deserialize(result))
+        .filter(Boolean) as T[];
     } catch (error) {
       logger.error(`Failed to find all ${this.tableName} records:`, error);
       throw error;
@@ -168,7 +189,10 @@ export abstract class BaseModel<T extends BaseModelInterface> {
   /**
    * Update record by ID
    */
-  public async update(id: string, data: Partial<Omit<T, 'id' | 'created_at'>>): Promise<T | null> {
+  public async update(
+    id: string,
+    data: Partial<Omit<T, 'id' | 'created_at'>>
+  ): Promise<T | null> {
     try {
       const updateData = {
         ...data,
@@ -182,9 +206,9 @@ export abstract class BaseModel<T extends BaseModelInterface> {
       const values = [...Object.values(sanitized), id];
 
       const query = `UPDATE ${this.tableName} SET ${setClause} WHERE id = ?`;
-      
+
       const result = await this.db.run(query, values);
-      
+
       if (result.changes === 0) {
         return null;
       }
@@ -204,12 +228,12 @@ export abstract class BaseModel<T extends BaseModelInterface> {
     try {
       const query = `DELETE FROM ${this.tableName} WHERE id = ?`;
       const result = await this.db.run(query, [id]);
-      
+
       const deleted = (result.changes || 0) > 0;
       if (deleted) {
         logger.info(`Deleted ${this.tableName} record with id: ${id}`);
       }
-      
+
       return deleted;
     } catch (error) {
       logger.error(`Failed to delete ${this.tableName} record ${id}:`, error);
@@ -220,10 +244,10 @@ export abstract class BaseModel<T extends BaseModelInterface> {
   /**
    * Count records with optional conditions
    */
-  public async count(conditions?: Record<string, any>): Promise<number> {
+  public async count(conditions?: Record<string, unknown>): Promise<number> {
     try {
       let query = `SELECT COUNT(*) as count FROM ${this.tableName}`;
-      const params: any[] = [];
+      const params: unknown[] = [];
 
       if (conditions && Object.keys(conditions).length > 0) {
         const whereClause = Object.keys(conditions)
@@ -250,7 +274,10 @@ export abstract class BaseModel<T extends BaseModelInterface> {
       const result = await this.db.get(query, [id]);
       return !!result;
     } catch (error) {
-      logger.error(`Failed to check if ${this.tableName} record exists:`, error);
+      logger.error(
+        `Failed to check if ${this.tableName} record exists:`,
+        error
+      );
       throw error;
     }
   }
@@ -258,7 +285,10 @@ export abstract class BaseModel<T extends BaseModelInterface> {
   /**
    * Execute a custom query
    */
-  protected async executeQuery<R = any>(query: string, params: any[] = []): Promise<R[]> {
+  protected async executeQuery<R = unknown>(
+    query: string,
+    params: unknown[] = []
+  ): Promise<R[]> {
     try {
       const results = await this.db.all(query, params);
       return results as R[];
@@ -271,12 +301,18 @@ export abstract class BaseModel<T extends BaseModelInterface> {
   /**
    * Execute a custom query that returns a single result
    */
-  protected async executeQuerySingle<R = any>(query: string, params: any[] = []): Promise<R | null> {
+  protected async executeQuerySingle<R = unknown>(
+    query: string,
+    params: unknown[] = []
+  ): Promise<R | null> {
     try {
       const result = await this.db.get(query, params);
-      return result as R || null;
+      return (result as R) || null;
     } catch (error) {
-      logger.error(`Failed to execute single query on ${this.tableName}:`, error);
+      logger.error(
+        `Failed to execute single query on ${this.tableName}:`,
+        error
+      );
       throw error;
     }
   }

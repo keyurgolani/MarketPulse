@@ -26,7 +26,7 @@ describe('Logging Service', () => {
           }
         });
       }
-    } catch (error) {
+    } catch {
       // Ignore cleanup errors
     }
   });
@@ -43,13 +43,20 @@ describe('Logging Service', () => {
       const logFiles = await loggingService.getLogFiles();
       expect(Array.isArray(logFiles)).toBe(true);
       // In test environment, we might not have log files
-      logFiles.forEach((file: any) => {
-        expect(file).toHaveProperty('name');
-        expect(file).toHaveProperty('path');
-        expect(file).toHaveProperty('size');
-        expect(file).toHaveProperty('modified');
-        expect(file).toHaveProperty('lines');
-      });
+      logFiles.forEach(
+        (file: {
+          name: string;
+          path: string;
+          size: number;
+          modified: Date;
+        }) => {
+          expect(file).toHaveProperty('name');
+          expect(file).toHaveProperty('path');
+          expect(file).toHaveProperty('size');
+          expect(file).toHaveProperty('modified');
+          expect(file).toHaveProperty('lines');
+        }
+      );
     });
 
     it('should get log statistics', async () => {

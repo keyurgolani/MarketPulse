@@ -6,12 +6,12 @@ import { config } from '@/config/environment';
 import { logger } from '@/utils/logger';
 import { errorHandler } from '@/middleware/errorHandler';
 import { rateLimiter } from '@/middleware/rateLimiter';
-import { 
-  httpLogger, 
-  requestId, 
-  responseTime, 
-  requestLogger, 
-  errorLogger 
+import {
+  httpLogger,
+  requestId,
+  responseTime,
+  requestLogger,
+  errorLogger,
 } from '@/middleware/logging';
 import { systemRoutes } from '@/routes/system';
 import { cacheRoutes } from '@/routes/cache';
@@ -24,10 +24,12 @@ const app = express();
 
 // Middleware
 app.use(helmet());
-app.use(cors({
-  origin: config.cors.origin,
-  credentials: true
-}));
+app.use(
+  cors({
+    origin: config.cors.origin,
+    credentials: true,
+  })
+);
 app.use(compression());
 
 // Logging middleware (before body parsing)
@@ -53,10 +55,10 @@ app.use('/api/logs', loggingRoutes);
 
 // Health check endpoint
 app.get('/health', (req, res) => {
-  res.json({ 
-    status: 'ok', 
+  res.json({
+    status: 'ok',
     timestamp: new Date().toISOString(),
-    uptime: process.uptime()
+    uptime: process.uptime(),
   });
 });
 
@@ -76,7 +78,7 @@ app.use(errorHandler);
 const PORT = config.port;
 
 // Initialize services and start server
-async function startServer() {
+async function startServer(): Promise<void> {
   try {
     // Initialize database
     await databaseManager.connect();

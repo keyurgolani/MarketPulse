@@ -1,14 +1,23 @@
-import js from '@eslint/js'
-import globals from 'globals'
-import reactHooks from 'eslint-plugin-react-hooks'
-import reactRefresh from 'eslint-plugin-react-refresh'
-import react from 'eslint-plugin-react'
-import jsxA11y from 'eslint-plugin-jsx-a11y'
-import tseslint from 'typescript-eslint'
+import js from '@eslint/js';
+import globals from 'globals';
+import reactHooks from 'eslint-plugin-react-hooks';
+import reactRefresh from 'eslint-plugin-react-refresh';
+import react from 'eslint-plugin-react';
+import jsxA11y from 'eslint-plugin-jsx-a11y';
+import tseslint from 'typescript-eslint';
 
 export default tseslint.config([
   {
-    ignores: ['dist', 'build', 'node_modules', '*.config.js', '*.config.ts'],
+    ignores: [
+      'dist/**/*',
+      'build/**/*',
+      'node_modules/**/*',
+      'server/dist/**/*',
+      'server/build/**/*',
+      'server/node_modules/**/*',
+      '*.config.js',
+      '*.config.ts',
+    ],
   },
   {
     files: ['**/*.{ts,tsx}'],
@@ -41,6 +50,10 @@ export default tseslint.config([
       'react/react-in-jsx-scope': 'off',
       '@typescript-eslint/no-unused-vars': 'error',
       '@typescript-eslint/explicit-function-return-type': 'warn',
+      '@typescript-eslint/no-explicit-any': 'error',
+      'no-useless-catch': 'error',
+      '@typescript-eslint/no-namespace': 'error',
+      '@typescript-eslint/no-empty-object-type': 'error',
     },
     settings: {
       react: {
@@ -48,4 +61,4 @@ export default tseslint.config([
       },
     },
   },
-])
+]);

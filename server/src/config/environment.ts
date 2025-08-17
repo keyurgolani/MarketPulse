@@ -1,54 +1,107 @@
-import { z } from 'zod';
+/**
+ * Environment Configuration
+ * Centralized configuration management for the MarketPulse server
+ */
 
-const envSchema = z.object({
-  NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
-  PORT: z.string().default('3001').transform(Number),
-  DATABASE_URL: z.string().default('./data/marketpulse.db'),
-  REDIS_URL: z.string().optional(),
-  REDIS_HOST: z.string().default('localhost'),
-  REDIS_PORT: z.string().default('6379').transform(Number),
-  REDIS_PASSWORD: z.string().optional(),
-  LOG_LEVEL: z.enum(['error', 'warn', 'info', 'debug']).default('info'),
-  CORS_ORIGIN: z.string().default('http://localhost:5173'),
-  API_RATE_LIMIT_WINDOW_MS: z.string().default('900000').transform(Number), // 15 minutes
-  API_RATE_LIMIT_MAX_REQUESTS: z.string().default('100').transform(Number),
-});
+import dotenv from 'dotenv';
+import path from 'path';
 
-type Environment = z.infer<typeof envSchema>;
+// Load environment variables from .env file
+dotenv.config({ path: path.join(__dirname, '../../.env') });
 
-function validateEnvironment(): Environment {
-  try {
-    return envSchema.parse(process.env);
-  } catch (error) {
-    console.error('Environment validation failed:', error);
-    process.exit(1);
-  }
+export interface Config {
+  // Server Configuration
+  port: number;
+  nodeEnv: string;
+
+  // Database Configuration
+  database: {
+    url: string;
+    type: 'sqlite' | 'postgres';
+    logging: boolean;
+  };
+
+  // Redis Configuration
+  redis: {
+    host: string;
+    port: number;
+    password?: string | undefined;
+    db: number;
+  };
+
+  // API Keys
+  apiKeys: {
+    yahooFinance?: string | undefined;
+    googleFinance?: string | undefined;
+    newsApi?: string | undefined;
+  };
+
+  // Security
+  security: {
+    jwtSecret: string;
+    corsOrigins: string[];
+    rateLimitWindowMs: number;
+    rateLimitMaxRequests: number;
+  };
+
+  // CORS Configuration
+  cors: {
+    origin: string | string[];
+  };
+
+  // Logging
+  logging: {
+    level: string;
+    format: string;
+  };
 }
 
-const env = validateEnvironment();
+export const config: Config = {
+  port: parseInt(process.env.PORT || '3001', 10),
+  nodeEnv: process.env.NODE_ENV || 'development',
 
-export const config = {
-  nodeEnv: env.NODE_ENV,
-  port: env.PORT,
   database: {
-    url: env.DATABASE_URL,
+    url: process.env.DATABASE_URL || 'sqlite:./data/marketpulse.db',
+    type: (process.env.DATABASE_TYPE as 'sqlite' | 'postgres') || 'sqlite',
+    logging: process.env.DATABASE_LOGGING === 'true',
   },
-  redis: {
-    url: env.REDIS_URL,
-    host: env.REDIS_HOST,
-    port: env.REDIS_PORT,
-    password: env.REDIS_PASSWORD,
-  },
-  logging: {
-    level: env.LOG_LEVEL,
-  },
-  cors: {
-    origin: env.CORS_ORIGIN,
-  },
-  rateLimit: {
-    windowMs: env.API_RATE_LIMIT_WINDOW_MS,
-    maxRequests: env.API_RATE_LIMIT_MAX_REQUESTS,
-  },
-} as const;
 
-export type Config = typeof config;
+  redis: {
+    host: process.env.REDIS_HOST || 'localhost',
+    port: parseInt(process.env.REDIS_PORT || '6379', 10),
+    password: process.env.REDIS_PASSWORD,
+    db: parseInt(process.env.REDIS_DB || '0', 10),
+  },
+
+  apiKeys: {
+    yahooFinance: process.env.YAHOO_FINANCE_API_KEY,
+    googleFinance: process.env.GOOGLE_FINANCE_API_KEY,
+    newsApi: process.env.NEWS_API_KEY,
+  },
+
+  security: {
+    jwtSecret: process.env.JWT_SECRET || 'dev-secret-key-change-in-production',
+    corsOrigins: process.env.CORS_ORIGINS?.split(',') || [
+      'http://localhost:5173',
+    ],
+    rateLimitWindowMs: parseInt(
+      process.env.RATE_LIMIT_WINDOW_MS || '900000',
+      10
+    ), // 15 minutes
+    rateLimitMaxRequests: parseInt(
+      process.env.RATE_LIMIT_MAX_REQUESTS || '100',
+      10
+    ),
+  },
+
+  cors: {
+    origin: process.env.CORS_ORIGINS?.split(',') || ['http://localhost:5173'],
+  },
+
+  logging: {
+    level: process.env.LOG_LEVEL || 'info',
+    format: process.env.LOG_FORMAT || 'combined',
+  },
+};
+
+export default config;

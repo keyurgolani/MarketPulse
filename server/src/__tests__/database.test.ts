@@ -1,4 +1,5 @@
 import { databaseManager } from '../config/database';
+import { MigrationManager } from '../utils/migrations';
 import { userModel } from '../models/User';
 import { dashboardModel } from '../models/Dashboard';
 import { widgetModel } from '../models/Widget';
@@ -8,6 +9,11 @@ describe('Database Integration', () => {
   beforeAll(async () => {
     // Connect to test database
     await databaseManager.connect();
+
+    // Run migrations to create tables
+    const db = databaseManager.getDatabase();
+    const migrationManager = new MigrationManager(db, 'server/migrations');
+    await migrationManager.runMigrations();
   });
 
   afterAll(async () => {
@@ -60,7 +66,7 @@ describe('Database Integration', () => {
       };
 
       const user = await userModel.createUser(userData);
-      
+
       expect(user).toHaveProperty('id');
       expect(user.email).toBe(userData.email);
       expect(user.username).toBe(userData.username);
@@ -76,7 +82,7 @@ describe('Database Integration', () => {
 
       const createdUser = await userModel.createUser(userData);
       const foundUser = await userModel.findByEmail(userData.email);
-      
+
       expect(foundUser).not.toBeNull();
       expect(foundUser?.id).toBe(createdUser.id);
       expect(foundUser?.email).toBe(userData.email);
@@ -100,19 +106,19 @@ describe('Database Integration', () => {
 
     it('should check if email is taken', async () => {
       const email = 'taken@example.com';
-      
+
       await userModel.createUser({ email, username: 'taken' });
-      
+
       const isTaken = await userModel.isEmailTaken(email);
       expect(isTaken).toBe(true);
-      
+
       const isNotTaken = await userModel.isEmailTaken('nottaken@example.com');
       expect(isNotTaken).toBe(false);
     });
   });
 
   describe('Dashboard Model', () => {
-    let testUser: any;
+    let testUser: { id: string; email: string; username: string };
 
     beforeEach(async () => {
       testUser = await userModel.createUser({
@@ -130,7 +136,7 @@ describe('Database Integration', () => {
       };
 
       const dashboard = await dashboardModel.createDashboard(dashboardData);
-      
+
       expect(dashboard).toHaveProperty('id');
       expect(dashboard.name).toBe(dashboardData.name);
       expect(dashboard.description).toBe(dashboardData.description);
@@ -143,14 +149,14 @@ describe('Database Integration', () => {
         name: 'Dashboard 1',
         owner_id: testUser.id,
       });
-      
+
       await dashboardModel.createDashboard({
         name: 'Dashboard 2',
         owner_id: testUser.id,
       });
 
       const dashboards = await dashboardModel.findByOwner(testUser.id);
-      
+
       expect(dashboards).toHaveLength(2);
       const dashboardNames = dashboards.map(d => d.name).sort();
       expect(dashboardNames).toEqual(['Dashboard 1', 'Dashboard 2']);
@@ -181,7 +187,7 @@ describe('Database Integration', () => {
   });
 
   describe('Widget Model', () => {
-    let testDashboard: any;
+    let testDashboard: { id: string; name: string; owner_id: string };
 
     beforeEach(async () => {
       const testUser = await userModel.createUser({
@@ -209,7 +215,7 @@ describe('Database Integration', () => {
       };
 
       const widget = await widgetModel.createWidget(widgetData);
-      
+
       expect(widget).toHaveProperty('id');
       expect(widget.dashboard_id).toBe(testDashboard.id);
       expect(widget.type).toBe('asset-list');
@@ -232,7 +238,7 @@ describe('Database Integration', () => {
       });
 
       const widgets = await widgetModel.findByDashboard(testDashboard.id);
-      
+
       expect(widgets).toHaveLength(2);
       expect(widgets[0]?.title).toBe('Widget 1');
       expect(widgets[1]?.title).toBe('Widget 2');
@@ -252,10 +258,12 @@ describe('Database Integration', () => {
       });
 
       expect(updatedWidget).not.toBeNull();
-      expect(updatedWidget?.config).toEqual(expect.objectContaining({
-        symbols: ['AAPL', 'GOOGL', 'MSFT'],
-        displayMode: 'grid',
-      }));
+      expect(updatedWidget?.config).toEqual(
+        expect.objectContaining({
+          symbols: ['AAPL', 'GOOGL', 'MSFT'],
+          displayMode: 'grid',
+        })
+      );
     });
   });
 
@@ -274,7 +282,7 @@ describe('Database Integration', () => {
       };
 
       const asset = await assetModel.createAsset(assetData);
-      
+
       expect(asset).toHaveProperty('id');
       expect(asset.symbol).toBe('AAPL');
       expect(asset.name).toBe('Apple Inc.');
@@ -290,7 +298,7 @@ describe('Database Integration', () => {
       });
 
       const asset = await assetModel.findBySymbol('GOOGL');
-      
+
       expect(asset).not.toBeNull();
       expect(asset?.symbol).toBe('GOOGL');
       expect(asset?.name).toBe('Alphabet Inc.');
@@ -301,8 +309,12 @@ describe('Database Integration', () => {
       await assetModel.createAsset({ symbol: 'GOOGL', name: 'Alphabet Inc.' });
       await assetModel.createAsset({ symbol: 'MSFT', name: 'Microsoft Corp.' });
 
-      const assets = await assetModel.findBySymbols(['AAPL', 'MSFT', 'NONEXISTENT']);
-      
+      const assets = await assetModel.findBySymbols([
+        'AAPL',
+        'MSFT',
+        'NONEXISTENT',
+      ]);
+
       expect(assets).toHaveLength(2);
       expect(assets.map(a => a.symbol)).toEqual(['AAPL', 'MSFT']);
     });
@@ -325,10 +337,10 @@ describe('Database Integration', () => {
 
     it('should check if symbol exists', async () => {
       await assetModel.createAsset({ symbol: 'TSLA', name: 'Tesla Inc.' });
-      
+
       const exists = await assetModel.symbolExists('TSLA');
       expect(exists).toBe(true);
-      
+
       const notExists = await assetModel.symbolExists('NONEXISTENT');
       expect(notExists).toBe(false);
     });
@@ -342,7 +354,7 @@ describe('Database Integration', () => {
       });
 
       try {
-        await databaseManager.executeTransaction(async (db) => {
+        await databaseManager.executeTransaction(async () => {
           // Create a dashboard
           await dashboardModel.createDashboard({
             name: 'Transaction Test',
@@ -352,7 +364,7 @@ describe('Database Integration', () => {
           // Force an error
           throw new Error('Simulated error');
         });
-      } catch (error) {
+      } catch {
         // Expected error
       }
 

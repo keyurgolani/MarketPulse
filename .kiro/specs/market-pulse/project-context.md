@@ -4,6 +4,17 @@
 
 MarketPulse is a comprehensive financial dashboard platform built with React, TypeScript, and modern web technologies.
 
+## Strict TypeScript Guidelines
+
+All code in this project must follow strict TypeScript guidelines:
+
+- **Never use `any` type** - Always identify and use the correct specific type
+- **Use `unknown` instead of `any`** - When the type is truly unknown, use `unknown` and add type guards
+- **Explicit return types** - All functions must have explicit return types
+- **Strict null checks** - Handle null and undefined cases explicitly
+- **Generic constraints** - Use extends for type safety in generics
+- **Type guards** - Implement proper type guards for runtime type checking
+
 ## Working Commands
 
 - [ ] ### Development

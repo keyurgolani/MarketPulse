@@ -11,7 +11,7 @@ export interface LogEntry {
   timestamp: string;
   level: string;
   message: string;
-  meta?: any;
+  meta?: Record<string, unknown>;
   stack?: string;
 }
 
@@ -70,7 +70,7 @@ export class LoggingService {
         if (file.endsWith('.log')) {
           const filePath = path.join(this.logsDir, file);
           const stats = await stat(filePath);
-          
+
           // Count lines in file
           const content = await readFile(filePath, 'utf-8');
           const lines = content.split('\n').filter(line => line.trim()).length;
@@ -86,7 +86,9 @@ export class LoggingService {
       }
 
       // Sort by modification date (newest first)
-      return logFiles.sort((a, b) => b.modified.getTime() - a.modified.getTime());
+      return logFiles.sort(
+        (a, b) => b.modified.getTime() - a.modified.getTime()
+      );
     } catch (error) {
       logger.error('Error getting log files:', error);
       return [];
@@ -96,7 +98,10 @@ export class LoggingService {
   /**
    * Read and parse log entries from a file
    */
-  public async readLogFile(filename: string, query?: LogQuery): Promise<LogQueryResult> {
+  public async readLogFile(
+    filename: string,
+    query?: LogQuery
+  ): Promise<LogQueryResult> {
     try {
       const filePath = path.join(this.logsDir, filename);
       if (!fs.existsSync(filePath)) {
@@ -110,25 +115,35 @@ export class LoggingService {
       for (const line of lines) {
         try {
           const entry = JSON.parse(line) as LogEntry;
-          
+
           // Apply filters
           if (query) {
             if (query.level && entry.level !== query.level) continue;
-            if (query.category && (!entry.meta || entry.meta.category !== query.category)) continue;
-            if (query.startDate && new Date(entry.timestamp) < query.startDate) continue;
-            if (query.endDate && new Date(entry.timestamp) > query.endDate) continue;
-            if (query.search && !this.matchesSearch(entry, query.search)) continue;
+            if (
+              query.category &&
+              (!entry.meta || entry.meta.category !== query.category)
+            )
+              continue;
+            if (query.startDate && new Date(entry.timestamp) < query.startDate)
+              continue;
+            if (query.endDate && new Date(entry.timestamp) > query.endDate)
+              continue;
+            if (query.search && !this.matchesSearch(entry, query.search))
+              continue;
           }
 
           entries.push(entry);
-        } catch (parseError) {
+        } catch {
           // Skip invalid JSON lines
           continue;
         }
       }
 
       // Sort by timestamp (newest first)
-      entries.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+      entries.sort(
+        (a, b) =>
+          new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+      );
 
       // Apply pagination
       const offset = query?.offset || 0;
@@ -165,7 +180,10 @@ export class LoggingService {
       }
 
       // Sort all entries by timestamp (newest first)
-      allEntries.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+      allEntries.sort(
+        (a, b) =>
+          new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+      );
 
       // Apply pagination
       const offset = query.offset || 0;
@@ -225,7 +243,8 @@ export class LoggingService {
 
             // Count categories
             if (entry.meta?.category) {
-              categoryCounts[entry.meta.category] = (categoryCounts[entry.meta.category] || 0) + 1;
+              categoryCounts[entry.meta.category] =
+                (categoryCounts[entry.meta.category] || 0) + 1;
             }
           }
         } catch (error) {
@@ -233,17 +252,17 @@ export class LoggingService {
         }
       }
 
-      const result: any = {
+      const result: Record<string, unknown> = {
         files: logFiles.length,
         totalSize,
         totalLines,
         levelCounts,
         categoryCounts,
       };
-      
+
       if (oldestEntry) result.oldestEntry = oldestEntry;
       if (newestEntry) result.newestEntry = newestEntry;
-      
+
       return result;
     } catch (error) {
       logger.error('Error getting log stats:', error);
@@ -268,14 +287,17 @@ export class LoggingService {
       let freedSpace = 0;
 
       // Sort by modification date (oldest first)
-      const sortedFiles = [...logFiles].sort((a, b) => a.modified.getTime() - b.modified.getTime());
+      const sortedFiles = [...logFiles].sort(
+        (a, b) => a.modified.getTime() - b.modified.getTime()
+      );
 
       for (const file of sortedFiles) {
         let shouldDelete = false;
 
         // Check age
         if (options.maxAge) {
-          const ageInDays = (Date.now() - file.modified.getTime()) / (1000 * 60 * 60 * 24);
+          const ageInDays =
+            (Date.now() - file.modified.getTime()) / (1000 * 60 * 60 * 24);
           if (ageInDays > options.maxAge) {
             shouldDelete = true;
           }
@@ -301,7 +323,9 @@ export class LoggingService {
             freedSpace += file.size;
             logger.info(`Deleted old log file: ${file.name}`, {
               size: file.size,
-              age: Math.round((Date.now() - file.modified.getTime()) / (1000 * 60 * 60 * 24)),
+              age: Math.round(
+                (Date.now() - file.modified.getTime()) / (1000 * 60 * 60 * 24)
+              ),
             });
           } catch (error) {
             logger.error(`Error deleting log file ${file.name}:`, error);
@@ -334,9 +358,13 @@ export class LoggingService {
       }
 
       for (const file of logFiles) {
-        const ageInDays = (Date.now() - file.modified.getTime()) / (1000 * 60 * 60 * 24);
+        const ageInDays =
+          (Date.now() - file.modified.getTime()) / (1000 * 60 * 60 * 24);
         if (ageInDays > maxAge) {
-          const archivePath = path.join(archiveDir, `${Date.now()}_${file.name}`);
+          const archivePath = path.join(
+            archiveDir,
+            `${Date.now()}_${file.name}`
+          );
           try {
             fs.renameSync(file.path, archivePath);
             archivedFiles.push(file.name);
@@ -364,7 +392,7 @@ export class LoggingService {
    */
   private matchesSearch(entry: LogEntry, search: string): boolean {
     const searchLower = search.toLowerCase();
-    
+
     // Search in message
     if (entry.message.toLowerCase().includes(searchLower)) {
       return true;

@@ -9,9 +9,11 @@ export interface ValidationSchema {
   headers?: Joi.ObjectSchema;
 }
 
-export const validate = (schema: ValidationSchema) => {
+export const validate = (
+  schema: ValidationSchema
+): ((req: Request, res: Response, next: NextFunction) => void) => {
   return (req: Request, res: Response, next: NextFunction) => {
-    const errors: any[] = [];
+    const errors: Array<{ field: string; message: string; type: string }> = [];
 
     // Validate request body
     if (schema.body) {
@@ -45,7 +47,9 @@ export const validate = (schema: ValidationSchema) => {
 
     // Validate route parameters
     if (schema.params) {
-      const { error } = schema.params.validate(req.params, { abortEarly: false });
+      const { error } = schema.params.validate(req.params, {
+        abortEarly: false,
+      });
       if (error) {
         errors.push({
           location: 'params',
@@ -60,7 +64,9 @@ export const validate = (schema: ValidationSchema) => {
 
     // Validate headers
     if (schema.headers) {
-      const { error } = schema.headers.validate(req.headers, { abortEarly: false });
+      const { error } = schema.headers.validate(req.headers, {
+        abortEarly: false,
+      });
       if (error) {
         errors.push({
           location: 'headers',
@@ -74,10 +80,9 @@ export const validate = (schema: ValidationSchema) => {
     }
 
     if (errors.length > 0) {
-      const validationError = new ValidationError(
-        'Request validation failed',
-        { validationErrors: errors }
-      );
+      const validationError = new ValidationError('Request validation failed', {
+        validationErrors: errors,
+      });
       return next(validationError);
     }
 
@@ -119,24 +124,32 @@ export const commonSchemas = {
 
   // MongoDB ObjectId
   objectIdParam: Joi.object({
-    id: Joi.string().pattern(/^[0-9a-fA-F]{24}$/).required(),
+    id: Joi.string()
+      .pattern(/^[0-9a-fA-F]{24}$/)
+      .required(),
   }),
 
   // Email
   email: Joi.string().email().required(),
 
   // Password
-  password: Joi.string().min(8).max(128).pattern(
-    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/
-  ).required().messages({
-    'string.pattern.base': 'Password must contain at least one lowercase letter, one uppercase letter, one number, and one special character',
-  }),
+  password: Joi.string()
+    .min(8)
+    .max(128)
+    .pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/)
+    .required()
+    .messages({
+      'string.pattern.base':
+        'Password must contain at least one lowercase letter, one uppercase letter, one number, and one special character',
+    }),
 
   // URL
   url: Joi.string().uri().required(),
 
   // Phone number
-  phone: Joi.string().pattern(/^\+?[1-9]\d{1,14}$/).required(),
+  phone: Joi.string()
+    .pattern(/^\+?[1-9]\d{1,14}$/)
+    .required(),
 
   // File upload
   file: Joi.object({
@@ -144,7 +157,10 @@ export const commonSchemas = {
     originalname: Joi.string().required(),
     encoding: Joi.string().required(),
     mimetype: Joi.string().required(),
-    size: Joi.number().integer().min(1).max(10 * 1024 * 1024), // 10MB max
+    size: Joi.number()
+      .integer()
+      .min(1)
+      .max(10 * 1024 * 1024), // 10MB max
     buffer: Joi.binary().required(),
   }),
 };
@@ -166,7 +182,9 @@ export const validateUrl = (url: string): boolean => {
 };
 
 export const validateObjectId = (id: string): boolean => {
-  const { error } = Joi.string().pattern(/^[0-9a-fA-F]{24}$/).validate(id);
+  const { error } = Joi.string()
+    .pattern(/^[0-9a-fA-F]{24}$/)
+    .validate(id);
   return !error;
 };
 
@@ -186,7 +204,9 @@ export const customJoi = Joi.extend({
 });
 
 // Sanitization middleware
-export const sanitize = (schema: Joi.ObjectSchema) => {
+export const sanitize = (
+  schema: Joi.ObjectSchema
+): ((req: Request, res: Response, next: NextFunction) => void) => {
   return (req: Request, res: Response, next: NextFunction) => {
     const { value, error } = schema.validate(req.body, {
       stripUnknown: true,
@@ -214,7 +234,11 @@ export const sanitize = (schema: Joi.ObjectSchema) => {
 
 // Rate limiting validation
 export const rateLimitSchema = Joi.object({
-  windowMs: Joi.number().integer().min(1000).max(24 * 60 * 60 * 1000).default(15 * 60 * 1000), // 15 minutes
+  windowMs: Joi.number()
+    .integer()
+    .min(1000)
+    .max(24 * 60 * 60 * 1000)
+    .default(15 * 60 * 1000), // 15 minutes
   max: Joi.number().integer().min(1).max(10000).default(100),
   message: Joi.string().max(200).default('Too many requests'),
 });
@@ -239,7 +263,9 @@ export const loggingSchema = {
     offset: Joi.number().integer().min(0).default(0),
   }),
   params: Joi.object({
-    filename: Joi.string().pattern(/^[\w\-. ]+\.log$/).required(),
+    filename: Joi.string()
+      .pattern(/^[\w\-. ]+\.log$/)
+      .required(),
   }),
   cleanup: Joi.object({
     maxAge: Joi.number().integer().min(1).max(365),

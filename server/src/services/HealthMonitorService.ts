@@ -27,11 +27,11 @@ export interface HealthMetrics {
   services: {
     database: {
       status: string;
-      details?: any;
+      details?: Record<string, unknown>;
     };
     cache: {
       status: string;
-      details?: any;
+      details?: Record<string, unknown>;
     };
   };
   environment: {
@@ -189,19 +189,25 @@ export class HealthMonitorService {
     alerts: HealthAlert[];
   }> {
     const metrics = await this.collectMetrics();
-    const activeAlerts = Array.from(this.alerts.values()).filter(alert => !alert.resolved);
+    const activeAlerts = Array.from(this.alerts.values()).filter(
+      alert => !alert.resolved
+    );
 
     let status: 'healthy' | 'degraded' | 'unhealthy' = 'healthy';
 
     // Determine overall status based on services and alerts
-    if (metrics.services.database.status === 'unhealthy' || 
-        metrics.services.cache.status === 'unhealthy' ||
-        activeAlerts.some(alert => alert.type === 'critical')) {
+    if (
+      metrics.services.database.status === 'unhealthy' ||
+      metrics.services.cache.status === 'unhealthy' ||
+      activeAlerts.some(alert => alert.type === 'critical')
+    ) {
       status = 'unhealthy';
-    } else if (metrics.services.database.status === 'degraded' || 
-               metrics.services.cache.status === 'degraded' ||
-               activeAlerts.some(alert => alert.type === 'error') ||
-               activeAlerts.length > 0) {
+    } else if (
+      metrics.services.database.status === 'degraded' ||
+      metrics.services.cache.status === 'degraded' ||
+      activeAlerts.some(alert => alert.type === 'error') ||
+      activeAlerts.length > 0
+    ) {
       status = 'degraded';
     }
 
@@ -242,7 +248,10 @@ export class HealthMonitorService {
     if (alert && !alert.resolved) {
       alert.resolved = true;
       alert.resolvedAt = new Date().toISOString();
-      logger.info(`Alert resolved: ${alert.message}`, { alertId, service: alert.service });
+      logger.info(`Alert resolved: ${alert.message}`, {
+        alertId,
+        service: alert.service,
+      });
       return true;
     }
     return false;
@@ -252,11 +261,12 @@ export class HealthMonitorService {
    * Clear all resolved alerts
    */
   public clearResolvedAlerts(): number {
-    const resolvedAlerts = Array.from(this.alerts.entries())
-      .filter(([_, alert]) => alert.resolved);
-    
+    const resolvedAlerts = Array.from(this.alerts.entries()).filter(
+      ([, alert]) => alert.resolved
+    );
+
     resolvedAlerts.forEach(([id]) => this.alerts.delete(id));
-    
+
     logger.info(`Cleared ${resolvedAlerts.length} resolved alerts`);
     return resolvedAlerts.length;
   }
@@ -381,23 +391,29 @@ export class HealthMonitorService {
   /**
    * Create or update an alert
    */
-  private createOrUpdateAlert(id: string, alertData: {
-    type: 'warning' | 'error' | 'critical';
-    service: string;
-    message: string;
-  }): void {
+  private createOrUpdateAlert(
+    id: string,
+    alertData: {
+      type: 'warning' | 'error' | 'critical';
+      service: string;
+      message: string;
+    }
+  ): void {
     const existingAlert = this.alerts.get(id);
-    
+
     if (existingAlert && !existingAlert.resolved) {
       // Update existing alert if severity changed
-      if (existingAlert.type !== alertData.type || existingAlert.message !== alertData.message) {
+      if (
+        existingAlert.type !== alertData.type ||
+        existingAlert.message !== alertData.message
+      ) {
         existingAlert.type = alertData.type;
         existingAlert.message = alertData.message;
         existingAlert.timestamp = new Date().toISOString();
-        logger.warn(`Alert updated: ${alertData.message}`, { 
-          alertId: id, 
+        logger.warn(`Alert updated: ${alertData.message}`, {
+          alertId: id,
           service: alertData.service,
-          type: alertData.type 
+          type: alertData.type,
         });
       }
     } else {
@@ -410,16 +426,20 @@ export class HealthMonitorService {
         timestamp: new Date().toISOString(),
         resolved: false,
       };
-      
+
       this.alerts.set(id, alert);
-      
-      const logLevel = alertData.type === 'critical' ? 'error' : 
-                      alertData.type === 'error' ? 'error' : 'warn';
-      
-      logger[logLevel](`New alert: ${alertData.message}`, { 
-        alertId: id, 
+
+      const logLevel =
+        alertData.type === 'critical'
+          ? 'error'
+          : alertData.type === 'error'
+            ? 'error'
+            : 'warn';
+
+      logger[logLevel](`New alert: ${alertData.message}`, {
+        alertId: id,
         service: alertData.service,
-        type: alertData.type 
+        type: alertData.type,
       });
     }
   }
@@ -428,17 +448,17 @@ export class HealthMonitorService {
    * Get CPU usage percentage
    */
   private async getCpuUsage(): Promise<number> {
-    return new Promise((resolve) => {
+    return new Promise(resolve => {
       const startUsage = process.cpuUsage();
       const startTime = process.hrtime();
 
       setTimeout(() => {
         const currentUsage = process.cpuUsage(startUsage);
         const currentTime = process.hrtime(startTime);
-        
+
         const totalTime = currentTime[0] * 1000000 + currentTime[1] / 1000; // microseconds
         const totalCpuTime = currentUsage.user + currentUsage.system; // microseconds
-        
+
         const cpuPercent = (totalCpuTime / totalTime) * 100;
         resolve(Math.min(100, Math.max(0, cpuPercent)));
       }, 100);

@@ -1,6 +1,6 @@
 /**
- * Market data and asset type definitions for MarketPulse application
- * Handles real-time and historical market data, technical indicators, and asset information
+ * Market data types and interfaces for MarketPulse application
+ * Handles asset data, pricing, historical data, and market information
  */
 
 /**
@@ -41,8 +41,6 @@ export interface Asset {
   dividendYield?: number;
   /** Earnings per share */
   eps?: number;
-  /** Beta coefficient */
-  beta?: number;
   /** Last update timestamp */
   lastUpdated: Date;
   /** Data source */
@@ -52,62 +50,75 @@ export interface Asset {
   /** Exchange name */
   exchange: string;
   /** Asset type */
-  assetType: AssetType;
+  type: AssetType;
   /** Sector classification */
   sector?: string;
   /** Industry classification */
   industry?: string;
-  /** Asset status */
-  status: AssetStatus;
+  /** Country of origin */
+  country?: string;
+  /** Whether market is currently open */
+  isMarketOpen: boolean;
+  /** Extended hours data */
+  extendedHours?: ExtendedHoursData;
 }
 
 /**
- * Asset type categories
+ * Asset types
  */
 export type AssetType =
   | 'stock'
   | 'etf'
   | 'mutual-fund'
-  | 'bond'
-  | 'commodity'
-  | 'currency'
-  | 'crypto'
   | 'index'
+  | 'crypto'
+  | 'forex'
+  | 'commodity'
+  | 'bond'
   | 'option'
   | 'future';
 
 /**
- * Asset status options
- */
-export type AssetStatus =
-  | 'active'
-  | 'halted'
-  | 'suspended'
-  | 'delisted'
-  | 'pre-market'
-  | 'after-hours';
-
-/**
- * Data source options
+ * Data sources for market data
  */
 export type DataSource =
   | 'yahoo'
   | 'google'
   | 'alpha-vantage'
-  | 'finnhub'
   | 'iex'
+  | 'finnhub'
   | 'cache'
-  | 'websocket';
+  | 'manual';
 
 /**
- * Historical market data
+ * Extended hours trading data
+ */
+export interface ExtendedHoursData {
+  /** Pre-market price */
+  preMarketPrice?: number;
+  /** Pre-market change */
+  preMarketChange?: number;
+  /** Pre-market change percentage */
+  preMarketChangePercent?: number;
+  /** After-hours price */
+  afterHoursPrice?: number;
+  /** After-hours change */
+  afterHoursChange?: number;
+  /** After-hours change percentage */
+  afterHoursChangePercent?: number;
+  /** Last extended hours update */
+  lastUpdated: Date;
+}
+
+/**
+ * Historical price data
  */
 export interface HistoricalData {
   /** Asset symbol */
   symbol: string;
-  /** Time period */
+  /** Time frame for the data */
   timeframe: string;
-  /** Historical price points */
+  /** Array of price points */
   data: PricePoint[];
   /** Technical indicators */
   indicators?: TechnicalIndicators;
@@ -115,15 +126,13 @@ export interface HistoricalData {
   source: DataSource;
   /** Last update timestamp */
   lastUpdated: Date;
-  /** Data quality metrics */
-  quality: DataQuality;
 }
 
 /**
  * Individual price point in historical data
  */
 export interface PricePoint {
-  /** Timestamp */
+  /** Timestamp for this data point */
   timestamp: Date;
   /** Opening price */
   open: number;
@@ -133,21 +142,19 @@ export interface PricePoint {
   low: number;
   /** Closing price */
   close: number;
-  /** Adjusted closing price */
-  adjustedClose?: number;
   /** Trading volume */
   volume: number;
-  /** Volume-weighted average price */
-  vwap?: number;
+  /** Adjusted close (for splits/dividends) */
+  adjustedClose?: number;
 }
 
 /**
- * Technical indicators collection
+ * Technical indicators data
  */
 export interface TechnicalIndicators {
-  /** Simple Moving Averages */
+  /** Simple Moving Average */
   sma?: MovingAverageData[];
-  /** Exponential Moving Averages */
+  /** Exponential Moving Average */
   ema?: MovingAverageData[];
   /** Relative Strength Index */
   rsi?: RSIData[];
@@ -159,10 +166,10 @@ export interface TechnicalIndicators {
   stochastic?: StochasticData[];
   /** Williams %R */
   williams?: WilliamsData[];
-  /** Average True Range */
-  atr?: ATRData[];
-  /** Volume indicators */
-  volume?: VolumeIndicators;
+  /** Commodity Channel Index */
+  cci?: CCIData[];
+  /** Volume Weighted Average Price */
+  vwap?: VWAPData[];
 }
 
 /**
@@ -173,7 +180,7 @@ export interface MovingAverageData {
   timestamp: Date;
   /** Moving average value */
   value: number;
-  /** Period (e.g., 20, 50, 200) */
+  /** Period used for calculation */
   period: number;
 }
 
@@ -221,10 +228,10 @@ export interface BollingerBands {
   middle: number;
   /** Lower band */
   lower: number;
-  /** Standard deviation multiplier */
-  stdDev: number;
-  /** Period used for calculation */
+  /** Period used */
   period: number;
+  /** Standard deviations */
+  stdDev: number;
 }
 
 /**
@@ -251,82 +258,30 @@ export interface WilliamsData {
   timestamp: Date;
   /** Williams %R value */
   value: number;
-  /** Period used for calculation */
+  /** Period used */
   period: number;
 }
 
 /**
- * Average True Range data point
+ * CCI data point
  */
-export interface ATRData {
+export interface CCIData {
   /** Timestamp */
   timestamp: Date;
-  /** ATR value */
+  /** CCI value */
   value: number;
-  /** Period used for calculation */
+  /** Period used */
   period: number;
 }
 
 /**
- * Volume indicators
+ * VWAP data point
  */
-export interface VolumeIndicators {
-  /** On-Balance Volume */
-  obv?: OBVData[];
-  /** Volume Rate of Change */
-  vroc?: VROCData[];
-  /** Accumulation/Distribution Line */
-  adl?: ADLData[];
-}
-
-/**
- * On-Balance Volume data point
- */
-export interface OBVData {
+export interface VWAPData {
   /** Timestamp */
   timestamp: Date;
-  /** OBV value */
+  /** VWAP value */
   value: number;
-}
-
-/**
- * Volume Rate of Change data point
- */
-export interface VROCData {
-  /** Timestamp */
-  timestamp: Date;
-  /** VROC value */
-  value: number;
-  /** Period used for calculation */
-  period: number;
-}
-
-/**
- * Accumulation/Distribution Line data point
- */
-export interface ADLData {
-  /** Timestamp */
-  timestamp: Date;
-  /** ADL value */
-  value: number;
-}
-
-/**
- * Data quality metrics
- */
-export interface DataQuality {
-  /** Completeness percentage (0-100) */
-  completeness: number;
-  /** Data accuracy score (0-100) */
-  accuracy: number;
-  /** Timeliness score (0-100) */
-  timeliness: number;
-  /** Number of missing data points */
-  missingPoints: number;
-  /** Number of outliers detected */
-  outliers: number;
-  /** Last quality check timestamp */
-  lastChecked: Date;
 }
 
 /**
@@ -341,16 +296,14 @@ export interface MarketSummary {
   topLosers: Asset[];
   /** Most actively traded stocks */
   mostActive: Asset[];
-  /** Market sentiment indicators */
-  sentiment: MarketSentiment;
-  /** Economic indicators */
-  economic: EconomicIndicators;
+  /** Market statistics */
+  statistics: MarketStatistics;
   /** Last update timestamp */
   lastUpdated: Date;
 }
 
 /**
- * Market index information
+ * Market index data
  */
 export interface MarketIndex {
   /** Index symbol */
@@ -369,193 +322,78 @@ export interface MarketIndex {
   dayHigh: number;
   /** Day's low */
   dayLow: number;
-  /** Trading volume */
-  volume?: number;
-  /** Last update timestamp */
+  /** Last update */
   lastUpdated: Date;
 }
 
 /**
- * Market sentiment indicators
+ * Market statistics
  */
-export interface MarketSentiment {
-  /** VIX (Volatility Index) */
-  vix: number;
-  /** Put/Call ratio */
-  putCallRatio: number;
-  /** Advance/Decline ratio */
-  advanceDeclineRatio: number;
-  /** Fear & Greed Index */
-  fearGreedIndex: number;
-  /** Overall sentiment score (-1 to 1) */
-  overallSentiment: number;
-  /** Sentiment label */
-  sentimentLabel: SentimentLabel;
-}
-
-/**
- * Sentiment label options
- */
-export type SentimentLabel =
-  | 'extreme-fear'
-  | 'fear'
-  | 'neutral'
-  | 'greed'
-  | 'extreme-greed';
-
-/**
- * Economic indicators
- */
-export interface EconomicIndicators {
-  /** GDP growth rate */
-  gdpGrowth?: number;
-  /** Inflation rate */
-  inflationRate?: number;
-  /** Unemployment rate */
-  unemploymentRate?: number;
-  /** Interest rates */
-  interestRates: InterestRates;
-  /** Currency exchange rates */
-  exchangeRates: ExchangeRate[];
-  /** Commodity prices */
-  commodities: CommodityPrice[];
-}
-
-/**
- * Interest rates information
- */
-export interface InterestRates {
-  /** Federal funds rate */
-  federalFunds: number;
-  /** 10-year treasury yield */
-  treasury10Y: number;
-  /** 2-year treasury yield */
-  treasury2Y: number;
-  /** Prime rate */
-  prime: number;
-  /** Last update timestamp */
-  lastUpdated: Date;
-}
-
-/**
- * Exchange rate information
- */
-export interface ExchangeRate {
-  /** Currency pair (e.g., USD/EUR) */
-  pair: string;
-  /** Exchange rate */
-  rate: number;
-  /** Change from previous */
-  change: number;
-  /** Percentage change */
-  changePercent: number;
-  /** Last update timestamp */
-  lastUpdated: Date;
-}
-
-/**
- * Commodity price information
- */
-export interface CommodityPrice {
-  /** Commodity name */
-  name: string;
-  /** Commodity symbol */
-  symbol: string;
-  /** Current price */
-  price: number;
-  /** Price unit */
-  unit: string;
-  /** Change from previous */
-  change: number;
-  /** Percentage change */
-  changePercent: number;
-  /** Last update timestamp */
-  lastUpdated: Date;
+export interface MarketStatistics {
+  /** Total market cap */
+  totalMarketCap: number;
+  /** Number of advancing stocks */
+  advancing: number;
+  /** Number of declining stocks */
+  declining: number;
+  /** Number of unchanged stocks */
+  unchanged: number;
+  /** New 52-week highs */
+  newHighs: number;
+  /** New 52-week lows */
+  newLows: number;
+  /** Total volume */
+  totalVolume: number;
+  /** VIX (volatility index) */
+  vix?: number;
 }
 
 /**
  * Asset search and filtering
  */
-export interface AssetSearchRequest {
+export interface AssetSearchFilters {
   /** Search query */
   query?: string;
   /** Asset types to include */
-  assetTypes?: AssetType[];
+  types?: AssetType[];
   /** Exchanges to include */
   exchanges?: string[];
   /** Sectors to include */
   sectors?: string[];
   /** Industries to include */
   industries?: string[];
-  /** Currency filter */
-  currency?: string;
-  /** Market cap range */
-  marketCapRange?: NumberRange;
+  /** Countries to include */
+  countries?: string[];
   /** Price range */
-  priceRange?: NumberRange;
+  priceRange?: {
+    min?: number;
+    max?: number;
+  };
+  /** Market cap range */
+  marketCapRange?: {
+    min?: number;
+    max?: number;
+  };
   /** Volume range */
-  volumeRange?: NumberRange;
-  /** Sort configuration */
-  sort?: AssetSortConfig;
-  /** Pagination */
-  pagination?: PaginationRequest;
+  volumeRange?: {
+    min?: number;
+    max?: number;
+  };
+  /** P/E ratio range */
+  peRatioRange?: {
+    min?: number;
+    max?: number;
+  };
 }
 
 /**
- * Number range filter
+ * Asset search result
  */
-export interface NumberRange {
-  /** Minimum value */
-  min?: number;
-  /** Maximum value */
-  max?: number;
-}
-
-/**
- * Asset sort configuration
- */
-export interface AssetSortConfig {
-  /** Field to sort by */
-  field: AssetSortField;
-  /** Sort direction */
-  direction: 'asc' | 'desc';
-}
-
-/**
- * Asset sort field options
- */
-export type AssetSortField =
-  | 'symbol'
-  | 'name'
-  | 'price'
-  | 'change'
-  | 'changePercent'
-  | 'volume'
-  | 'marketCap'
-  | 'peRatio'
-  | 'dividendYield'
-  | 'lastUpdated';
-
-/**
- * Pagination request
- */
-export interface PaginationRequest {
-  /** Page number (1-based) */
-  page: number;
-  /** Items per page */
-  limit: number;
-}
-
-/**
- * Asset search response
- */
-export interface AssetSearchResponse {
-  /** Found assets */
+export interface AssetSearchResult {
+  /** Matching assets */
   assets: Asset[];
-  /** Total number of results */
-  total: number;
-  /** Pagination information */
-  pagination: PaginationInfo;
+  /** Total count */
+  totalCount: number;
   /** Search metadata */
   metadata: SearchMetadata;
 }
@@ -564,191 +402,20 @@ export interface AssetSearchResponse {
  * Search metadata
  */
 export interface SearchMetadata {
-  /** Search execution time in milliseconds */
-  executionTime: number;
+  /** Search query used */
+  query: string;
+  /** Filters applied */
+  filters: AssetSearchFilters;
+  /** Search duration in milliseconds */
+  duration: number;
   /** Data sources used */
   sources: DataSource[];
-  /** Cache hit ratio */
-  cacheHitRatio: number;
-  /** Search timestamp */
-  timestamp: Date;
+  /** Cache hit/miss info */
+  cached: boolean;
 }
 
 /**
- * Real-time quote subscription
- */
-export interface QuoteSubscription {
-  /** Subscription ID */
-  id: string;
-  /** Asset symbols to subscribe to */
-  symbols: string[];
-  /** Subscription type */
-  type: SubscriptionType;
-  /** Update frequency */
-  frequency: UpdateFrequency;
-  /** Callback for updates */
-  onUpdate: (quote: RealTimeQuote) => void;
-  /** Callback for errors */
-  onError: (error: SubscriptionError) => void;
-  /** Subscription status */
-  status: SubscriptionStatus;
-  /** Creation timestamp */
-  createdAt: Date;
-}
-
-/**
- * Subscription type options
- */
-export type SubscriptionType = 'quote' | 'trade' | 'level1' | 'level2';
-
-/**
- * Update frequency options
- */
-export type UpdateFrequency = 'real-time' | '1s' | '5s' | '10s' | '30s' | '1m';
-
-/**
- * Subscription status options
- */
-export type SubscriptionStatus = 'active' | 'paused' | 'error' | 'disconnected';
-
-/**
- * Real-time quote data
- */
-export interface RealTimeQuote {
-  /** Asset symbol */
-  symbol: string;
-  /** Current price */
-  price: number;
-  /** Price change */
-  change: number;
-  /** Percentage change */
-  changePercent: number;
-  /** Bid price */
-  bid?: number;
-  /** Ask price */
-  ask?: number;
-  /** Bid size */
-  bidSize?: number;
-  /** Ask size */
-  askSize?: number;
-  /** Last trade size */
-  lastSize?: number;
-  /** Trading volume */
-  volume: number;
-  /** Quote timestamp */
-  timestamp: Date;
-  /** Market status */
-  marketStatus: MarketStatus;
-}
-
-/**
- * Market status options
- */
-export type MarketStatus =
-  | 'pre-market'
-  | 'open'
-  | 'closed'
-  | 'after-hours'
-  | 'holiday';
-
-/**
- * Subscription error information
- */
-export interface SubscriptionError {
-  /** Error code */
-  code: string;
-  /** Error message */
-  message: string;
-  /** Affected symbols */
-  symbols?: string[];
-  /** Error timestamp */
-  timestamp: Date;
-  /** Whether error is recoverable */
-  recoverable: boolean;
-}
-
-/**
- * Market hours information
- */
-export interface MarketHours {
-  /** Market name */
-  market: string;
-  /** Market timezone */
-  timezone: string;
-  /** Regular trading hours */
-  regular: TradingSession;
-  /** Pre-market hours */
-  preMarket?: TradingSession;
-  /** After-hours trading */
-  afterHours?: TradingSession;
-  /** Current market status */
-  currentStatus: MarketStatus;
-  /** Next market open time */
-  nextOpen?: Date;
-  /** Next market close time */
-  nextClose?: Date;
-  /** Whether market is currently open */
-  isOpen: boolean;
-}
-
-/**
- * Trading session information
- */
-export interface TradingSession {
-  /** Session start time */
-  start: string;
-  /** Session end time */
-  end: string;
-  /** Days of week (0=Sunday, 6=Saturday) */
-  daysOfWeek: number[];
-  /** Whether session is currently active */
-  isActive: boolean;
-}
-
-/**
- * Price alert configuration
- */
-export interface PriceAlert {
-  /** Alert ID */
-  id: string;
-  /** Asset symbol */
-  symbol: string;
-  /** Alert type */
-  type: PriceAlertType;
-  /** Target price */
-  targetPrice: number;
-  /** Alert condition */
-  condition: AlertCondition;
-  /** Alert message */
-  message: string;
-  /** Alert enabled status */
-  enabled: boolean;
-  /** Creation timestamp */
-  createdAt: Date;
-  /** Expiration timestamp */
-  expiresAt?: Date;
-  /** Trigger count */
-  triggerCount: number;
-  /** Last triggered timestamp */
-  lastTriggered?: Date;
-}
-
-/**
- * Price alert type options
- */
-export type PriceAlertType =
-  | 'price-above'
-  | 'price-below'
-  | 'price-change'
-  | 'volume-spike';
-
-/**
- * Alert condition options
- */
-export type AlertCondition = 'once' | 'every-time' | 'daily' | 'weekly';
-
-/**
- * Watchlist configuration
+ * Watchlist interface
  */
 export interface Watchlist {
   /** Watchlist ID */
@@ -765,44 +432,163 @@ export interface Watchlist {
   isPublic: boolean;
   /** Watchlist tags */
   tags: string[];
-  /** Sort configuration */
-  sortConfig: AssetSortConfig;
   /** Creation timestamp */
   createdAt: Date;
   /** Last update timestamp */
   updatedAt: Date;
-  /** Watchlist metadata */
-  metadata: WatchlistMetadata;
+  /** Sort order for assets */
+  sortOrder?: WatchlistSortOrder;
 }
 
 /**
- * Watchlist metadata
+ * Watchlist sort options
  */
-export interface WatchlistMetadata {
-  /** Number of views */
-  viewCount: number;
-  /** Number of followers */
-  followerCount: number;
-  /** Performance metrics */
-  performance: WatchlistPerformance;
-  /** Last accessed timestamp */
-  lastAccessed?: Date;
+export interface WatchlistSortOrder {
+  /** Field to sort by */
+  field:
+    | 'symbol'
+    | 'name'
+    | 'price'
+    | 'change'
+    | 'changePercent'
+    | 'volume'
+    | 'marketCap';
+  /** Sort direction */
+  direction: 'asc' | 'desc';
 }
 
 /**
- * Watchlist performance metrics
+ * Price alert configuration
  */
-export interface WatchlistPerformance {
-  /** Total return percentage */
-  totalReturn: number;
-  /** Average return percentage */
-  averageReturn: number;
-  /** Best performing asset */
-  bestPerformer: string;
-  /** Worst performing asset */
-  worstPerformer: string;
-  /** Volatility measure */
-  volatility: number;
-  /** Sharpe ratio */
-  sharpeRatio?: number;
+export interface PriceAlert {
+  /** Alert ID */
+  id: string;
+  /** Asset symbol */
+  symbol: string;
+  /** Alert type */
+  type: AlertType;
+  /** Alert condition */
+  condition: AlertCondition;
+  /** Target value */
+  targetValue: number;
+  /** Whether alert is active */
+  isActive: boolean;
+  /** User ID */
+  userId: string;
+  /** Alert message */
+  message?: string;
+  /** Creation timestamp */
+  createdAt: Date;
+  /** Expiration timestamp */
+  expiresAt?: Date;
+  /** Whether alert has been triggered */
+  triggered: boolean;
+  /** Trigger timestamp */
+  triggeredAt?: Date;
+}
+
+/**
+ * Alert types
+ */
+export type AlertType = 'price' | 'volume' | 'change' | 'technical';
+
+/**
+ * Alert conditions
+ */
+export interface AlertCondition {
+  /** Comparison operator */
+  operator: 'gt' | 'lt' | 'gte' | 'lte' | 'eq';
+  /** Field to compare */
+  field: 'price' | 'change' | 'changePercent' | 'volume';
+  /** Comparison value */
+  value: number;
+}
+
+/**
+ * Market hours information
+ */
+export interface MarketHours {
+  /** Exchange name */
+  exchange: string;
+  /** Whether market is currently open */
+  isOpen: boolean;
+  /** Market open time */
+  openTime: string;
+  /** Market close time */
+  closeTime: string;
+  /** Time zone */
+  timezone: string;
+  /** Pre-market hours */
+  preMarket?: {
+    openTime: string;
+    closeTime: string;
+  };
+  /** After-hours trading */
+  afterHours?: {
+    openTime: string;
+    closeTime: string;
+  };
+  /** Market holidays */
+  holidays: Date[];
+}
+
+/**
+ * Type guard to check if asset is a stock
+ */
+export function isStock(asset: Asset): boolean {
+  return asset.type === 'stock';
+}
+
+/**
+ * Type guard to check if asset is a cryptocurrency
+ */
+export function isCrypto(asset: Asset): boolean {
+  return asset.type === 'crypto';
+}
+
+/**
+ * Type guard to check if market is open for asset
+ */
+export function isMarketOpen(asset: Asset): boolean {
+  return asset.isMarketOpen;
+}
+
+/**
+ * Utility function to format price with appropriate decimal places
+ */
+export function formatPrice(price: number, currency: string = 'USD'): string {
+  const decimals = price < 1 ? 4 : price < 10 ? 3 : 2;
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency,
+    minimumFractionDigits: decimals,
+    maximumFractionDigits: decimals,
+  }).format(price);
+}
+
+/**
+ * Utility function to format percentage change
+ */
+export function formatPercentage(value: number): string {
+  return `${value >= 0 ? '+' : ''}${value.toFixed(2)}%`;
+}
+
+/**
+ * Utility function to format volume
+ */
+export function formatVolume(volume: number): string {
+  if (volume >= 1e9) return `${(volume / 1e9).toFixed(1)}B`;
+  if (volume >= 1e6) return `${(volume / 1e6).toFixed(1)}M`;
+  if (volume >= 1e3) return `${(volume / 1e3).toFixed(1)}K`;
+  return volume.toString();
+}
+
+/**
+ * Utility function to format market cap
+ */
+export function formatMarketCap(marketCap: number): string {
+  if (marketCap >= 1e12) return `${(marketCap / 1e12).toFixed(1)}T`;
+  if (marketCap >= 1e9) return `${(marketCap / 1e9).toFixed(1)}B`;
+  if (marketCap >= 1e6) return `${(marketCap / 1e6).toFixed(1)}M`;
+  return marketCap.toString();
 }

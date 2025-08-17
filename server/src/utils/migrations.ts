@@ -54,7 +54,8 @@ export class MigrationManager {
         return [];
       }
 
-      const files = fs.readdirSync(this.migrationsPath)
+      const files = fs
+        .readdirSync(this.migrationsPath)
         .filter(file => file.endsWith('.sql'))
         .sort();
 
@@ -95,7 +96,7 @@ export class MigrationManager {
       const tableExists = await this.db.get(
         "SELECT name FROM sqlite_master WHERE type='table' AND name='migrations'"
       );
-      
+
       if (!tableExists) {
         return [];
       }
@@ -119,7 +120,9 @@ export class MigrationManager {
       const applied = await this.getAppliedMigrations();
       const appliedVersions = new Set(applied.map(m => m.version));
 
-      return available.filter(migration => !appliedVersions.has(migration.version));
+      return available.filter(
+        migration => !appliedVersions.has(migration.version)
+      );
     } catch (error) {
       logger.error('Failed to get pending migrations:', error);
       throw error;
@@ -164,9 +167,9 @@ export class MigrationManager {
   public async runMigrations(): Promise<void> {
     try {
       await this.initializeMigrationsTable();
-      
+
       const pending = await this.getPendingMigrations();
-      
+
       if (pending.length === 0) {
         logger.info('No pending migrations to apply');
         return;
@@ -194,7 +197,7 @@ export class MigrationManager {
       const tableExists = await this.db.get(
         "SELECT name FROM sqlite_master WHERE type='table' AND name='migrations'"
       );
-      
+
       if (!tableExists) {
         return 0;
       }
@@ -203,7 +206,7 @@ export class MigrationManager {
         'SELECT MAX(version) as version FROM migrations'
       );
       return result?.version || 0;
-    } catch (error) {
+    } catch {
       // If migrations table doesn't exist, return 0
       return 0;
     }
@@ -216,7 +219,7 @@ export class MigrationManager {
     try {
       const available = await this.getAvailableMigrations();
       const currentVersion = await this.getCurrentVersion();
-      
+
       if (available.length === 0) {
         return true;
       }
@@ -232,7 +235,10 @@ export class MigrationManager {
   /**
    * Validate migration integrity
    */
-  public async validateMigrations(): Promise<{ valid: boolean; errors: string[] }> {
+  public async validateMigrations(): Promise<{
+    valid: boolean;
+    errors: string[];
+  }> {
     const errors: string[] = [];
 
     try {
@@ -244,16 +250,24 @@ export class MigrationManager {
       for (let i = 1; i < versions.length; i++) {
         const current = versions[i];
         const previous = versions[i - 1];
-        if (current !== undefined && previous !== undefined && current !== previous + 1) {
+        if (
+          current !== undefined &&
+          previous !== undefined &&
+          current !== previous + 1
+        ) {
           errors.push(`Gap in migration versions: ${previous} -> ${current}`);
         }
       }
 
       // Check for applied migrations that don't exist in files
       for (const appliedMigration of applied) {
-        const exists = available.some(m => m.version === appliedMigration.version);
+        const exists = available.some(
+          m => m.version === appliedMigration.version
+        );
         if (!exists) {
-          errors.push(`Applied migration ${appliedMigration.version} not found in migration files`);
+          errors.push(
+            `Applied migration ${appliedMigration.version} not found in migration files`
+          );
         }
       }
 

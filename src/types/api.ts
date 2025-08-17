@@ -14,7 +14,7 @@ export interface ApiResponse<T> {
   success: boolean;
   /** Error message if success is false */
   error?: string;
-  /** Timestamp when the response was generated */
+  /** Unix timestamp when the response was generated */
   timestamp: number;
   /** Optional metadata about the response */
   meta?: ResponseMetadata;
@@ -25,13 +25,13 @@ export interface ApiResponse<T> {
  * @template T - The type of items in the data array
  */
 export interface PaginatedResponse<T> {
-  /** Array of data items */
+  /** Array of data items for the current page */
   data: T[];
   /** Pagination information */
   pagination: PaginationInfo;
   /** Indicates if the request was successful */
   success: boolean;
-  /** Timestamp when the response was generated */
+  /** Unix timestamp when the response was generated */
   timestamp: number;
   /** Optional metadata about the response */
   meta?: ResponseMetadata;
@@ -65,44 +65,28 @@ export interface ErrorResponse {
   message: string;
   /** HTTP status code */
   statusCode: number;
-  /** Timestamp when the error occurred */
+  /** ISO timestamp when the error occurred */
   timestamp: string;
   /** Request path that caused the error */
   path?: string;
   /** Additional error details for debugging */
   details?: Record<string, unknown>;
-  /** Validation errors for form submissions */
-  validationErrors?: ValidationError[];
-}
-
-/**
- * Validation error for form fields
- */
-export interface ValidationError {
-  /** Field name that failed validation */
-  field: string;
-  /** Error message for the field */
-  message: string;
-  /** The invalid value that was provided */
-  value?: unknown;
-  /** Validation rule that was violated */
-  rule?: string;
+  /** Request ID for tracking */
+  requestId?: string;
 }
 
 /**
  * Optional metadata that can be included in responses
  */
 export interface ResponseMetadata {
-  /** Source of the data (cache, database, external API) */
-  source?: 'cache' | 'database' | 'external-api';
-  /** Time taken to process the request in milliseconds */
-  processingTime?: number;
-  /** Cache TTL in seconds if data is cached */
+  /** Source of the data (cache, api, database) */
+  source?: 'cache' | 'api' | 'database';
+  /** Cache TTL in seconds */
   cacheTtl?: number;
-  /** API version used */
-  version?: string;
-  /** Rate limiting information */
+  /** Rate limit information */
   rateLimit?: RateLimitInfo;
+  /** Performance metrics */
+  performance?: PerformanceMetrics;
 }
 
 /**
@@ -113,40 +97,54 @@ export interface RateLimitInfo {
   limit: number;
   /** Remaining requests in the current window */
   remaining: number;
-  /** Time when the rate limit window resets (Unix timestamp) */
+  /** Unix timestamp when the rate limit resets */
   resetTime: number;
-  /** Duration of the rate limit window in seconds */
-  windowSize: number;
+  /** Time window in seconds */
+  windowMs: number;
 }
 
 /**
- * Generic request parameters for API endpoints
+ * Performance metrics for API responses
  */
-export interface RequestParams {
-  /** Optional request ID for tracking */
-  requestId?: string;
-  /** Client timestamp when request was made */
-  clientTimestamp?: number;
-  /** Client version making the request */
-  clientVersion?: string;
+export interface PerformanceMetrics {
+  /** Total response time in milliseconds */
+  responseTime: number;
+  /** Database query time in milliseconds */
+  dbTime?: number;
+  /** External API call time in milliseconds */
+  apiTime?: number;
+  /** Cache lookup time in milliseconds */
+  cacheTime?: number;
 }
 
 /**
- * Common query parameters for list endpoints
+ * Generic request parameters for list endpoints
  */
-export interface ListQueryParams extends RequestParams {
-  /** Page number for pagination (1-based) */
+export interface ListRequestParams {
+  /** Page number (1-based) */
   page?: number;
   /** Number of items per page */
   limit?: number;
-  /** Field to sort by */
+  /** Sort field */
   sortBy?: string;
   /** Sort direction */
   sortOrder?: 'asc' | 'desc';
-  /** Search query string */
+  /** Search query */
   search?: string;
   /** Filters to apply */
   filters?: Record<string, unknown>;
+}
+
+/**
+ * Generic request parameters for time-based queries
+ */
+export interface TimeRangeParams {
+  /** Start date (ISO string or Unix timestamp) */
+  startDate?: string | number;
+  /** End date (ISO string or Unix timestamp) */
+  endDate?: string | number;
+  /** Predefined time range */
+  timeRange?: '1h' | '1d' | '1w' | '1m' | '3m' | '6m' | '1y' | 'all';
 }
 
 /**
@@ -157,31 +155,66 @@ export type Optional<T> = {
 };
 
 /**
- * Utility type for making specific properties optional
+ * Utility type for making specific properties required
  */
-export type PartialBy<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>;
+export type RequireFields<T, K extends keyof T> = T & Required<Pick<T, K>>;
 
 /**
- * Utility type for making all properties required
+ * Utility type for creating update payloads (excludes id, timestamps)
  */
-export type RequiredAll<T> = {
-  [P in keyof T]-?: T[P];
-};
+export type UpdatePayload<T> = Omit<
+  Partial<T>,
+  'id' | 'createdAt' | 'updatedAt'
+>;
 
 /**
- * Utility type for deep partial (makes nested objects optional too)
+ * Utility type for creating create payloads (excludes id, timestamps)
  */
-export type DeepPartial<T> = {
-  [P in keyof T]?: T[P] extends object ? DeepPartial<T[P]> : T[P];
-};
+export type CreatePayload<T> = Omit<T, 'id' | 'createdAt' | 'updatedAt'>;
 
 /**
- * Utility type for extracting the data type from an ApiResponse
+ * Type guard to check if a response is an error response
  */
-export type ExtractApiData<T> = T extends ApiResponse<infer U> ? U : never;
+export function isErrorResponse(response: unknown): response is ErrorResponse {
+  return (
+    response !== null &&
+    typeof response === 'object' &&
+    'error' in response &&
+    'statusCode' in response &&
+    typeof (response as Record<string, unknown>).error === 'string' &&
+    typeof (response as Record<string, unknown>).statusCode === 'number'
+  );
+}
 
 /**
- * Utility type for extracting the item type from a PaginatedResponse
+ * Type guard to check if a response is a successful API response
  */
-export type ExtractPaginatedData<T> =
-  T extends PaginatedResponse<infer U> ? U : never;
+export function isApiResponse<T>(
+  response: unknown
+): response is ApiResponse<T> {
+  return (
+    response !== null &&
+    typeof response === 'object' &&
+    'success' in response &&
+    'data' in response &&
+    typeof (response as Record<string, unknown>).success === 'boolean' &&
+    (response as Record<string, unknown>).data !== undefined
+  );
+}
+
+/**
+ * Type guard to check if a response is a paginated response
+ */
+export function isPaginatedResponse<T>(
+  response: unknown
+): response is PaginatedResponse<T> {
+  return (
+    response !== null &&
+    typeof response === 'object' &&
+    'data' in response &&
+    'pagination' in response &&
+    Array.isArray((response as Record<string, unknown>).data) &&
+    (response as Record<string, unknown>).pagination &&
+    typeof (response as Record<string, unknown>).pagination.page === 'number'
+  );
+}

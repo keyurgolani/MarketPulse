@@ -18,11 +18,14 @@ export class RateLimiter {
   constructor(windowMs: number = 15 * 60 * 1000, maxRequests: number = 100) {
     this.windowMs = windowMs;
     this.maxRequests = maxRequests;
-    
+
     // Clean up expired entries every 5 minutes
-    this.cleanupInterval = setInterval(() => {
-      this.cleanup();
-    }, 5 * 60 * 1000);
+    this.cleanupInterval = setInterval(
+      () => {
+        this.cleanup();
+      },
+      5 * 60 * 1000
+    );
   }
 
   private getKey(req: Request): string {
@@ -32,10 +35,16 @@ export class RateLimiter {
     if (forwarded) {
       return forwarded.split(',')[0]!.trim();
     }
-    return req.ip || req.socket?.remoteAddress || req.connection?.remoteAddress || 'unknown';
+    return (
+      req.ip ||
+      req.socket?.remoteAddress ||
+      req.connection?.remoteAddress ||
+      'unknown'
+    );
   }
 
-  public cleanup(): void { // Made public for testing
+  public cleanup(): void {
+    // Made public for testing
     const now = Date.now();
     const keysToDelete: string[] = [];
 
@@ -50,12 +59,18 @@ export class RateLimiter {
     });
 
     if (keysToDelete.length > 0) {
-      logger.debug(`Rate limiter cleanup: removed ${keysToDelete.length} expired entries`);
+      logger.debug(
+        `Rate limiter cleanup: removed ${keysToDelete.length} expired entries`
+      );
     }
   }
 
-  public middleware() {
-    return (req: Request, res: Response, next: NextFunction) => {
+  public middleware(): (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => void {
+    return (req: Request, res: Response, next: NextFunction): void => {
       try {
         const key = this.getKey(req);
         const now = Date.now();
@@ -121,7 +136,11 @@ const apiLimiter = new RateLimiter(15 * 60 * 1000, 1000); // 1000 requests per 1
 const strictLimiter = new RateLimiter(60 * 1000, 10); // 10 requests per minute for sensitive endpoints
 
 // Middleware function that applies appropriate rate limiting based on path
-export const rateLimiter = (req: Request, res: Response, next: NextFunction) => {
+export const rateLimiter = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): void => {
   // Skip rate limiting in test environment only for specific tests
   if (config.nodeEnv === 'test' && !process.env.TEST_RATE_LIMITING) {
     return next();

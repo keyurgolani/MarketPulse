@@ -1,181 +1,194 @@
-import { createClient, RedisClientType } from 'redis';
-import { config } from '@/config/environment';
-import { logger } from '@/utils/logger';
+/**
+ * Redis Configuration and Connection Management
+ * Handles Redis connection with fallback to memory cache
+ */
 
-export class RedisManager {
-  private static instance: RedisManager;
-  private client: RedisClientType | null = null;
-  private isConnected = false;
-  private reconnectAttempts = 0;
-  private maxReconnectAttempts = 5;
-  private reconnectDelay = 1000; // Start with 1 second
+import Redis from 'ioredis';
+import { config } from './environment';
+import { logger } from '../utils/logger';
 
-  private constructor() {}
+export interface RedisManager {
+  client: Redis | null;
+  isConnected: boolean;
+  connect(): Promise<Redis | null>;
+  disconnect(): Promise<void>;
+  get(key: string): Promise<string | null>;
+  set(key: string, value: string, ttl?: number): Promise<void>;
+  del(key: string): Promise<void>;
+  exists(key: string): Promise<boolean>;
+  getClient(): Redis | null;
+  isHealthy(): boolean;
+  getInfo(): Promise<Record<string, unknown>>;
+  healthCheck(): Promise<{ status: string; details: Record<string, unknown> }>;
+}
 
-  public static getInstance(): RedisManager {
-    if (!RedisManager.instance) {
-      RedisManager.instance = new RedisManager();
-    }
-    return RedisManager.instance;
-  }
+class RedisManagerImpl implements RedisManager {
+  public client: Redis | null = null;
+  public isConnected = false;
 
-  public async connect(): Promise<RedisClientType | null> {
-    if (this.client && this.isConnected) {
-      return this.client;
-    }
-
+  async connect(): Promise<Redis | null> {
     try {
-      // Create Redis client
-      const clientConfig: any = {
-        socket: {
-          host: config.redis.host,
-          port: config.redis.port,
-          reconnectStrategy: (retries: number) => {
-            if (retries >= this.maxReconnectAttempts) {
-              logger.error(`Redis reconnection failed after ${retries} attempts`);
-              return false; // Stop reconnecting
-            }
-            const delay = Math.min(this.reconnectDelay * Math.pow(2, retries), 30000);
-            logger.warn(`Redis reconnecting in ${delay}ms (attempt ${retries + 1})`);
-            return delay;
-          },
-        },
+      const redisConfig: Record<string, unknown> = {
+        host: config.redis.host,
+        port: config.redis.port,
+        db: config.redis.db,
+        maxRetriesPerRequest: 3,
+        lazyConnect: true,
       };
 
-      // Add password if configured
       if (config.redis.password) {
-        clientConfig.password = config.redis.password;
+        redisConfig.password = config.redis.password;
       }
 
-      // Add URL if configured (overrides host/port)
-      if (config.redis.url) {
-        clientConfig.url = config.redis.url;
-        delete clientConfig.socket;
-      }
+      this.client = new Redis(redisConfig);
 
-      this.client = createClient(clientConfig);
-
-      // Set up event listeners
       this.client.on('connect', () => {
-        logger.info('Redis client connected');
         this.isConnected = true;
-        this.reconnectAttempts = 0;
+        logger.info('Redis connected successfully');
       });
 
-      this.client.on('ready', () => {
-        logger.info('Redis client ready');
-      });
-
-      this.client.on('error', (error) => {
-        logger.error('Redis client error:', error);
+      this.client.on('error', error => {
         this.isConnected = false;
+        logger.error('Redis connection error:', error);
       });
 
-      this.client.on('end', () => {
-        logger.warn('Redis client connection ended');
+      this.client.on('close', () => {
         this.isConnected = false;
+        logger.warn('Redis connection closed');
       });
 
-      this.client.on('reconnecting', () => {
-        this.reconnectAttempts++;
-        logger.info(`Redis client reconnecting (attempt ${this.reconnectAttempts})`);
-      });
-
-      // Connect to Redis
       await this.client.connect();
-      
-      logger.info(`Redis connected successfully to ${config.redis.host}:${config.redis.port}`);
       return this.client;
-
     } catch (error) {
-      logger.error('Redis connection failed:', error);
+      logger.error('Failed to connect to Redis:', error);
       this.client = null;
       this.isConnected = false;
       return null;
     }
   }
 
-  public async disconnect(): Promise<void> {
+  async disconnect(): Promise<void> {
     if (this.client) {
-      try {
-        await this.client.quit();
-        this.client = null;
-        this.isConnected = false;
-        logger.info('Redis disconnected successfully');
-      } catch (error) {
-        logger.error('Error disconnecting from Redis:', error);
-        // Force disconnect
-        if (this.client) {
-          this.client.disconnect();
-          this.client = null;
-          this.isConnected = false;
-        }
-      }
+      await this.client.disconnect();
+      this.client = null;
+      this.isConnected = false;
     }
   }
 
-  public getClient(): RedisClientType | null {
+  async get(key: string): Promise<string | null> {
+    if (!this.client || !this.isConnected) {
+      return null;
+    }
+
+    try {
+      return await this.client.get(key);
+    } catch (error) {
+      logger.error('Redis GET error:', error);
+      return null;
+    }
+  }
+
+  async set(key: string, value: string, ttl?: number): Promise<void> {
+    if (!this.client || !this.isConnected) {
+      return;
+    }
+
+    try {
+      if (ttl) {
+        await this.client.setex(key, ttl, value);
+      } else {
+        await this.client.set(key, value);
+      }
+    } catch (error) {
+      logger.error('Redis SET error:', error);
+    }
+  }
+
+  async del(key: string): Promise<void> {
+    if (!this.client || !this.isConnected) {
+      return;
+    }
+
+    try {
+      await this.client.del(key);
+    } catch (error) {
+      logger.error('Redis DEL error:', error);
+    }
+  }
+
+  async exists(key: string): Promise<boolean> {
+    if (!this.client || !this.isConnected) {
+      return false;
+    }
+
+    try {
+      const result = await this.client.exists(key);
+      return result === 1;
+    } catch (error) {
+      logger.error('Redis EXISTS error:', error);
+      return false;
+    }
+  }
+
+  getClient(): Redis | null {
     return this.client;
   }
 
-  public isHealthy(): boolean {
+  isHealthy(): boolean {
     return this.isConnected && this.client !== null;
   }
 
-  public async healthCheck(): Promise<{ status: string; details?: any }> {
-    try {
-      if (!this.isConnected || !this.client) {
-        return { status: 'disconnected' };
-      }
+  async getInfo(): Promise<Record<string, unknown>> {
+    if (!this.client || !this.isConnected) {
+      return {};
+    }
 
-      // Simple ping test
-      const pong = await this.client.ping();
-      
-      if (pong === 'PONG') {
-        return { 
-          status: 'healthy',
-          details: {
-            connected: true,
-            host: config.redis.host,
-            port: config.redis.port,
-          }
-        };
-      } else {
-        return { status: 'unhealthy', details: { ping: pong } };
-      }
+    try {
+      const info = await this.client.info();
+      return { info };
     } catch (error) {
-      logger.error('Redis health check failed:', error);
-      return { 
-        status: 'unhealthy', 
-        details: { error: error instanceof Error ? error.message : 'Unknown error' }
+      logger.error('Redis INFO error:', error);
+      return {};
+    }
+  }
+
+  async healthCheck(): Promise<{
+    status: string;
+    details: Record<string, unknown>;
+  }> {
+    if (!this.client || !this.isConnected) {
+      return {
+        status: 'unhealthy',
+        details: { error: 'Redis not connected' },
+      };
+    }
+
+    try {
+      await this.client.ping();
+      return {
+        status: 'healthy',
+        details: {
+          connected: true,
+          host: config.redis.host,
+          port: config.redis.port,
+        },
+      };
+    } catch (error) {
+      return {
+        status: 'unhealthy',
+        details: {
+          error: error instanceof Error ? error.message : 'Unknown error',
+        },
       };
     }
   }
-
-  public async flushAll(): Promise<void> {
-    if (this.client && this.isConnected) {
-      try {
-        await this.client.flushAll();
-        logger.info('Redis cache cleared');
-      } catch (error) {
-        logger.error('Failed to flush Redis cache:', error);
-        throw error;
-      }
-    }
-  }
-
-  public async getInfo(): Promise<string | null> {
-    if (this.client && this.isConnected) {
-      try {
-        return await this.client.info();
-      } catch (error) {
-        logger.error('Failed to get Redis info:', error);
-        return null;
-      }
-    }
-    return null;
-  }
 }
 
-// Export singleton instance
-export const redisManager = RedisManager.getInstance();
+export const redisManager = new RedisManagerImpl();
+
+// Initialize Redis connection
+export const initializeRedis = async (): Promise<void> => {
+  await redisManager.connect();
+};
+
+export default redisManager;

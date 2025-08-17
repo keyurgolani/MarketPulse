@@ -32,7 +32,7 @@ export class DatabaseManager {
 
     try {
       const dbPath = this.getDatabasePath();
-      
+
       // Ensure directory exists
       const dbDir = path.dirname(dbPath);
       if (!fs.existsSync(dbDir)) {
@@ -58,7 +58,7 @@ export class DatabaseManager {
 
       this.isConnected = true;
       logger.info(`Database connected successfully: ${dbPath}`);
-      
+
       return this.db;
     } catch (error) {
       logger.error('Database connection failed:', error);
@@ -91,7 +91,10 @@ export class DatabaseManager {
     return this.isConnected && this.db !== null;
   }
 
-  public async healthCheck(): Promise<{ status: string; details?: any }> {
+  public async healthCheck(): Promise<{
+    status: string;
+    details?: Record<string, unknown>;
+  }> {
     try {
       if (!this.isConnected || !this.db) {
         return { status: 'disconnected' };
@@ -99,26 +102,28 @@ export class DatabaseManager {
 
       // Simple query to test connection
       await this.db.get('SELECT 1 as test');
-      
-      return { 
+
+      return {
         status: 'healthy',
         details: {
           connected: true,
           path: this.getDatabasePath(),
-        }
+        },
       };
     } catch (error) {
       logger.error('Database health check failed:', error);
-      return { 
-        status: 'unhealthy', 
-        details: { error: error instanceof Error ? error.message : 'Unknown error' }
+      return {
+        status: 'unhealthy',
+        details: {
+          error: error instanceof Error ? error.message : 'Unknown error',
+        },
       };
     }
   }
 
   private getDatabasePath(): string {
     const dbUrl = config.database.url;
-    
+
     // Handle in-memory database for testing
     if (dbUrl === ':memory:') {
       return ':memory:';
@@ -136,7 +141,7 @@ export class DatabaseManager {
     callback: (db: Database) => Promise<T>
   ): Promise<T> {
     const db = this.getDatabase();
-    
+
     try {
       await db.exec('BEGIN TRANSACTION');
       const result = await callback(db);

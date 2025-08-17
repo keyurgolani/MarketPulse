@@ -1,6 +1,7 @@
 // Set NODE_ENV to development for testing BEFORE importing modules
 process.env.NODE_ENV = 'development';
 
+import { vi } from 'vitest';
 import request from 'supertest';
 import express from 'express';
 import {
@@ -30,7 +31,9 @@ app.get('/test/success', (req, res) => {
 });
 
 app.get('/test/custom-error', (req, res, next) => {
-  const error = new CustomError('Custom error message', 400, 'CUSTOM_ERROR', { field: 'test' });
+  const error = new CustomError('Custom error message', 400, 'CUSTOM_ERROR', {
+    field: 'test',
+  });
   next(error);
 });
 
@@ -84,12 +87,17 @@ app.get('/test/generic-error', (req, res, next) => {
   next(error);
 });
 
-app.get('/test/async-error', asyncHandler(async (req: any, res: any) => {
-  throw new Error('Async error');
-}));
+app.get(
+  '/test/async-error',
+  asyncHandler(async () => {
+    throw new Error('Async error');
+  })
+);
 
 app.get('/test/create-error', (req, res, next) => {
-  const error = createError('Created error', 422, 'CREATED_ERROR', { test: true });
+  const error = createError('Created error', 422, 'CREATED_ERROR', {
+    test: true,
+  });
   next(error);
 });
 
@@ -180,7 +188,6 @@ describe('Error Handler Middleware', () => {
         .expect(400)
         .expect('Content-Type', /json/);
 
-
       expect(response.body.success).toBe(false);
       expect(response.body.error.message).toBe('Validation failed');
       expect(response.body.error.code).toBe('VALIDATION_ERROR');
@@ -261,7 +268,9 @@ describe('Error Handler Middleware', () => {
         .expect('Content-Type', /json/);
 
       expect(response.body.success).toBe(false);
-      expect(response.body.error.message).toBe('External service error: PaymentAPI - Service unavailable');
+      expect(response.body.error.message).toBe(
+        'External service error: PaymentAPI - Service unavailable'
+      );
       expect(response.body.error.code).toBe('EXTERNAL_SERVICE_ERROR');
     });
   });
@@ -363,7 +372,9 @@ describe('Error Handler Middleware', () => {
         .expect('Content-Type', /json/);
 
       expect(response.body.success).toBe(false);
-      expect(response.body.error.message).toBe('Route GET /nonexistent-route not found');
+      expect(response.body.error.message).toBe(
+        'Route GET /nonexistent-route not found'
+      );
       expect(response.body.error.code).toBe('NOT_FOUND_ERROR');
     });
   });
@@ -378,7 +389,7 @@ describe('Error Handler Middleware', () => {
       expect(response.body).toHaveProperty('error');
       expect(response.body).toHaveProperty('requestId');
       expect(response.body).toHaveProperty('timestamp');
-      
+
       expect(response.body.error).toHaveProperty('message');
       expect(response.body.error).toHaveProperty('code');
       expect(response.body.error).toHaveProperty('statusCode');
@@ -386,10 +397,7 @@ describe('Error Handler Middleware', () => {
 
     it('should include stack trace in development', async () => {
       // This test assumes NODE_ENV is not 'production'
-      const response = await request(app)
-        .get('/test/custom-error')
-        .expect(400);
-
+      const response = await request(app).get('/test/custom-error').expect(400);
 
       if (process.env.NODE_ENV !== 'production') {
         expect(response.body.error).toHaveProperty('stack');
@@ -412,12 +420,12 @@ describe('Error Handler Middleware', () => {
 
 describe('Error Utility Functions', () => {
   describe('asyncHandler', () => {
-    it('should catch async errors and pass to next', (done) => {
-      const mockReq = {} as any;
-      const mockRes = {} as any;
-      const mockNext = jest.fn();
+    it('should catch async errors and pass to next', done => {
+      const mockReq = {} as Request;
+      const mockRes = {} as Response;
+      const mockNext = vi.fn();
 
-      const asyncFn = async () => {
+      const asyncFn = async (): Promise<void> => {
         throw new Error('Async error');
       };
 
@@ -435,7 +443,13 @@ describe('Error Utility Functions', () => {
 
   describe('createError', () => {
     it('should create error with all properties', () => {
-      const error = createError('Test message', 422, 'TEST_CODE', { test: true }, { context: 'test' });
+      const error = createError(
+        'Test message',
+        422,
+        'TEST_CODE',
+        { test: true },
+        { context: 'test' }
+      );
 
       expect(error.message).toBe('Test message');
       expect(error.statusCode).toBe(422);

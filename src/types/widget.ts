@@ -1,6 +1,6 @@
 /**
- * Widget data models and configuration types for MarketPulse application
- * Handles widget definitions, configurations, and positioning
+ * Widget types and interfaces for MarketPulse dashboard system
+ * Handles widget configuration, data, and behavior
  */
 
 /**
@@ -13,22 +13,22 @@ export interface Widget {
   type: WidgetType;
   /** Widget display title */
   title: string;
-  /** Widget configuration settings */
+  /** Widget configuration */
   config: WidgetConfig;
   /** Widget position in dashboard grid */
   position: WidgetPosition;
   /** Widget size constraints */
   size: WidgetSize;
-  /** Widget theme override */
-  theme?: WidgetTheme;
-  /** Widget visibility settings */
-  visibility: WidgetVisibility;
   /** Widget creation timestamp */
   createdAt: Date;
   /** Last update timestamp */
   updatedAt: Date;
-  /** Widget metadata */
-  metadata: WidgetMetadata;
+  /** Widget visibility */
+  isVisible: boolean;
+  /** Widget loading state */
+  isLoading?: boolean;
+  /** Widget error state */
+  error?: string;
 }
 
 /**
@@ -38,64 +38,64 @@ export type WidgetType =
   | 'asset-list'
   | 'asset-grid'
   | 'price-chart'
-  | 'candlestick-chart'
   | 'news-feed'
   | 'market-summary'
   | 'watchlist'
-  | 'portfolio-summary'
+  | 'portfolio'
   | 'economic-calendar'
   | 'heatmap'
   | 'screener'
   | 'alerts'
-  | 'performance-metrics'
-  | 'sector-performance'
+  | 'performance'
   | 'custom';
 
 /**
- * Widget configuration settings (varies by widget type)
+ * Widget configuration (varies by widget type)
  */
 export interface WidgetConfig {
   /** Assets to display (for asset-related widgets) */
   assets?: string[];
-  /** Chart timeframe (for chart widgets) */
-  timeframe?: ChartTimeframe;
-  /** Technical indicators (for chart widgets) */
+  /** Chart timeframe */
+  timeframe?: TimeFrame;
+  /** Technical indicators to display */
   indicators?: TechnicalIndicator[];
-  /** Display mode (list, grid, chart, etc.) */
+  /** Display mode */
   displayMode?: DisplayMode;
   /** Data refresh interval in milliseconds */
   refreshInterval?: number;
-  /** Maximum number of items to display */
-  maxItems?: number;
-  /** Sorting configuration */
-  sorting?: SortingConfig;
-  /** Filtering configuration */
-  filtering?: FilteringConfig;
-  /** Custom widget-specific settings */
+  /** Custom widget settings */
   customSettings?: Record<string, unknown>;
   /** Data source preferences */
-  dataSources?: DataSourceConfig;
-  /** Alert configurations */
-  alerts?: AlertConfig[];
+  dataSources?: DataSourcePreference[];
+  /** Filtering options */
+  filters?: WidgetFilters;
+  /** Styling options */
+  styling?: WidgetStyling;
 }
 
 /**
- * Chart timeframe options
+ * Time frame options for charts and data
  */
-export type ChartTimeframe =
+export type TimeFrame =
   | '1m'
   | '5m'
   | '15m'
   | '30m'
   | '1h'
+  | '2h'
   | '4h'
   | '1d'
   | '1w'
   | '1M'
-  | '1Y';
+  | '3M'
+  | '6M'
+  | '1y'
+  | '2y'
+  | '5y'
+  | 'max';
 
 /**
- * Technical indicator types
+ * Technical indicators available for charts
  */
 export type TechnicalIndicator =
   | 'sma'
@@ -105,241 +105,112 @@ export type TechnicalIndicator =
   | 'bollinger'
   | 'stochastic'
   | 'williams'
-  | 'atr'
-  | 'volume';
+  | 'cci'
+  | 'momentum'
+  | 'volume'
+  | 'vwap'
+  | 'fibonacci';
 
 /**
- * Display mode options
+ * Display modes for different widget types
  */
 export type DisplayMode =
   | 'list'
   | 'grid'
-  | 'chart'
   | 'table'
-  | 'cards'
+  | 'chart'
+  | 'card'
   | 'compact'
-  | 'detailed';
+  | 'detailed'
+  | 'minimal';
 
 /**
- * Sorting configuration
+ * Data source preference for widgets
  */
-export interface SortingConfig {
-  /** Field to sort by */
-  field: string;
-  /** Sort direction */
-  direction: 'asc' | 'desc';
-  /** Enable user sorting */
-  userSortable: boolean;
-  /** Available sort fields */
-  availableFields: SortField[];
+export interface DataSourcePreference {
+  /** Data source name */
+  source: string;
+  /** Priority (1 = highest) */
+  priority: number;
+  /** Whether to use as fallback */
+  fallback: boolean;
 }
 
 /**
- * Sort field definition
+ * Widget filtering options
  */
-export interface SortField {
-  /** Field key */
-  key: string;
-  /** Display label */
-  label: string;
-  /** Data type */
-  type: 'string' | 'number' | 'date' | 'boolean';
-  /** Default sort direction */
-  defaultDirection: 'asc' | 'desc';
+export interface WidgetFilters {
+  /** Market cap filter */
+  marketCap?: MarketCapFilter;
+  /** Price range filter */
+  priceRange?: PriceRangeFilter;
+  /** Volume filter */
+  volume?: VolumeFilter;
+  /** Sector filter */
+  sectors?: string[];
+  /** Exchange filter */
+  exchanges?: string[];
+  /** Country filter */
+  countries?: string[];
+  /** Custom filters */
+  custom?: Record<string, unknown>;
 }
 
 /**
- * Filtering configuration
+ * Market cap filter options
  */
-export interface FilteringConfig {
-  /** Enable user filtering */
-  userFilterable: boolean;
-  /** Available filters */
-  availableFilters: FilterDefinition[];
-  /** Active filters */
-  activeFilters: ActiveFilter[];
+export interface MarketCapFilter {
+  /** Minimum market cap */
+  min?: number;
+  /** Maximum market cap */
+  max?: number;
+  /** Market cap categories */
+  categories?: ('micro' | 'small' | 'mid' | 'large' | 'mega')[];
 }
 
 /**
- * Filter definition
+ * Price range filter
  */
-export interface FilterDefinition {
-  /** Filter key */
-  key: string;
-  /** Display label */
-  label: string;
-  /** Filter type */
-  type: FilterType;
-  /** Filter options (for select/multi-select) */
-  options?: FilterOption[];
-  /** Default value */
-  defaultValue?: unknown;
+export interface PriceRangeFilter {
+  /** Minimum price */
+  min?: number;
+  /** Maximum price */
+  max?: number;
 }
 
 /**
- * Filter type options
+ * Volume filter options
  */
-export type FilterType =
-  | 'text'
-  | 'number'
-  | 'date'
-  | 'select'
-  | 'multi-select'
-  | 'range'
-  | 'boolean';
-
-/**
- * Filter option for select filters
- */
-export interface FilterOption {
-  /** Option value */
-  value: unknown;
-  /** Display label */
-  label: string;
-  /** Option description */
-  description?: string;
+export interface VolumeFilter {
+  /** Minimum volume */
+  min?: number;
+  /** Maximum volume */
+  max?: number;
+  /** Average volume multiplier */
+  avgVolumeMultiplier?: number;
 }
 
 /**
- * Active filter instance
+ * Widget styling options
  */
-export interface ActiveFilter {
-  /** Filter key */
-  key: string;
-  /** Filter value */
-  value: unknown;
-  /** Filter operator */
-  operator: FilterOperator;
+export interface WidgetStyling {
+  /** Background color */
+  backgroundColor?: string;
+  /** Text color */
+  textColor?: string;
+  /** Border color */
+  borderColor?: string;
+  /** Border width */
+  borderWidth?: number;
+  /** Border radius */
+  borderRadius?: number;
+  /** Padding */
+  padding?: number;
+  /** Font size */
+  fontSize?: 'small' | 'medium' | 'large';
+  /** Custom CSS classes */
+  customClasses?: string[];
 }
-
-/**
- * Filter operator options
- */
-export type FilterOperator =
-  | 'equals'
-  | 'not-equals'
-  | 'contains'
-  | 'not-contains'
-  | 'starts-with'
-  | 'ends-with'
-  | 'greater-than'
-  | 'less-than'
-  | 'greater-equal'
-  | 'less-equal'
-  | 'between'
-  | 'in'
-  | 'not-in';
-
-/**
- * Data source configuration
- */
-export interface DataSourceConfig {
-  /** Primary data source */
-  primary: DataSource;
-  /** Fallback data sources */
-  fallbacks: DataSource[];
-  /** Cache preferences */
-  caching: CachingConfig;
-}
-
-/**
- * Data source options
- */
-export type DataSource =
-  | 'yahoo'
-  | 'google'
-  | 'alpha-vantage'
-  | 'finnhub'
-  | 'cache'
-  | 'websocket';
-
-/**
- * Caching configuration
- */
-export interface CachingConfig {
-  /** Enable caching */
-  enabled: boolean;
-  /** Cache TTL in seconds */
-  ttl: number;
-  /** Cache strategy */
-  strategy: CacheStrategy;
-}
-
-/**
- * Cache strategy options
- */
-export type CacheStrategy =
-  | 'cache-first'
-  | 'network-first'
-  | 'cache-only'
-  | 'network-only';
-
-/**
- * Alert configuration
- */
-export interface AlertConfig {
-  /** Alert ID */
-  id: string;
-  /** Alert type */
-  type: AlertType;
-  /** Alert condition */
-  condition: AlertCondition;
-  /** Alert actions */
-  actions: AlertAction[];
-  /** Alert enabled status */
-  enabled: boolean;
-}
-
-/**
- * Alert type options
- */
-export type AlertType = 'price' | 'volume' | 'change' | 'technical' | 'news';
-
-/**
- * Alert condition
- */
-export interface AlertCondition {
-  /** Field to monitor */
-  field: string;
-  /** Comparison operator */
-  operator: ComparisonOperator;
-  /** Target value */
-  value: number | string;
-  /** Condition description */
-  description: string;
-}
-
-/**
- * Comparison operator options
- */
-export type ComparisonOperator =
-  | 'greater-than'
-  | 'less-than'
-  | 'equals'
-  | 'greater-equal'
-  | 'less-equal'
-  | 'crosses-above'
-  | 'crosses-below';
-
-/**
- * Alert action
- */
-export interface AlertAction {
-  /** Action type */
-  type: AlertActionType;
-  /** Action configuration */
-  config: Record<string, unknown>;
-}
-
-/**
- * Alert action type options
- */
-export type AlertActionType =
-  | 'notification'
-  | 'email'
-  | 'webhook'
-  | 'sound'
-  | 'popup';
 
 /**
  * Widget position in dashboard grid
@@ -371,285 +242,228 @@ export interface WidgetSize {
   maxH?: number;
   /** Whether widget is resizable */
   resizable: boolean;
-  /** Aspect ratio constraint */
-  aspectRatio?: number;
+  /** Whether widget maintains aspect ratio */
+  maintainAspectRatio?: boolean;
 }
 
 /**
- * Widget theme configuration
+ * Widget data interface (generic)
  */
-export interface WidgetTheme {
-  /** Background color */
-  backgroundColor: string;
-  /** Border color */
-  borderColor: string;
-  /** Text color */
-  textColor: string;
-  /** Accent color */
-  accentColor: string;
-  /** Border radius */
-  borderRadius: number;
-  /** Shadow configuration */
-  shadow: ShadowConfig;
-  /** Custom CSS variables */
-  customVariables?: Record<string, string>;
+export interface WidgetData<T = unknown> {
+  /** Widget ID */
+  widgetId: string;
+  /** Data payload */
+  data: T;
+  /** Data timestamp */
+  timestamp: Date;
+  /** Data source */
+  source: string;
+  /** Whether data is cached */
+  cached: boolean;
+  /** Cache expiration */
+  cacheExpires?: Date;
+  /** Data quality score */
+  quality?: number;
 }
 
 /**
- * Shadow configuration
+ * Widget performance metrics
  */
-export interface ShadowConfig {
-  /** Enable shadow */
-  enabled: boolean;
-  /** Shadow color */
-  color: string;
-  /** Shadow blur radius */
-  blur: number;
-  /** Shadow offset X */
-  offsetX: number;
-  /** Shadow offset Y */
-  offsetY: number;
-  /** Shadow spread */
-  spread: number;
+export interface WidgetPerformance {
+  /** Widget ID */
+  widgetId: string;
+  /** Load time in milliseconds */
+  loadTime: number;
+  /** Render time in milliseconds */
+  renderTime: number;
+  /** Data fetch time in milliseconds */
+  dataFetchTime: number;
+  /** Memory usage in bytes */
+  memoryUsage: number;
+  /** Update frequency */
+  updateFrequency: number;
+  /** Error count */
+  errorCount: number;
+  /** Last performance check */
+  lastCheck: Date;
 }
 
 /**
- * Widget visibility settings
+ * Widget interaction events
  */
-export interface WidgetVisibility {
+export interface WidgetInteraction {
+  /** Widget ID */
+  widgetId: string;
+  /** Interaction type */
+  type: InteractionType;
+  /** Interaction data */
+  data?: Record<string, unknown>;
+  /** Interaction timestamp */
+  timestamp: Date;
+  /** User ID */
+  userId: string;
+}
+
+/**
+ * Types of widget interactions
+ */
+export type InteractionType =
+  | 'click'
+  | 'hover'
+  | 'scroll'
+  | 'resize'
+  | 'move'
+  | 'configure'
+  | 'refresh'
+  | 'export'
+  | 'share'
+  | 'zoom'
+  | 'pan'
+  | 'select';
+
+/**
+ * Widget state for React components
+ */
+export interface WidgetState {
+  /** Whether widget is loading */
+  isLoading: boolean;
+  /** Whether widget has error */
+  hasError: boolean;
+  /** Error message */
+  error?: string;
+  /** Whether widget is configured */
+  isConfigured: boolean;
   /** Whether widget is visible */
-  visible: boolean;
-  /** Responsive visibility settings */
-  responsive: ResponsiveVisibility;
-  /** Conditional visibility rules */
-  conditions?: VisibilityCondition[];
+  isVisible: boolean;
+  /** Whether widget is focused */
+  isFocused: boolean;
+  /** Last update timestamp */
+  lastUpdated?: Date;
 }
 
 /**
- * Responsive visibility settings
+ * Widget action for state management
  */
-export interface ResponsiveVisibility {
-  /** Visible on mobile */
-  mobile: boolean;
-  /** Visible on tablet */
-  tablet: boolean;
-  /** Visible on desktop */
-  desktop: boolean;
-  /** Visible on ultra-wide */
-  ultrawide: boolean;
+export interface WidgetAction {
+  /** Action type */
+  type: WidgetActionType;
+  /** Widget ID */
+  widgetId: string;
+  /** Action payload */
+  payload?: unknown;
 }
 
 /**
- * Visibility condition
+ * Widget action types
  */
-export interface VisibilityCondition {
-  /** Condition type */
-  type: VisibilityConditionType;
-  /** Condition value */
-  value: unknown;
-  /** Condition operator */
-  operator: ComparisonOperator;
+export type WidgetActionType =
+  | 'LOAD_START'
+  | 'LOAD_SUCCESS'
+  | 'LOAD_ERROR'
+  | 'UPDATE_CONFIG'
+  | 'UPDATE_POSITION'
+  | 'UPDATE_SIZE'
+  | 'SET_VISIBILITY'
+  | 'SET_FOCUS'
+  | 'REFRESH_DATA'
+  | 'CLEAR_ERROR';
+
+/**
+ * Widget factory interface for creating widgets
+ */
+export interface WidgetFactory {
+  /** Widget type this factory creates */
+  type: WidgetType;
+  /** Create a new widget instance */
+  create(config: Partial<WidgetConfig>): Widget;
+  /** Validate widget configuration */
+  validate(config: WidgetConfig): boolean;
+  /** Get default configuration */
+  getDefaultConfig(): WidgetConfig;
+  /** Get widget metadata */
+  getMetadata(): WidgetMetadata;
 }
 
 /**
- * Visibility condition type options
- */
-export type VisibilityConditionType =
-  | 'time-of-day'
-  | 'day-of-week'
-  | 'market-hours'
-  | 'user-role'
-  | 'screen-size';
-
-/**
- * Widget metadata
+ * Widget metadata for registration and discovery
  */
 export interface WidgetMetadata {
-  /** Widget version */
-  version: number;
-  /** Widget category */
+  /** Widget type */
+  type: WidgetType;
+  /** Display name */
+  name: string;
+  /** Description */
+  description: string;
+  /** Category */
   category: WidgetCategory;
-  /** Widget tags */
+  /** Icon */
+  icon: string;
+  /** Tags */
   tags: string[];
-  /** Widget description */
-  description?: string;
-  /** Widget author */
-  author?: string;
-  /** Widget popularity score */
-  popularityScore: number;
-  /** Usage statistics */
-  usage: WidgetUsage;
-  /** Performance metrics */
-  performance: WidgetPerformance;
+  /** Version */
+  version: string;
+  /** Author */
+  author: string;
+  /** Whether widget is premium */
+  isPremium: boolean;
+  /** Supported data sources */
+  supportedDataSources: string[];
 }
 
 /**
- * Widget category options
+ * Widget categories for organization
  */
 export type WidgetCategory =
   | 'market-data'
   | 'charts'
   | 'news'
-  | 'analytics'
+  | 'analysis'
   | 'portfolio'
   | 'alerts'
   | 'utilities'
   | 'custom';
 
 /**
- * Widget usage statistics
+ * Type guard to check if widget is chart type
  */
-export interface WidgetUsage {
-  /** Total views */
-  views: number;
-  /** Total interactions */
-  interactions: number;
-  /** Average view time in seconds */
-  avgViewTime: number;
-  /** Last accessed timestamp */
-  lastAccessed?: Date;
-  /** Usage frequency */
-  frequency: UsageFrequency;
+export function isChartWidget(widget: Widget): boolean {
+  return ['price-chart', 'heatmap'].includes(widget.type);
 }
 
 /**
- * Usage frequency options
+ * Type guard to check if widget displays assets
  */
-export type UsageFrequency =
-  | 'never'
-  | 'rarely'
-  | 'occasionally'
-  | 'frequently'
-  | 'daily';
-
-/**
- * Widget performance metrics
- */
-export interface WidgetPerformance {
-  /** Average load time in milliseconds */
-  avgLoadTime: number;
-  /** Error rate percentage */
-  errorRate: number;
-  /** Memory usage in MB */
-  memoryUsage: number;
-  /** CPU usage percentage */
-  cpuUsage: number;
-  /** Last performance check */
-  lastChecked: Date;
+export function isAssetWidget(widget: Widget): boolean {
+  return ['asset-list', 'asset-grid', 'watchlist', 'portfolio'].includes(
+    widget.type
+  );
 }
 
 /**
- * Widget template for creating new widgets
+ * Type guard to check if widget is resizable
  */
-export interface WidgetTemplate {
-  /** Template ID */
-  id: string;
-  /** Template name */
-  name: string;
-  /** Template description */
-  description: string;
-  /** Widget type */
-  type: WidgetType;
-  /** Template category */
-  category: WidgetCategory;
-  /** Default configuration */
-  defaultConfig: WidgetConfig;
-  /** Default size */
-  defaultSize: WidgetSize;
-  /** Template preview image */
-  previewImage?: string;
-  /** Template tags */
-  tags: string[];
-  /** Template popularity */
-  popularityScore: number;
-  /** Template creation date */
-  createdAt: Date;
-  /** Template creator */
-  createdBy: string;
+export function isResizable(widget: Widget): boolean {
+  return widget.size.resizable;
 }
 
 /**
- * Widget creation request
+ * Utility function to get widget display name
  */
-export interface CreateWidgetRequest {
-  /** Widget type */
-  type: WidgetType;
-  /** Widget title */
-  title: string;
-  /** Widget configuration */
-  config: WidgetConfig;
-  /** Widget position */
-  position: WidgetPosition;
-  /** Widget size */
-  size?: Partial<WidgetSize>;
-  /** Template ID to base widget on */
-  templateId?: string;
-  /** Widget theme */
-  theme?: WidgetTheme;
-}
-
-/**
- * Widget update request
- */
-export interface UpdateWidgetRequest {
-  /** Updated title */
-  title?: string;
-  /** Updated configuration */
-  config?: Partial<WidgetConfig>;
-  /** Updated position */
-  position?: Partial<WidgetPosition>;
-  /** Updated size */
-  size?: Partial<WidgetSize>;
-  /** Updated theme */
-  theme?: WidgetTheme;
-  /** Updated visibility */
-  visibility?: Partial<WidgetVisibility>;
-}
-
-/**
- * Widget data response (varies by widget type)
- */
-export interface WidgetData {
-  /** Widget ID */
-  widgetId: string;
-  /** Data timestamp */
-  timestamp: Date;
-  /** Widget-specific data */
-  data: unknown;
-  /** Data source */
-  source: DataSource;
-  /** Cache information */
-  cache?: CacheInfo;
-  /** Error information if data failed to load */
-  error?: WidgetError;
-}
-
-/**
- * Cache information
- */
-export interface CacheInfo {
-  /** Whether data is from cache */
-  cached: boolean;
-  /** Cache timestamp */
-  cachedAt?: Date;
-  /** Cache TTL in seconds */
-  ttl?: number;
-  /** Cache key */
-  key?: string;
-}
-
-/**
- * Widget error information
- */
-export interface WidgetError {
-  /** Error code */
-  code: string;
-  /** Error message */
-  message: string;
-  /** Error details */
-  details?: Record<string, unknown>;
-  /** Error timestamp */
-  timestamp: Date;
-  /** Whether error is recoverable */
-  recoverable: boolean;
+export function getWidgetDisplayName(type: WidgetType): string {
+  const names: Record<WidgetType, string> = {
+    'asset-list': 'Asset List',
+    'asset-grid': 'Asset Grid',
+    'price-chart': 'Price Chart',
+    'news-feed': 'News Feed',
+    'market-summary': 'Market Summary',
+    watchlist: 'Watchlist',
+    portfolio: 'Portfolio',
+    'economic-calendar': 'Economic Calendar',
+    heatmap: 'Market Heatmap',
+    screener: 'Stock Screener',
+    alerts: 'Price Alerts',
+    performance: 'Performance',
+    custom: 'Custom Widget',
+  };
+  return names[type] || type;
 }

@@ -25,7 +25,8 @@ app.use(express.json());
 app.use(requestIdMiddleware);
 
 // Test routes with validation
-app.post('/test/body-validation', 
+app.post(
+  '/test/body-validation',
   validate({
     body: Joi.object({
       name: Joi.string().required(),
@@ -38,7 +39,8 @@ app.post('/test/body-validation',
   }
 );
 
-app.get('/test/query-validation',
+app.get(
+  '/test/query-validation',
   validate({
     query: Joi.object({
       page: Joi.number().integer().min(1).default(1),
@@ -51,10 +53,13 @@ app.get('/test/query-validation',
   }
 );
 
-app.get('/test/params-validation/:id',
+app.get(
+  '/test/params-validation/:id',
   validate({
     params: Joi.object({
-      id: Joi.string().pattern(/^[0-9a-fA-F]{24}$/).required(),
+      id: Joi.string()
+        .pattern(/^[0-9a-fA-F]{24}$/)
+        .required(),
     }),
   }),
   (req, res) => {
@@ -62,7 +67,8 @@ app.get('/test/params-validation/:id',
   }
 );
 
-app.post('/test/headers-validation',
+app.post(
+  '/test/headers-validation',
   validate({
     headers: Joi.object({
       'x-api-key': Joi.string().required(),
@@ -74,7 +80,8 @@ app.post('/test/headers-validation',
   }
 );
 
-app.post('/test/multiple-validation/:id',
+app.post(
+  '/test/multiple-validation/:id',
   validate({
     body: Joi.object({
       name: Joi.string().required(),
@@ -87,22 +94,29 @@ app.post('/test/multiple-validation/:id',
     }),
   }),
   (req, res) => {
-    res.json({ success: true, data: { body: req.body, query: req.query, params: req.params } });
+    res.json({
+      success: true,
+      data: { body: req.body, query: req.query, params: req.params },
+    });
   }
 );
 
-app.post('/test/sanitization',
-  sanitize(Joi.object({
-    name: Joi.string().required(),
-    email: Joi.string().email().required(),
-    extraField: Joi.string(), // This should be stripped if not provided
-  })), // Allow unknown fields to be stripped
+app.post(
+  '/test/sanitization',
+  sanitize(
+    Joi.object({
+      name: Joi.string().required(),
+      email: Joi.string().email().required(),
+      extraField: Joi.string(), // This should be stripped if not provided
+    })
+  ), // Allow unknown fields to be stripped
   (req, res) => {
     res.json({ success: true, data: req.body });
   }
 );
 
-app.get('/test/common-schemas/pagination',
+app.get(
+  '/test/common-schemas/pagination',
   validate({
     query: commonSchemas.pagination,
   }),
@@ -111,7 +125,8 @@ app.get('/test/common-schemas/pagination',
   }
 );
 
-app.get('/test/common-schemas/date-range',
+app.get(
+  '/test/common-schemas/date-range',
   validate({
     query: commonSchemas.dateRange,
   }),
@@ -120,7 +135,8 @@ app.get('/test/common-schemas/date-range',
   }
 );
 
-app.get('/test/logging-schema',
+app.get(
+  '/test/logging-schema',
   validate({
     query: loggingSchema.query,
   }),
@@ -129,7 +145,8 @@ app.get('/test/logging-schema',
   }
 );
 
-app.get('/test/cache-schema/:key',
+app.get(
+  '/test/cache-schema/:key',
   validate({
     params: cacheSchema.params,
     query: cacheSchema.query,
@@ -139,7 +156,8 @@ app.get('/test/cache-schema/:key',
   }
 );
 
-app.get('/test/system-schema',
+app.get(
+  '/test/system-schema',
   validate({
     query: systemSchema.query,
   }),
@@ -186,7 +204,9 @@ describe('Validation Middleware', () => {
       expect(response.body.success).toBe(false);
       expect(response.body.error.code).toBe('VALIDATION_ERROR');
       expect(response.body.error.details.validationErrors).toHaveLength(1);
-      expect(response.body.error.details.validationErrors[0].location).toBe('body');
+      expect(response.body.error.details.validationErrors[0].location).toBe(
+        'body'
+      );
     });
 
     it('should reject missing required fields', async () => {
@@ -306,7 +326,7 @@ describe('Validation Middleware', () => {
     });
 
     it('should report errors from multiple sources', async () => {
-      const response = await request(app)
+      await request(app)
         .post('/test/multiple-validation/test-id') // Missing required fields
         .send({}) // Missing name in body
         .expect(400); // Validation error due to missing fields
@@ -368,7 +388,9 @@ describe('Validation Middleware', () => {
 
     it('should validate date range schema', async () => {
       const response = await request(app)
-        .get('/test/common-schemas/date-range?startDate=2023-01-01T00:00:00.000Z&endDate=2023-12-31T23:59:59.999Z')
+        .get(
+          '/test/common-schemas/date-range?startDate=2023-01-01T00:00:00.000Z&endDate=2023-12-31T23:59:59.999Z'
+        )
         .expect(200)
         .expect('Content-Type', /json/);
 
@@ -377,7 +399,9 @@ describe('Validation Middleware', () => {
 
     it('should reject invalid date range', async () => {
       const response = await request(app)
-        .get('/test/common-schemas/date-range?startDate=2023-12-31T00:00:00.000Z&endDate=2023-01-01T00:00:00.000Z')
+        .get(
+          '/test/common-schemas/date-range?startDate=2023-12-31T00:00:00.000Z&endDate=2023-01-01T00:00:00.000Z'
+        )
         .expect(400)
         .expect('Content-Type', /json/);
 
@@ -488,7 +512,7 @@ describe('Custom Joi Extensions', () => {
   describe('objectId type', () => {
     it('should validate ObjectId with custom extension', () => {
       const schema = customJoi.objectId().required();
-      
+
       const { error: validError } = schema.validate('507f1f77bcf86cd799439011');
       expect(validError).toBeUndefined();
 

@@ -5,11 +5,11 @@ import { logger } from '@/utils/logger';
 export interface CacheServiceStats {
   redis: {
     available: boolean;
-    stats?: any;
+    stats?: Record<string, unknown>;
   };
   memory: {
     available: boolean;
-    stats: any;
+    stats: Record<string, unknown>;
   };
   fallbackMode: boolean;
 }
@@ -37,7 +37,7 @@ export class CacheService {
     try {
       // Try to connect to Redis
       const redisClient = await redisManager.connect();
-      
+
       if (redisClient) {
         this.fallbackMode = false;
         logger.info('Cache service initialized with Redis');
@@ -54,7 +54,7 @@ export class CacheService {
   /**
    * Get value from cache
    */
-  public async get<T = any>(key: string): Promise<T | null> {
+  public async get<T = unknown>(key: string): Promise<T | null> {
     try {
       // Try Redis first if available
       if (!this.fallbackMode) {
@@ -75,14 +75,14 @@ export class CacheService {
       return await this.memoryCache.get<T>(key);
     } catch (error) {
       logger.error(`Cache get error for key ${key}:`, error);
-      
+
       // If Redis fails, try memory cache
       if (!this.fallbackMode) {
         this.fallbackMode = true;
         logger.warn('Redis error, switching to memory cache fallback');
         return await this.memoryCache.get<T>(key);
       }
-      
+
       return null;
     }
   }
@@ -90,7 +90,11 @@ export class CacheService {
   /**
    * Set value in cache with TTL
    */
-  public async set<T = any>(key: string, value: T, ttlSeconds?: number): Promise<void> {
+  public async set<T = unknown>(
+    key: string,
+    value: T,
+    ttlSeconds?: number
+  ): Promise<void> {
     try {
       const serialized = JSON.stringify(value);
 
@@ -99,11 +103,11 @@ export class CacheService {
         const redisClient = redisManager.getClient();
         if (redisClient && redisManager.isHealthy()) {
           if (ttlSeconds) {
-            await redisClient.setEx(key, ttlSeconds, serialized);
+            await redisClient.setex(key, ttlSeconds, serialized);
           } else {
             await redisClient.set(key, serialized);
           }
-          
+
           // Also set in memory cache for faster access
           await this.memoryCache.set(key, value, ttlSeconds);
           return;
@@ -118,7 +122,7 @@ export class CacheService {
       await this.memoryCache.set(key, value, ttlSeconds);
     } catch (error) {
       logger.error(`Cache set error for key ${key}:`, error);
-      
+
       // If Redis fails, try memory cache
       if (!this.fallbackMode) {
         this.fallbackMode = true;
@@ -149,17 +153,17 @@ export class CacheService {
 
       // Also delete from memory cache
       const memoryDeleted = await this.memoryCache.delete(key);
-      
+
       return deleted || memoryDeleted;
     } catch (error) {
       logger.error(`Cache delete error for key ${key}:`, error);
-      
+
       // If Redis fails, try memory cache
       if (!this.fallbackMode) {
         this.fallbackMode = true;
         logger.warn('Redis error, switching to memory cache fallback');
       }
-      
+
       return await this.memoryCache.delete(key);
     }
   }
@@ -185,13 +189,13 @@ export class CacheService {
       return await this.memoryCache.exists(key);
     } catch (error) {
       logger.error(`Cache exists error for key ${key}:`, error);
-      
+
       // If Redis fails, try memory cache
       if (!this.fallbackMode) {
         this.fallbackMode = true;
         logger.warn('Redis error, switching to memory cache fallback');
       }
-      
+
       return await this.memoryCache.exists(key);
     }
   }
@@ -206,10 +210,10 @@ export class CacheService {
         const redisClient = redisManager.getClient();
         if (redisClient && redisManager.isHealthy()) {
           const result = await redisClient.expire(key, ttlSeconds);
-          
+
           // Also update memory cache expiry
           await this.memoryCache.expire(key, ttlSeconds);
-          
+
           return result === 1; // Redis returns 1 for success, 0 for failure
         } else {
           this.fallbackMode = true;
@@ -221,13 +225,13 @@ export class CacheService {
       return await this.memoryCache.expire(key, ttlSeconds);
     } catch (error) {
       logger.error(`Cache expire error for key ${key}:`, error);
-      
+
       // If Redis fails, try memory cache
       if (!this.fallbackMode) {
         this.fallbackMode = true;
         logger.warn('Redis error, switching to memory cache fallback');
       }
-      
+
       return await this.memoryCache.expire(key, ttlSeconds);
     }
   }
@@ -252,13 +256,13 @@ export class CacheService {
       return await this.memoryCache.ttl(key);
     } catch (error) {
       logger.error(`Cache TTL error for key ${key}:`, error);
-      
+
       // If Redis fails, try memory cache
       if (!this.fallbackMode) {
         this.fallbackMode = true;
         logger.warn('Redis error, switching to memory cache fallback');
       }
-      
+
       return await this.memoryCache.ttl(key);
     }
   }
@@ -272,13 +276,13 @@ export class CacheService {
       if (!this.fallbackMode) {
         const redisClient = redisManager.getClient();
         if (redisClient && redisManager.isHealthy()) {
-          await redisClient.flushAll();
+          await redisClient.flushall();
         }
       }
 
       // Clear memory cache
       await this.memoryCache.clear();
-      
+
       logger.info('Cache cleared successfully');
     } catch (error) {
       logger.error('Cache clear error:', error);
@@ -306,13 +310,13 @@ export class CacheService {
       return await this.memoryCache.keys(pattern);
     } catch (error) {
       logger.error(`Cache keys error for pattern ${pattern}:`, error);
-      
+
       // If Redis fails, try memory cache
       if (!this.fallbackMode) {
         this.fallbackMode = true;
         logger.warn('Redis error, switching to memory cache fallback');
       }
-      
+
       return await this.memoryCache.keys(pattern);
     }
   }
@@ -340,17 +344,17 @@ export class CacheService {
 
       // Also delete from memory cache
       const memoryDeleted = await this.memoryCache.deletePattern(pattern);
-      
+
       return Math.max(deleted, memoryDeleted);
     } catch (error) {
       logger.error(`Cache delete pattern error for pattern ${pattern}:`, error);
-      
+
       // If Redis fails, try memory cache
       if (!this.fallbackMode) {
         this.fallbackMode = true;
         logger.warn('Redis error, switching to memory cache fallback');
       }
-      
+
       return await this.memoryCache.deletePattern(pattern);
     }
   }
@@ -389,13 +393,19 @@ export class CacheService {
   /**
    * Health check for cache service
    */
-  public async healthCheck(): Promise<{ status: string; details: any }> {
+  public async healthCheck(): Promise<{
+    status: string;
+    details: Record<string, unknown>;
+  }> {
     try {
       const redisHealth = await redisManager.healthCheck();
       const memoryStats = this.memoryCache.getStats();
 
       return {
-        status: redisHealth.status === 'healthy' || this.fallbackMode ? 'healthy' : 'degraded',
+        status:
+          redisHealth.status === 'healthy' || this.fallbackMode
+            ? 'healthy'
+            : 'degraded',
         details: {
           redis: redisHealth,
           memory: {
@@ -408,7 +418,9 @@ export class CacheService {
     } catch (error) {
       return {
         status: 'unhealthy',
-        details: { error: error instanceof Error ? error.message : 'Unknown error' },
+        details: {
+          error: error instanceof Error ? error.message : 'Unknown error',
+        },
       };
     }
   }

@@ -4,9 +4,7 @@ import app from '../index';
 describe('Express App', () => {
   describe('Health Check', () => {
     it('should return health status on /health', async () => {
-      const response = await request(app)
-        .get('/health')
-        .expect(200);
+      const response = await request(app).get('/health').expect(200);
 
       expect(response.body).toHaveProperty('status', 'ok');
       expect(response.body).toHaveProperty('timestamp');
@@ -17,8 +15,7 @@ describe('Express App', () => {
 
   describe('System Routes', () => {
     it('should return system health on /api/system/health', async () => {
-      const response = await request(app)
-        .get('/api/system/health');
+      const response = await request(app).get('/api/system/health');
 
       expect(response.status).toBeGreaterThanOrEqual(200);
       expect(response.status).toBeLessThan(300);
@@ -32,9 +29,7 @@ describe('Express App', () => {
     });
 
     it('should return system info on /api/system/info', async () => {
-      const response = await request(app)
-        .get('/api/system/info')
-        .expect(200);
+      const response = await request(app).get('/api/system/info').expect(200);
 
       expect(response.body).toHaveProperty('name', 'MarketPulse API');
       expect(response.body).toHaveProperty('version');
@@ -61,9 +56,7 @@ describe('Express App', () => {
 
   describe('Error Handling', () => {
     it('should return 404 for non-existent routes', async () => {
-      const response = await request(app)
-        .get('/api/non-existent')
-        .expect(404);
+      const response = await request(app).get('/api/non-existent').expect(404);
 
       expect(response.body).toHaveProperty('success', false);
       expect(response.body).toHaveProperty('error');
@@ -74,6 +67,7 @@ describe('Express App', () => {
     it('should include CORS headers', async () => {
       const response = await request(app)
         .get('/health')
+        .set('Origin', 'http://localhost:5173')
         .expect(200);
 
       expect(response.headers).toHaveProperty('access-control-allow-origin');
@@ -82,9 +76,7 @@ describe('Express App', () => {
 
   describe('Security Headers', () => {
     it('should include security headers from Helmet', async () => {
-      const response = await request(app)
-        .get('/health')
-        .expect(200);
+      const response = await request(app).get('/health').expect(200);
 
       expect(response.headers).toHaveProperty('x-content-type-options');
       expect(response.headers).toHaveProperty('x-frame-options');

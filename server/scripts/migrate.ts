@@ -4,7 +4,7 @@ import { databaseManager } from '../src/config/database';
 import { MigrationManager } from '../src/utils/migrations';
 import { logger } from '../src/utils/logger';
 
-async function runMigrations() {
+async function runMigrations(): Promise<void> {
   try {
     logger.info('Starting database migration process...');
 
@@ -26,9 +26,9 @@ async function runMigrations() {
     // Check current status
     const currentVersion = await migrationManager.getCurrentVersion();
     const isUpToDate = await migrationManager.isUpToDate();
-    
+
     logger.info(`Current database version: ${currentVersion}`);
-    
+
     if (isUpToDate) {
       logger.info('Database is already up to date');
       return;
@@ -36,10 +36,9 @@ async function runMigrations() {
 
     // Run migrations
     await migrationManager.runMigrations();
-    
+
     const newVersion = await migrationManager.getCurrentVersion();
     logger.info(`Database migrated successfully to version ${newVersion}`);
-
   } catch (error) {
     logger.error('Migration failed:', error);
     process.exit(1);
@@ -58,26 +57,26 @@ switch (command) {
   case undefined:
     runMigrations();
     break;
-  
+
   case 'status':
-    (async () => {
+    (async (): Promise<void> => {
       try {
         const db = await databaseManager.connect();
         const migrationManager = new MigrationManager(db);
-        
+
         const currentVersion = await migrationManager.getCurrentVersion();
         const pending = await migrationManager.getPendingMigrations();
         const applied = await migrationManager.getAppliedMigrations();
-        
+
         console.log(`Current version: ${currentVersion}`);
         console.log(`Applied migrations: ${applied.length}`);
         console.log(`Pending migrations: ${pending.length}`);
-        
+
         if (pending.length > 0) {
           console.log('\nPending migrations:');
           pending.forEach(m => console.log(`  ${m.version}: ${m.name}`));
         }
-        
+
         await databaseManager.disconnect();
       } catch (error) {
         logger.error('Failed to get migration status:', error);
@@ -85,15 +84,15 @@ switch (command) {
       }
     })();
     break;
-    
+
   case 'validate':
-    (async () => {
+    (async (): Promise<void> => {
       try {
         const db = await databaseManager.connect();
         const migrationManager = new MigrationManager(db);
-        
+
         const validation = await migrationManager.validateMigrations();
-        
+
         if (validation.valid) {
           console.log('✅ All migrations are valid');
         } else {
@@ -101,7 +100,7 @@ switch (command) {
           validation.errors.forEach(error => console.log(`  - ${error}`));
           process.exit(1);
         }
-        
+
         await databaseManager.disconnect();
       } catch (error) {
         logger.error('Validation failed:', error);
@@ -109,7 +108,7 @@ switch (command) {
       }
     })();
     break;
-    
+
   default:
     console.log('Usage: npm run migrate [command]');
     console.log('Commands:');

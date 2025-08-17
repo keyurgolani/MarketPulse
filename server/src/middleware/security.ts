@@ -14,7 +14,7 @@ interface SecurityConfig {
     exposedHeaders: string[];
     maxAge: number;
   };
-  helmet: any; // Use any for helmet config to avoid type issues
+  helmet: Record<string, unknown>; // Use Record for helmet config
   rateLimit: {
     windowMs: number;
     max: number;
@@ -24,14 +24,22 @@ interface SecurityConfig {
 
 // Get security configuration based on environment
 const getSecurityConfig = (): SecurityConfig => {
-  const isDevelopment = config.nodeEnv === 'development' || config.nodeEnv === 'test';
+  const isDevelopment =
+    config.nodeEnv === 'development' || config.nodeEnv === 'test';
   const isProduction = config.nodeEnv === 'production';
 
   return {
     cors: {
-      origin: isDevelopment 
-        ? ['http://localhost:3000', 'http://localhost:5173', 'http://127.0.0.1:3000', 'http://127.0.0.1:5173']
-        : config.cors.origin ? [config.cors.origin] : false,
+      origin: isDevelopment
+        ? [
+            'http://localhost:3000',
+            'http://localhost:5173',
+            'http://127.0.0.1:3000',
+            'http://127.0.0.1:5173',
+          ]
+        : config.cors.origin
+          ? [config.cors.origin]
+          : false,
       credentials: true,
       methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
       allowedHeaders: [
@@ -54,32 +62,44 @@ const getSecurityConfig = (): SecurityConfig => {
       maxAge: 86400, // 24 hours
     },
     helmet: {
-      contentSecurityPolicy: isProduction ? {
-        directives: {
-          defaultSrc: ["'self'"],
-          styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
-          fontSrc: ["'self'", 'https://fonts.gstatic.com'],
-          imgSrc: ["'self'", 'data:', 'https:'],
-          scriptSrc: ["'self'"],
-          connectSrc: ["'self'", 'https://api.yahoo.com', 'https://query1.finance.yahoo.com'],
-          frameSrc: ["'none'"],
-          objectSrc: ["'none'"],
-          baseUri: ["'self'"],
-          formAction: ["'self'"],
-          upgradeInsecureRequests: [],
-        },
-      } : false, // Disable CSP in development for easier debugging
+      contentSecurityPolicy: isProduction
+        ? {
+            directives: {
+              defaultSrc: ["'self'"],
+              styleSrc: [
+                "'self'",
+                "'unsafe-inline'",
+                'https://fonts.googleapis.com',
+              ],
+              fontSrc: ["'self'", 'https://fonts.gstatic.com'],
+              imgSrc: ["'self'", 'data:', 'https:'],
+              scriptSrc: ["'self'"],
+              connectSrc: [
+                "'self'",
+                'https://api.yahoo.com',
+                'https://query1.finance.yahoo.com',
+              ],
+              frameSrc: ["'none'"],
+              objectSrc: ["'none'"],
+              baseUri: ["'self'"],
+              formAction: ["'self'"],
+              upgradeInsecureRequests: [],
+            },
+          }
+        : false, // Disable CSP in development for easier debugging
       crossOriginEmbedderPolicy: false, // May interfere with some APIs
       crossOriginOpenerPolicy: false, // Disable for compatibility
-      crossOriginResourcePolicy: false, // Disable for compatibility  
+      crossOriginResourcePolicy: false, // Disable for compatibility
       dnsPrefetchControl: false,
       frameguard: { action: 'deny' },
       hidePoweredBy: true,
-      hsts: isProduction ? {
-        maxAge: 31536000, // 1 year
-        includeSubDomains: true,
-        preload: true,
-      } : false,
+      hsts: isProduction
+        ? {
+            maxAge: 31536000, // 1 year
+            includeSubDomains: true,
+            preload: true,
+          }
+        : false,
       ieNoOpen: true,
       noSniff: true,
       originAgentCluster: true,
@@ -96,8 +116,12 @@ const getSecurityConfig = (): SecurityConfig => {
 };
 
 // Input sanitization middleware
-const sanitizeInput = (req: Request, res: Response, next: NextFunction): void => {
-  const sanitizeObject = (obj: any): any => {
+const sanitizeInput = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): void => {
+  const sanitizeObject = (obj: unknown): unknown => {
     if (typeof obj === 'string') {
       // Sanitize strings
       return obj
@@ -107,7 +131,7 @@ const sanitizeInput = (req: Request, res: Response, next: NextFunction): void =>
         .replace(/<[^>]*>/g, '') // Remove all HTML tags
         .trim();
     }
-    
+
     if (typeof obj !== 'object' || obj === null) {
       return obj;
     }
@@ -116,10 +140,15 @@ const sanitizeInput = (req: Request, res: Response, next: NextFunction): void =>
       return obj.map(sanitizeObject);
     }
 
-    const sanitized: any = {};
+    const sanitized: Record<string, unknown> = {};
     for (const [key, value] of Object.entries(obj)) {
       // Remove potentially dangerous keys
-      if (key.startsWith('__') || key.includes('prototype') || key.includes('constructor') || key.startsWith('on')) {
+      if (
+        key.startsWith('__') ||
+        key.includes('prototype') ||
+        key.includes('constructor') ||
+        key.startsWith('on')
+      ) {
         continue;
       }
 
@@ -143,13 +172,13 @@ const sanitizeInput = (req: Request, res: Response, next: NextFunction): void =>
 const limitRequestSize = (maxSize: string = '10mb') => {
   // Validate the maxSize parameter when creating the middleware
   const maxBytes = parseSize(maxSize);
-  
+
   return (req: Request, res: Response, next: NextFunction): void => {
     const contentLength = req.headers['content-length'];
-    
+
     if (contentLength) {
       const size = parseInt(contentLength, 10);
-      
+
       if (size > maxBytes) {
         logger.warn('Request size limit exceeded', {
           ip: req.ip,
@@ -158,7 +187,7 @@ const limitRequestSize = (maxSize: string = '10mb') => {
           contentLength: size,
           maxSize: maxBytes,
         });
-        
+
         res.status(413).json({
           success: false,
           error: 'Request entity too large',
@@ -168,7 +197,7 @@ const limitRequestSize = (maxSize: string = '10mb') => {
         return;
       }
     }
-    
+
     next();
   };
 };
@@ -181,41 +210,51 @@ const parseSize = (size: string): number => {
     mb: 1024 * 1024,
     gb: 1024 * 1024 * 1024,
   };
-  
+
   const match = size.toLowerCase().match(/^(\d+(?:\.\d+)?)\s*([a-z]+)?$/);
   if (!match) {
     throw new Error(`Invalid size format: ${size}`);
   }
-  
+
   const value = parseFloat(match[1]!);
   const unit = match[2] || 'b';
-  
+
   if (!(unit in units)) {
     throw new Error(`Unknown size unit: ${unit}`);
   }
-  
+
   return Math.floor(value * units[unit]!);
 };
 
 // Security headers middleware
-const securityHeaders = (req: Request, res: Response, next: NextFunction): void => {
+const securityHeaders = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): void => {
   // Remove server information
   res.removeHeader('X-Powered-By');
-  
+
   // Add custom security headers
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('X-Frame-Options', 'DENY');
   res.setHeader('X-XSS-Protection', '1; mode=block');
   res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
-  res.setHeader('Permissions-Policy', 'geolocation=(), microphone=(), camera=()');
-  
+  res.setHeader(
+    'Permissions-Policy',
+    'geolocation=(), microphone=(), camera=()'
+  );
+
   // Add cache control for security-sensitive endpoints
   if (req.path.includes('/api/system') || req.path.includes('/api/logs')) {
-    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.setHeader(
+      'Cache-Control',
+      'no-store, no-cache, must-revalidate, proxy-revalidate'
+    );
     res.setHeader('Pragma', 'no-cache');
     res.setHeader('Expires', '0');
   }
-  
+
   next();
 };
 
@@ -235,9 +274,9 @@ const ipFilter = (options: {
       }
       return req.ip || req.connection.remoteAddress || 'unknown';
     };
-    
+
     const clientIP = getClientIP();
-    
+
     // Check blacklist first
     if (options.blacklist && options.blacklist.includes(clientIP)) {
       logger.warn('Blocked request from blacklisted IP', {
@@ -246,7 +285,7 @@ const ipFilter = (options: {
         method: req.method,
         userAgent: req.get('User-Agent'),
       });
-      
+
       res.status(403).json({
         success: false,
         error: 'Access denied',
@@ -255,7 +294,7 @@ const ipFilter = (options: {
       });
       return;
     }
-    
+
     // Check whitelist if configured
     if (options.whitelist && options.whitelist.length > 0) {
       if (!options.whitelist.includes(clientIP)) {
@@ -265,7 +304,7 @@ const ipFilter = (options: {
           method: req.method,
           userAgent: req.get('User-Agent'),
         });
-        
+
         res.status(403).json({
           success: false,
           error: 'Access denied',
@@ -275,20 +314,24 @@ const ipFilter = (options: {
         return;
       }
     }
-    
+
     next();
   };
 };
 
 // API key validation middleware
-const validateApiKey = (req: Request, res: Response, next: NextFunction): void => {
+const validateApiKey = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): void => {
   const apiKey = req.headers['x-api-key'] as string;
-  
+
   // Skip API key validation for health checks and public endpoints
   if (req.path === '/api/system/health' || req.path === '/api/system/info') {
     return next();
   }
-  
+
   if (!apiKey) {
     logger.warn('Missing API key', {
       ip: req.ip,
@@ -296,7 +339,7 @@ const validateApiKey = (req: Request, res: Response, next: NextFunction): void =
       method: req.method,
       userAgent: req.get('User-Agent'),
     });
-    
+
     res.status(401).json({
       success: false,
       error: 'Missing API key',
@@ -305,7 +348,7 @@ const validateApiKey = (req: Request, res: Response, next: NextFunction): void =
     });
     return;
   }
-  
+
   // Validate API key format (basic validation)
   if (!/^[a-zA-Z0-9_-]{32,}$/.test(apiKey)) {
     logger.warn('Invalid API key format', {
@@ -314,7 +357,7 @@ const validateApiKey = (req: Request, res: Response, next: NextFunction): void =
       method: req.method,
       apiKeyLength: apiKey.length,
     });
-    
+
     res.status(401).json({
       success: false,
       error: 'Invalid API key',
@@ -323,10 +366,10 @@ const validateApiKey = (req: Request, res: Response, next: NextFunction): void =
     });
     return;
   }
-  
+
   // TODO: Implement actual API key validation against database
   // For now, accept any properly formatted key
-  
+
   next();
 };
 
@@ -341,7 +384,7 @@ const requestTimeout = (timeoutMs: number = 30000) => {
           method: req.method,
           timeout: timeoutMs,
         });
-        
+
         res.status(408).json({
           success: false,
           error: 'Request timeout',
@@ -350,62 +393,66 @@ const requestTimeout = (timeoutMs: number = 30000) => {
         });
       }
     }, timeoutMs);
-    
+
     // Clear timeout when response is finished
     res.on('finish', () => {
       clearTimeout(timeout);
     });
-    
+
     res.on('close', () => {
       clearTimeout(timeout);
     });
-    
+
     next();
   };
 };
 
 // Main security middleware setup function (without sanitization)
-export const setupSecurity = () => {
+export const setupSecurity = (): Array<
+  (req: Request, res: Response, next: NextFunction) => void
+> => {
   const securityConfig = getSecurityConfig();
-  
+
   return [
     // Request timeout (should be first)
     requestTimeout(30000),
-    
+
     // Helmet for security headers
     helmet(securityConfig.helmet),
-    
+
     // CORS configuration
     cors(securityConfig.cors),
-    
+
     // Custom security headers
     securityHeaders,
-    
+
     // Request size limiting
     limitRequestSize('10mb'),
   ];
 };
 
 // Security middleware setup with sanitization (for after body parsing)
-export const setupSecurityWithSanitization = () => {
+export const setupSecurityWithSanitization = (): Array<
+  (req: Request, res: Response, next: NextFunction) => void
+> => {
   const securityConfig = getSecurityConfig();
-  
+
   return [
     // Request timeout (should be first)
     requestTimeout(30000),
-    
+
     // Helmet for security headers
     helmet(securityConfig.helmet),
-    
+
     // CORS configuration
     cors(securityConfig.cors),
-    
+
     // Custom security headers
     securityHeaders,
-    
+
     // Request size limiting
     limitRequestSize('10mb'),
-    
+
     // Input sanitization (after body parsing)
     sanitizeInput,
   ];

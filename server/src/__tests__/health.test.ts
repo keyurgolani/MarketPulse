@@ -1,18 +1,18 @@
 import { healthMonitor } from '../services/HealthMonitorService';
-import { databaseManager } from '../config/database';
-import { cacheService } from '../services/CacheService';
 
 describe('Health Monitor Service', () => {
   beforeEach(() => {
     // Stop any existing monitoring
     healthMonitor.stopMonitoring();
-    
+
     // Clear alerts and history
     healthMonitor.clearResolvedAlerts();
     const alerts = healthMonitor.getAlerts(true);
-    alerts.forEach((alert: any) => healthMonitor.resolveAlert(alert.id));
+    alerts.forEach((alert: { id: string }) =>
+      healthMonitor.resolveAlert(alert.id)
+    );
     healthMonitor.clearResolvedAlerts();
-    
+
     // Clear metrics history
     healthMonitor.destroy();
   });
@@ -28,7 +28,7 @@ describe('Health Monitor Service', () => {
   describe('Metrics Collection', () => {
     it('should collect current health metrics', async () => {
       const metrics = await healthMonitor.collectMetrics();
-      
+
       expect(metrics).toHaveProperty('timestamp');
       expect(metrics).toHaveProperty('uptime');
       expect(metrics).toHaveProperty('memory');
@@ -36,7 +36,7 @@ describe('Health Monitor Service', () => {
       expect(metrics).toHaveProperty('system');
       expect(metrics).toHaveProperty('services');
       expect(metrics).toHaveProperty('environment');
-      
+
       // Check memory metrics
       expect(metrics.memory).toHaveProperty('used');
       expect(metrics.memory).toHaveProperty('total');
@@ -44,19 +44,19 @@ describe('Health Monitor Service', () => {
       expect(metrics.memory).toHaveProperty('percentage');
       expect(typeof metrics.memory.used).toBe('number');
       expect(typeof metrics.memory.percentage).toBe('number');
-      
+
       // Check CPU metrics
       expect(metrics.cpu).toHaveProperty('usage');
       expect(metrics.cpu).toHaveProperty('loadAverage');
       expect(typeof metrics.cpu.usage).toBe('number');
       expect(Array.isArray(metrics.cpu.loadAverage)).toBe(true);
-      
+
       // Check system info
       expect(metrics.system).toHaveProperty('platform');
       expect(metrics.system).toHaveProperty('arch');
       expect(metrics.system).toHaveProperty('nodeVersion');
       expect(metrics.system).toHaveProperty('hostname');
-      
+
       // Check services
       expect(metrics.services).toHaveProperty('database');
       expect(metrics.services).toHaveProperty('cache');
@@ -69,10 +69,10 @@ describe('Health Monitor Service', () => {
       await healthMonitor.collectMetrics();
       await healthMonitor.collectMetrics();
       await healthMonitor.collectMetrics();
-      
+
       const history = healthMonitor.getMetricsHistory();
       expect(history.length).toBe(3);
-      
+
       // Check that timestamps are different
       expect(history[0]?.timestamp).not.toBe(history[1]?.timestamp);
       expect(history[1]?.timestamp).not.toBe(history[2]?.timestamp);
@@ -83,7 +83,7 @@ describe('Health Monitor Service', () => {
       for (let i = 0; i < 15; i++) {
         await healthMonitor.collectMetrics();
       }
-      
+
       const history = healthMonitor.getMetricsHistory();
       expect(history.length).toBe(15);
     }, 15000);
@@ -93,10 +93,10 @@ describe('Health Monitor Service', () => {
       for (let i = 0; i < 10; i++) {
         await healthMonitor.collectMetrics();
       }
-      
+
       const limitedHistory = healthMonitor.getMetricsHistory(5);
       expect(limitedHistory.length).toBe(5);
-      
+
       // Should return the most recent ones
       const fullHistory = healthMonitor.getMetricsHistory();
       expect(limitedHistory.length).toBeLessThanOrEqual(fullHistory.length);
@@ -106,18 +106,20 @@ describe('Health Monitor Service', () => {
   describe('Health Status', () => {
     it('should provide overall health status', async () => {
       const healthStatus = await healthMonitor.getHealthStatus();
-      
+
       expect(healthStatus).toHaveProperty('status');
       expect(healthStatus).toHaveProperty('metrics');
       expect(healthStatus).toHaveProperty('alerts');
-      
-      expect(['healthy', 'degraded', 'unhealthy']).toContain(healthStatus.status);
+
+      expect(['healthy', 'degraded', 'unhealthy']).toContain(
+        healthStatus.status
+      );
       expect(Array.isArray(healthStatus.alerts)).toBe(true);
     });
 
     it('should determine status based on services', async () => {
       const healthStatus = await healthMonitor.getHealthStatus();
-      
+
       // With working database and cache, should be healthy or degraded (if Redis is unavailable)
       expect(['healthy', 'degraded']).toContain(healthStatus.status);
     });
@@ -128,7 +130,7 @@ describe('Health Monitor Service', () => {
       // Initially no alerts
       const activeAlerts = healthMonitor.getAlerts(false);
       const allAlerts = healthMonitor.getAlerts(true);
-      
+
       expect(activeAlerts.length).toBe(0);
       expect(allAlerts.length).toBe(0);
     });
@@ -138,7 +140,7 @@ describe('Health Monitor Service', () => {
       // Since we can't directly create alerts, we'll test the resolution logic
       const alertsBefore = healthMonitor.getAlerts(false);
       expect(alertsBefore.length).toBe(0);
-      
+
       // Try to resolve non-existent alert
       const resolved = healthMonitor.resolveAlert('non-existent');
       expect(resolved).toBe(false);
@@ -152,30 +154,30 @@ describe('Health Monitor Service', () => {
   });
 
   describe('Monitoring Control', () => {
-    it('should start and stop monitoring', (done) => {
+    it('should start and stop monitoring', done => {
       // Start monitoring with short interval for testing
       healthMonitor.startMonitoring(100);
-      
+
       // Wait a bit then stop
       setTimeout(() => {
         healthMonitor.stopMonitoring();
-        
+
         // Check that metrics were collected
         const history = healthMonitor.getMetricsHistory();
         expect(history.length).toBeGreaterThan(0);
-        
+
         done();
       }, 250);
     });
 
     it('should not start monitoring if already running', () => {
       healthMonitor.startMonitoring(1000);
-      
+
       // Try to start again - should not throw error
       expect(() => {
         healthMonitor.startMonitoring(500);
       }).not.toThrow();
-      
+
       healthMonitor.stopMonitoring();
     });
 
@@ -190,16 +192,16 @@ describe('Health Monitor Service', () => {
   describe('Resource Cleanup', () => {
     it('should destroy and cleanup resources', () => {
       healthMonitor.startMonitoring(1000);
-      
+
       // Should not throw error
       expect(() => {
         healthMonitor.destroy();
       }).not.toThrow();
-      
+
       // Should clear alerts and history
       const alerts = healthMonitor.getAlerts(true);
       const history = healthMonitor.getMetricsHistory();
-      
+
       expect(alerts.length).toBe(0);
       expect(history.length).toBe(0);
     });

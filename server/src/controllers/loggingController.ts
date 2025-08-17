@@ -5,9 +5,9 @@ import { logger } from '@/utils/logger';
 
 export const getLogFiles = asyncHandler(async (req: Request, res: Response) => {
   const logFiles = await loggingService.getLogFiles();
-  
+
   logger.info('Log files accessed', {
-    requestId: (req as any).id,
+    requestId: (req as Request & { id?: string }).id,
     fileCount: logFiles.length,
   });
 
@@ -23,7 +23,8 @@ export const getLogFiles = asyncHandler(async (req: Request, res: Response) => {
 
 export const getLogFile = asyncHandler(async (req: Request, res: Response) => {
   const { filename } = req.params;
-  const { level, category, startDate, endDate, search, limit, offset } = req.query;
+  const { level, category, startDate, endDate, search, limit, offset } =
+    req.query;
 
   if (!filename) {
     return res.status(400).json({
@@ -33,13 +34,13 @@ export const getLogFile = asyncHandler(async (req: Request, res: Response) => {
     });
   }
 
-  const query: any = {};
+  const query: Record<string, unknown> = {};
   if (level) query.level = level as string;
   if (category) query.category = category as string;
   if (startDate) query.startDate = new Date(startDate as string);
   if (endDate) query.endDate = new Date(endDate as string);
   if (search) query.search = search as string;
-  
+
   // Validate and set limit
   if (limit) {
     const limitNum = parseInt(limit as string, 10);
@@ -68,11 +69,11 @@ export const getLogFile = asyncHandler(async (req: Request, res: Response) => {
 
   try {
     const result = await loggingService.readLogFile(filename, query);
-    
+
     logger.info('Log file accessed', {
-      requestId: (req as any).id,
-      filename, 
-      query, 
+      requestId: (req as Record<string, unknown>).id,
+      filename,
+      query,
       resultCount: result.entries.length,
     });
 
@@ -95,15 +96,16 @@ export const getLogFile = asyncHandler(async (req: Request, res: Response) => {
 });
 
 export const searchLogs = asyncHandler(async (req: Request, res: Response) => {
-  const { level, category, startDate, endDate, search, limit, offset } = req.query;
+  const { level, category, startDate, endDate, search, limit, offset } =
+    req.query;
 
-  const query: any = {};
+  const query: Record<string, unknown> = {};
   if (level) query.level = level as string;
   if (category) query.category = category as string;
   if (startDate) query.startDate = new Date(startDate as string);
   if (endDate) query.endDate = new Date(endDate as string);
   if (search) query.search = search as string;
-  
+
   // Validate and set limit
   if (limit) {
     const limitNum = parseInt(limit as string, 10);
@@ -131,10 +133,10 @@ export const searchLogs = asyncHandler(async (req: Request, res: Response) => {
   }
 
   const result = await loggingService.searchLogs(query);
-  
+
   logger.info('Logs searched', {
-    requestId: (req as any).id,
-    query, 
+    requestId: (req as Record<string, unknown>).id,
+    query,
     resultCount: result.entries.length,
   });
 
@@ -147,9 +149,9 @@ export const searchLogs = asyncHandler(async (req: Request, res: Response) => {
 
 export const getLogStats = asyncHandler(async (req: Request, res: Response) => {
   const stats = await loggingService.getLogStats();
-  
+
   logger.info('Log stats accessed', {
-    requestId: (req as any).id,
+    requestId: (req as Record<string, unknown>).id,
   });
 
   return res.json({
@@ -162,8 +164,8 @@ export const getLogStats = asyncHandler(async (req: Request, res: Response) => {
 export const cleanupLogs = asyncHandler(async (req: Request, res: Response) => {
   const { maxAge, maxSize, maxFiles } = req.body;
 
-  const options: any = {};
-  
+  const options: Record<string, unknown> = {};
+
   // Validate and set maxAge
   if (maxAge) {
     const maxAgeNum = parseInt(maxAge, 10);
@@ -204,17 +206,17 @@ export const cleanupLogs = asyncHandler(async (req: Request, res: Response) => {
   }
 
   const result = await loggingService.cleanupLogs(options);
-  
+
   logger.info('Log cleanup performed', {
-    requestId: (req as any).id,
-    options, 
+    requestId: (req as Record<string, unknown>).id,
+    options,
     deletedFiles: result.deletedFiles.length,
     freedSpace: result.freedSpace,
   });
 
   return res.json({
     success: true,
-    message: `Cleaned up ${result.deletedFiles.length} log files, freed ${Math.round(result.freedSpace / 1024 / 1024 * 100) / 100} MB`,
+    message: `Cleaned up ${result.deletedFiles.length} log files, freed ${Math.round((result.freedSpace / 1024 / 1024) * 100) / 100} MB`,
     data: result,
     timestamp: new Date().toISOString(),
   });
@@ -233,51 +235,53 @@ export const archiveLogs = asyncHandler(async (req: Request, res: Response) => {
   }
 
   const result = await loggingService.archiveLogs(maxAgeNum);
-  
+
   logger.info('Log archival performed', {
-    requestId: (req as any).id,
-    maxAge: maxAgeNum, 
+    requestId: (req as Record<string, unknown>).id,
+    maxAge: maxAgeNum,
     archivedFiles: result.archivedFiles.length,
     archiveSize: result.archiveSize,
   });
 
   return res.json({
     success: true,
-    message: `Archived ${result.archivedFiles.length} log files, total size ${Math.round(result.archiveSize / 1024 / 1024 * 100) / 100} MB`,
+    message: `Archived ${result.archivedFiles.length} log files, total size ${Math.round((result.archiveSize / 1024 / 1024) * 100) / 100} MB`,
     data: result,
     timestamp: new Date().toISOString(),
   });
 });
 
-export const downloadLogFile = asyncHandler(async (req: Request, res: Response) => {
-  const { filename } = req.params;
+export const downloadLogFile = asyncHandler(
+  async (req: Request, res: Response) => {
+    const { filename } = req.params;
 
-  if (!filename) {
-    return res.status(400).json({
-      success: false,
-      error: 'Filename is required',
-      timestamp: new Date().toISOString(),
+    if (!filename) {
+      return res.status(400).json({
+        success: false,
+        error: 'Filename is required',
+        timestamp: new Date().toISOString(),
+      });
+    }
+
+    const logFiles = await loggingService.getLogFiles();
+    const logFile = logFiles.find(f => f.name === filename);
+
+    if (!logFile) {
+      return res.status(404).json({
+        success: false,
+        error: `Log file ${filename} not found`,
+        timestamp: new Date().toISOString(),
+      });
+    }
+
+    logger.info('Log file downloaded', {
+      requestId: (req as Record<string, unknown>).id,
+      filename,
+      size: logFile.size,
     });
+
+    res.setHeader('Content-Type', 'text/plain');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    return res.sendFile(logFile.path);
   }
-
-  const logFiles = await loggingService.getLogFiles();
-  const logFile = logFiles.find(f => f.name === filename);
-
-  if (!logFile) {
-    return res.status(404).json({
-      success: false,
-      error: `Log file ${filename} not found`,
-      timestamp: new Date().toISOString(),
-    });
-  }
-
-  logger.info('Log file downloaded', {
-    requestId: (req as any).id,
-    filename, 
-    size: logFile.size,
-  });
-
-  res.setHeader('Content-Type', 'text/plain');
-  res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
-  return res.sendFile(logFile.path);
-});
+);

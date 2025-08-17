@@ -1,6 +1,6 @@
 /**
- * User data models and preference types for MarketPulse application
- * Handles user authentication, preferences, and accessibility settings
+ * User-related types and interfaces for MarketPulse application
+ * Handles user authentication, preferences, and settings
  */
 
 /**
@@ -58,48 +58,39 @@ export interface UserPreferences {
 export type ThemePreference = 'light' | 'dark' | 'system';
 
 /**
- * Notification settings for various events
+ * Notification settings
  */
 export interface NotificationSettings {
   /** Enable price alerts */
   priceAlerts: boolean;
-  /** Enable news update notifications */
+  /** Enable news updates */
   newsUpdates: boolean;
-  /** Enable system message notifications */
+  /** Enable system messages */
   systemMessages: boolean;
   /** Enable email notifications */
   emailNotifications: boolean;
   /** Enable push notifications */
   pushNotifications: boolean;
-  /** Enable sound notifications */
-  soundNotifications: boolean;
-  /** Notification frequency */
-  frequency: NotificationFrequency;
-  /** Quiet hours for notifications */
-  quietHours?: QuietHours;
+  /** Price alert thresholds */
+  priceAlertThresholds: PriceAlertSettings;
 }
 
 /**
- * Notification frequency options
+ * Price alert configuration
  */
-export type NotificationFrequency = 'immediate' | 'hourly' | 'daily' | 'weekly';
-
-/**
- * Quiet hours configuration
- */
-export interface QuietHours {
-  /** Enable quiet hours */
-  enabled: boolean;
-  /** Start time (24-hour format, e.g., "22:00") */
-  startTime: string;
-  /** End time (24-hour format, e.g., "08:00") */
-  endTime: string;
-  /** Timezone for quiet hours */
-  timezone: string;
+export interface PriceAlertSettings {
+  /** Percentage change threshold for alerts */
+  percentageThreshold: number;
+  /** Absolute price change threshold */
+  priceThreshold: number;
+  /** Volume change threshold */
+  volumeThreshold: number;
+  /** Alert frequency limit */
+  maxAlertsPerHour: number;
 }
 
 /**
- * Accessibility settings for inclusive design
+ * Accessibility settings for WCAG compliance
  */
 export interface AccessibilitySettings {
   /** Enable high contrast mode */
@@ -114,8 +105,6 @@ export interface AccessibilitySettings {
   keyboardNavigation: boolean;
   /** Focus indicator enhancement */
   enhancedFocus: boolean;
-  /** Color blind friendly mode */
-  colorBlindFriendly: boolean;
 }
 
 /**
@@ -124,25 +113,35 @@ export interface AccessibilitySettings {
 export type FontSize = 'small' | 'medium' | 'large' | 'extra-large';
 
 /**
- * Display preferences for UI customization
+ * Display preferences
  */
 export interface DisplaySettings {
-  /** Preferred currency for display */
-  currency: string;
-  /** Number format locale */
-  locale: string;
-  /** Timezone for timestamps */
-  timezone: string;
+  /** Number format preference */
+  numberFormat: NumberFormat;
   /** Date format preference */
   dateFormat: DateFormat;
-  /** Time format preference */
-  timeFormat: TimeFormat;
+  /** Time zone preference */
+  timezone: string;
+  /** Currency preference */
+  currency: string;
   /** Decimal places for prices */
   priceDecimalPlaces: number;
   /** Show percentage changes */
   showPercentageChanges: boolean;
-  /** Compact number formatting */
+  /** Compact number display */
   compactNumbers: boolean;
+}
+
+/**
+ * Number format options
+ */
+export interface NumberFormat {
+  /** Locale for number formatting */
+  locale: string;
+  /** Thousands separator */
+  thousandsSeparator: ',' | '.' | ' ';
+  /** Decimal separator */
+  decimalSeparator: '.' | ',';
 }
 
 /**
@@ -155,11 +154,6 @@ export type DateFormat =
   | 'relative';
 
 /**
- * Time format options
- */
-export type TimeFormat = '12h' | '24h';
-
-/**
  * Trading-specific preferences
  */
 export interface TradingSettings {
@@ -167,44 +161,25 @@ export interface TradingSettings {
   defaultTimeframe: string;
   /** Preferred technical indicators */
   defaultIndicators: string[];
-  /** Risk tolerance level */
-  riskTolerance: RiskTolerance;
-  /** Investment horizon */
-  investmentHorizon: InvestmentHorizon;
-  /** Preferred asset classes */
-  preferredAssetClasses: AssetClass[];
-  /** Enable paper trading mode */
-  paperTradingMode: boolean;
+  /** Chart type preference */
+  chartType: ChartType;
+  /** Show extended hours data */
+  showExtendedHours: boolean;
+  /** Default watchlist */
+  defaultWatchlist?: string;
 }
 
 /**
- * Risk tolerance levels
+ * Chart type options
  */
-export type RiskTolerance = 'conservative' | 'moderate' | 'aggressive';
-
-/**
- * Investment horizon options
- */
-export type InvestmentHorizon = 'short-term' | 'medium-term' | 'long-term';
-
-/**
- * Asset class categories
- */
-export type AssetClass =
-  | 'stocks'
-  | 'bonds'
-  | 'commodities'
-  | 'crypto'
-  | 'forex'
-  | 'etfs'
-  | 'mutual-funds';
+export type ChartType = 'line' | 'candlestick' | 'bar' | 'area';
 
 /**
  * User session information
  */
 export interface UserSession {
-  /** Session ID */
-  id: string;
+  /** Session identifier */
+  sessionId: string;
   /** User ID */
   userId: string;
   /** Session creation time */
@@ -212,27 +187,29 @@ export interface UserSession {
   /** Session expiration time */
   expiresAt: Date;
   /** Last activity timestamp */
-  lastActivityAt: Date;
+  lastActivity: Date;
   /** Device information */
-  device?: DeviceInfo;
+  device: DeviceInfo;
   /** IP address */
-  ipAddress?: string;
-  /** User agent string */
-  userAgent?: string;
+  ipAddress: string;
+  /** Whether session is active */
+  isActive: boolean;
 }
 
 /**
- * Device information for session tracking
+ * Device information for sessions
  */
 export interface DeviceInfo {
   /** Device type */
-  type: 'desktop' | 'tablet' | 'mobile';
+  type: 'desktop' | 'mobile' | 'tablet';
   /** Operating system */
-  os?: string;
-  /** Browser name */
-  browser?: string;
+  os: string;
+  /** Browser information */
+  browser: string;
   /** Screen resolution */
   screenResolution?: string;
+  /** User agent string */
+  userAgent: string;
 }
 
 /**
@@ -251,8 +228,8 @@ export interface UserActivity {
   metadata?: Record<string, unknown>;
   /** Activity timestamp */
   timestamp: Date;
-  /** Session ID when activity occurred */
-  sessionId?: string;
+  /** Session ID */
+  sessionId: string;
 }
 
 /**
@@ -261,90 +238,91 @@ export interface UserActivity {
 export type ActivityType =
   | 'login'
   | 'logout'
-  | 'dashboard-created'
-  | 'dashboard-updated'
-  | 'dashboard-deleted'
-  | 'widget-added'
-  | 'widget-removed'
-  | 'preferences-updated'
-  | 'asset-added-to-watchlist'
-  | 'asset-removed-from-watchlist'
-  | 'alert-created'
-  | 'alert-triggered'
-  | 'news-article-viewed'
-  | 'chart-exported'
-  | 'data-exported';
+  | 'dashboard_created'
+  | 'dashboard_updated'
+  | 'dashboard_deleted'
+  | 'widget_added'
+  | 'widget_removed'
+  | 'preferences_updated'
+  | 'watchlist_updated'
+  | 'alert_created'
+  | 'alert_triggered';
 
 /**
- * User authentication credentials
+ * User authentication payload
  */
-export interface UserCredentials {
-  /** Email address */
+export interface AuthPayload {
+  /** User's email */
   email: string;
-  /** Password (should be hashed on server) */
+  /** User's password */
   password: string;
+  /** Remember me option */
+  rememberMe?: boolean;
 }
 
 /**
- * User registration data
+ * User registration payload
  */
-export interface UserRegistration extends UserCredentials {
+export interface RegisterPayload {
+  /** User's email */
+  email: string;
+  /** User's password */
+  password: string;
+  /** Password confirmation */
+  confirmPassword: string;
   /** Display name */
   displayName?: string;
   /** Accept terms of service */
   acceptTerms: boolean;
-  /** Accept privacy policy */
-  acceptPrivacy: boolean;
-  /** Optional referral code */
-  referralCode?: string;
 }
 
 /**
- * Password reset request
+ * Password reset payload
  */
-export interface PasswordResetRequest {
-  /** Email address */
+export interface PasswordResetPayload {
+  /** User's email */
   email: string;
 }
 
 /**
- * Password reset confirmation
+ * Password change payload
  */
-export interface PasswordResetConfirmation {
-  /** Reset token */
-  token: string;
+export interface PasswordChangePayload {
+  /** Current password */
+  currentPassword: string;
   /** New password */
   newPassword: string;
+  /** New password confirmation */
+  confirmPassword: string;
 }
 
 /**
- * User profile update data
+ * User profile update payload
  */
-export interface UserProfileUpdate {
+export interface ProfileUpdatePayload {
   /** Display name */
   displayName?: string;
-  /** Email address */
-  email?: string;
   /** User preferences */
   preferences?: Partial<UserPreferences>;
 }
 
 /**
- * User statistics and metrics
+ * Type guard to check if user has admin role
  */
-export interface UserStats {
-  /** Total number of dashboards created */
-  dashboardsCreated: number;
-  /** Total number of widgets added */
-  widgetsAdded: number;
-  /** Total number of assets in watchlists */
-  assetsWatched: number;
-  /** Total login count */
-  loginCount: number;
-  /** Average session duration in minutes */
-  avgSessionDuration: number;
-  /** Most active day of week */
-  mostActiveDay: string;
-  /** Preferred time of day for usage */
-  preferredTimeOfDay: string;
+export function isAdmin(user: User): boolean {
+  return user.role === 'admin';
+}
+
+/**
+ * Type guard to check if user has moderator or admin role
+ */
+export function isModerator(user: User): boolean {
+  return user.role === 'moderator' || user.role === 'admin';
+}
+
+/**
+ * Type guard to check if user session is valid
+ */
+export function isValidSession(session: UserSession): boolean {
+  return session.isActive && new Date() < session.expiresAt;
 }

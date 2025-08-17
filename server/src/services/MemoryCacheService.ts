@@ -1,6 +1,6 @@
 import { logger } from '@/utils/logger';
 
-export interface CacheItem<T = any> {
+export interface CacheItem<T = unknown> {
   value: T;
   expiry: number;
   size: number;
@@ -28,19 +28,22 @@ export class MemoryCacheService {
   private cleanupInterval: NodeJS.Timeout | null = null;
   private cleanupIntervalMs = 60000; // 1 minute
 
-  constructor(maxSize: number = 100 * 1024 * 1024) { // 100MB default
+  constructor(maxSize: number = 100 * 1024 * 1024) {
+    // 100MB default
     this.maxSize = maxSize;
     this.startCleanupInterval();
-    
-    logger.info(`Memory cache initialized with max size: ${this.formatBytes(maxSize)}`);
+
+    logger.info(
+      `Memory cache initialized with max size: ${this.formatBytes(maxSize)}`
+    );
   }
 
   /**
    * Get value from cache
    */
-  public async get<T = any>(key: string): Promise<T | null> {
+  public async get<T = unknown>(key: string): Promise<T | null> {
     const item = this.cache.get(key);
-    
+
     if (!item) {
       this.stats.misses++;
       return null;
@@ -60,10 +63,14 @@ export class MemoryCacheService {
   /**
    * Set value in cache with TTL
    */
-  public async set<T = any>(key: string, value: T, ttlSeconds?: number): Promise<void> {
+  public async set<T = unknown>(
+    key: string,
+    value: T,
+    ttlSeconds?: number
+  ): Promise<void> {
     const serialized = JSON.stringify(value);
     const size = Buffer.byteLength(serialized, 'utf8');
-    
+
     // Check if this single item exceeds max size
     if (size > this.maxSize) {
       logger.warn(`Cache item too large: ${key} (${this.formatBytes(size)})`);
@@ -71,7 +78,9 @@ export class MemoryCacheService {
     }
 
     // Calculate expiry time
-    const expiry = ttlSeconds ? Date.now() + (ttlSeconds * 1000) : Date.now() + (24 * 60 * 60 * 1000); // Default 24 hours
+    const expiry = ttlSeconds
+      ? Date.now() + ttlSeconds * 1000
+      : Date.now() + 24 * 60 * 60 * 1000; // Default 24 hours
 
     // Ensure we have space
     await this.ensureSpace(size);
@@ -102,7 +111,7 @@ export class MemoryCacheService {
    */
   public async exists(key: string): Promise<boolean> {
     const item = this.cache.get(key);
-    
+
     if (!item) {
       return false;
     }
@@ -121,12 +130,12 @@ export class MemoryCacheService {
    */
   public async expire(key: string, ttlSeconds: number): Promise<boolean> {
     const item = this.cache.get(key);
-    
+
     if (!item) {
       return false;
     }
 
-    item.expiry = Date.now() + (ttlSeconds * 1000);
+    item.expiry = Date.now() + ttlSeconds * 1000;
     return true;
   }
 
@@ -135,13 +144,13 @@ export class MemoryCacheService {
    */
   public async ttl(key: string): Promise<number> {
     const item = this.cache.get(key);
-    
+
     if (!item) {
       return -2; // Key doesn't exist
     }
 
     const remaining = item.expiry - Date.now();
-    
+
     if (remaining <= 0) {
       this.cache.delete(key);
       return -2; // Key expired
@@ -163,9 +172,12 @@ export class MemoryCacheService {
    * Get cache statistics
    */
   public getStats(): CacheStats {
-    const totalSize = Array.from(this.cache.values()).reduce((sum, item) => sum + item.size, 0);
+    const totalSize = Array.from(this.cache.values()).reduce(
+      (sum, item) => sum + item.size,
+      0
+    );
     const totalRequests = this.stats.hits + this.stats.misses;
-    
+
     return {
       hits: this.stats.hits,
       misses: this.stats.misses,
@@ -217,8 +229,11 @@ export class MemoryCacheService {
    * Ensure we have enough space for new item
    */
   private async ensureSpace(requiredSize: number): Promise<void> {
-    const currentSize = Array.from(this.cache.values()).reduce((sum, item) => sum + item.size, 0);
-    
+    const currentSize = Array.from(this.cache.values()).reduce(
+      (sum, item) => sum + item.size,
+      0
+    );
+
     if (currentSize + requiredSize <= this.maxSize) {
       return; // We have enough space
     }
@@ -227,7 +242,7 @@ export class MemoryCacheService {
     const items = Array.from(this.cache.entries()).map(([key, item]) => ({
       key,
       item,
-      lastAccess: item.expiry - (24 * 60 * 60 * 1000), // Approximate last access
+      lastAccess: item.expiry - 24 * 60 * 60 * 1000, // Approximate last access
     }));
 
     // Sort by last access (oldest first)
@@ -247,7 +262,9 @@ export class MemoryCacheService {
     }
 
     if (evicted > 0) {
-      logger.info(`Memory cache evicted ${evicted} items to free ${this.formatBytes(freedSize)}`);
+      logger.info(
+        `Memory cache evicted ${evicted} items to free ${this.formatBytes(freedSize)}`
+      );
     }
   }
 
@@ -308,7 +325,7 @@ export class MemoryCacheService {
     const sizes = ['Bytes', 'KB', 'MB', 'GB'];
     if (bytes === 0) return '0 Bytes';
     const i = Math.floor(Math.log(bytes) / Math.log(1024));
-    return Math.round(bytes / Math.pow(1024, i) * 100) / 100 + ' ' + sizes[i];
+    return Math.round((bytes / Math.pow(1024, i)) * 100) / 100 + ' ' + sizes[i];
   }
 
   /**

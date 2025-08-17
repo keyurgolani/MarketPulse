@@ -5,19 +5,19 @@ import { config } from '@/config/environment';
 
 // Create a stream for Morgan HTTP logging
 export const logStream = {
-  write: (message: string) => {
+  write: (message: string): void => {
     logger.http(message.trim());
   },
 };
 
 // Custom token for request ID
-morgan.token('id', (req: Request) => {
-  return (req as any).id || 'unknown';
+morgan.token('id', (req: Request): string => {
+  return (req as Request & { id?: string }).id || 'unknown';
 });
 
 // Custom token for user ID
 morgan.token('user', (req: Request) => {
-  return (req as any).user?.id || 'anonymous';
+  return (req as Record<string, unknown>).user?.id || 'anonymous';
 });
 
 // Custom token for response time in milliseconds
@@ -38,7 +38,8 @@ morgan.token('res-size', (req: Request, res: Response) => {
 
 // Define different log formats
 const formats = {
-  development: ':id :method :url :status :response-time-ms - :req-size/:res-size bytes - :user-agent',
+  development:
+    ':id :method :url :status :response-time-ms - :req-size/:res-size bytes - :user-agent',
   production: JSON.stringify({
     id: ':id',
     method: ':method',
@@ -52,7 +53,8 @@ const formats = {
     user: ':user',
     timestamp: ':date[iso]',
   }),
-  combined: ':remote-addr - :user [:date[clf]] ":method :url HTTP/:http-version" :status :res[content-length] ":referrer" ":user-agent" :response-time-ms',
+  combined:
+    ':remote-addr - :user [:date[clf]] ":method :url HTTP/:http-version" :status :res[content-length] ":referrer" ":user-agent" :response-time-ms',
 };
 
 // Create Morgan middleware
@@ -75,31 +77,40 @@ export const httpLogger = morgan(
 );
 
 // Request ID middleware
-export const requestId = (req: Request, res: Response, next: NextFunction) => {
-  const id = req.get('X-Request-ID') || 
-             req.get('X-Correlation-ID') || 
-             generateRequestId();
-  (req as any).id = id;
+export const requestId = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): void => {
+  const id =
+    req.get('X-Request-ID') ||
+    req.get('X-Correlation-ID') ||
+    generateRequestId();
+  (req as Request & { id: string }).id = id;
   res.setHeader('X-Request-ID', id);
   next();
 };
 
 // Response time middleware
-export const responseTime = (req: Request, res: Response, next: NextFunction) => {
+export const responseTime = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): void => {
   const start = Date.now();
-  
+
   // Set response time header before response is sent
   const originalSend = res.send;
-  res.send = function(body: any) {
+  res.send = function (body: unknown): Response {
     const duration = Date.now() - start;
     if (!res.headersSent) {
       res.setHeader('X-Response-Time', duration);
     }
-    
+
     // Log slow requests
     if (duration > 1000) {
       logger.warn('Slow request detected', {
-        requestId: (req as any).id,
+        requestId: (req as Record<string, unknown>).id,
         method: req.method,
         url: req.url,
         duration,
@@ -107,20 +118,24 @@ export const responseTime = (req: Request, res: Response, next: NextFunction) =>
         ip: req.ip,
       });
     }
-    
+
     return originalSend.call(this, body);
   };
-  
+
   next();
 };
 
 // Request logging middleware
-export const requestLogger = (req: Request, res: Response, next: NextFunction) => {
+export const requestLogger = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): void => {
   const startTime = Date.now();
-  
+
   // Log incoming request
   logger.info('Incoming request', {
-    requestId: (req as any).id,
+    requestId: (req as Record<string, unknown>).id,
     method: req.method,
     url: req.url,
     userAgent: req.get('User-Agent'),
@@ -136,7 +151,7 @@ export const requestLogger = (req: Request, res: Response, next: NextFunction) =
     const sanitizedBody = sanitizeRequestBody(req.body);
     if (Object.keys(sanitizedBody).length > 0) {
       logger.debug('Request body', {
-        requestId: (req as any).id,
+        requestId: (req as Record<string, unknown>).id,
         body: sanitizedBody,
       });
     }
@@ -144,12 +159,12 @@ export const requestLogger = (req: Request, res: Response, next: NextFunction) =
 
   // Override res.json to log response
   const originalJson = res.json;
-  res.json = function(body: any) {
+  res.json = function (body: unknown): Response {
     const duration = Date.now() - startTime;
-    
+
     // Log response
     logger.info('Outgoing response', {
-      requestId: (req as any).id,
+      requestId: (req as Record<string, unknown>).id,
       method: req.method,
       url: req.url,
       statusCode: res.statusCode,
@@ -163,7 +178,7 @@ export const requestLogger = (req: Request, res: Response, next: NextFunction) =
       const sanitizedResponse = sanitizeResponseBody(body);
       if (sanitizedResponse) {
         logger.debug('Response body', {
-          requestId: (req as any).id,
+          requestId: (req as Record<string, unknown>).id,
           statusCode: res.statusCode,
           body: sanitizedResponse,
         });
@@ -177,9 +192,14 @@ export const requestLogger = (req: Request, res: Response, next: NextFunction) =
 };
 
 // Error logging middleware
-export const errorLogger = (error: Error, req: Request, res: Response, next: NextFunction) => {
+export const errorLogger = (
+  error: Error,
+  req: Request,
+  res: Response,
+  next: NextFunction
+): void => {
   logger.error('Request error', {
-    requestId: (req as any).id,
+    requestId: (req as Record<string, unknown>).id,
     method: req.method,
     url: req.url,
     error: {
@@ -195,9 +215,13 @@ export const errorLogger = (error: Error, req: Request, res: Response, next: Nex
 };
 
 // Security event logging middleware
-export const securityLogger = (event: string, req: Request, details?: any) => {
+export const securityLogger = (
+  event: string,
+  req: Request,
+  details?: Record<string, unknown>
+): void => {
   logger.warn(`Security event: ${event}`, {
-    requestId: (req as any).id,
+    requestId: (req as Record<string, unknown>).id,
     event,
     method: req.method,
     url: req.url,
@@ -209,15 +233,19 @@ export const securityLogger = (event: string, req: Request, details?: any) => {
 };
 
 // Audit logging middleware
-export const auditLogger = (action: string, req: Request, details?: any) => {
+export const auditLogger = (
+  action: string,
+  req: Request,
+  details?: Record<string, unknown>
+): void => {
   logger.info(`Audit event: ${action}`, {
-    requestId: (req as any).id,
+    requestId: (req as Record<string, unknown>).id,
     action,
     method: req.method,
     url: req.url,
     ip: req.ip,
     userAgent: req.get('User-Agent'),
-    user: (req as any).user?.id || 'anonymous',
+    user: (req as Record<string, unknown>).user?.id || 'anonymous',
     timestamp: new Date().toISOString(),
     ...details,
   });
@@ -228,7 +256,7 @@ function generateRequestId(): string {
   return `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 }
 
-function sanitizeRequestBody(body: any): any {
+function sanitizeRequestBody(body: unknown): unknown {
   if (!body || typeof body !== 'object') {
     return body;
   }
@@ -261,7 +289,7 @@ function sanitizeRequestBody(body: any): any {
   return sanitized;
 }
 
-function sanitizeResponseBody(body: any): any {
+function sanitizeResponseBody(body: unknown): unknown {
   if (!body || typeof body !== 'object') {
     return body;
   }
@@ -269,7 +297,10 @@ function sanitizeResponseBody(body: any): any {
   // Don't log large response bodies
   const bodyString = JSON.stringify(body);
   if (bodyString.length > 10000) {
-    return { message: '[Response body too large to log]', size: bodyString.length };
+    return {
+      message: '[Response body too large to log]',
+      size: bodyString.length,
+    };
   }
 
   const sensitiveFields = [
@@ -293,6 +324,7 @@ function sanitizeResponseBody(body: any): any {
 
 // Export types for TypeScript
 declare global {
+  // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace Express {
     interface Request {
       id?: string;

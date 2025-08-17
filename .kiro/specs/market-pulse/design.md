@@ -4,6 +4,17 @@
 
 MarketPulse is a modern, accessible financial dashboard platform built with a focus on performance, accessibility, and user experience. The system follows a modular architecture with aggressive caching, multi-source data aggregation, and responsive design principles. The platform supports both owner-configured default dashboards and user-created custom dashboards with real-time market data, news aggregation, and comprehensive accessibility features.
 
+## TypeScript Guidelines
+
+All code examples and implementations in this design document follow strict TypeScript guidelines:
+
+- **Never use `any` type** - Always identify and use the correct specific type
+- **Use `unknown` instead of `any`** - When the type is truly unknown, use `unknown` and add type guards
+- **Explicit return types** - All functions must have explicit return types
+- **Strict null checks** - Handle null and undefined cases explicitly
+- **Generic constraints** - Use extends for type safety in generics
+- **Type guards** - Implement proper type guards for runtime type checking
+
 ## Architecture
 
 - [ ] ### High-Level Architecture
@@ -76,89 +87,89 @@ graph TB
 
 - [ ] ### Frontend Components
 
-- [ ] ####  Core Layout Components
+- [ ] #### Core Layout Components
 
 ```typescript
 // Layout Components
 interface AppLayoutProps {
-  children: React.ReactNode
-  theme: 'light' | 'dark'
+  children: React.ReactNode;
+  theme: 'light' | 'dark';
 }
 
 interface NavigationProps {
-  dashboards: Dashboard[]
-  activeDashboard: string
-  onDashboardChange: (id: string) => void
+  dashboards: Dashboard[];
+  activeDashboard: string;
+  onDashboardChange: (id: string) => void;
 }
 
 interface HeaderProps {
-  user?: User
-  onThemeToggle: () => void
-  onRefresh: () => void
+  user?: User;
+  onThemeToggle: () => void;
+  onRefresh: () => void;
 }
 ```
 
-- [ ] ####  Dashboard Components
+- [ ] #### Dashboard Components
 
 ```typescript
 interface DashboardProps {
-  dashboard: Dashboard
-  isEditable: boolean
-  onUpdate: (dashboard: Dashboard) => void
+  dashboard: Dashboard;
+  isEditable: boolean;
+  onUpdate: (dashboard: Dashboard) => void;
 }
 
 interface WidgetContainerProps {
-  widgets: Widget[]
-  layout: LayoutConfig
-  onLayoutChange: (layout: LayoutConfig) => void
+  widgets: Widget[];
+  layout: LayoutConfig;
+  onLayoutChange: (layout: LayoutConfig) => void;
 }
 
 interface AssetWidgetProps {
-  assets: Asset[]
-  displayMode: 'list' | 'grid' | 'chart'
-  refreshInterval: number
+  assets: Asset[];
+  displayMode: 'list' | 'grid' | 'chart';
+  refreshInterval: number;
 }
 ```
 
-- [ ] ####  Data Visualization Components
+- [ ] #### Data Visualization Components
 
 ```typescript
 interface ChartWidgetProps {
-  asset: Asset
-  timeframe: '1D' | '1W' | '1M' | '3M' | '1Y'
-  indicators: TechnicalIndicator[]
-  height: number
+  asset: Asset;
+  timeframe: '1D' | '1W' | '1M' | '3M' | '1Y';
+  indicators: TechnicalIndicator[];
+  height: number;
 }
 
 interface DataTableProps {
-  data: Asset[]
-  columns: TableColumn[]
-  sortable: boolean
-  filterable: boolean
+  data: Asset[];
+  columns: TableColumn[];
+  sortable: boolean;
+  filterable: boolean;
 }
 ```
 
 - [ ] ### Backend API Interfaces
 
-- [ ] ####  Data Aggregation Service
+- [ ] #### Data Aggregation Service
 
 ```typescript
 interface DataAggregationService {
-  getAssetData(symbols: string[]): Promise<Asset[]>
-  getHistoricalData(symbol: string, timeframe: string): Promise<HistoricalData>
-  getNewsData(symbols?: string[]): Promise<NewsArticle[]>
-  refreshCache(symbols?: string[]): Promise<void>
+  getAssetData(symbols: string[]): Promise<Asset[]>;
+  getHistoricalData(symbol: string, timeframe: string): Promise<HistoricalData>;
+  getNewsData(symbols?: string[]): Promise<NewsArticle[]>;
+  refreshCache(symbols?: string[]): Promise<void>;
 }
 
 interface CacheService {
-  get<T>(key: string): Promise<T | null>
-  set<T>(key: string, value: T, ttl?: number): Promise<void>
-  invalidate(pattern: string): Promise<void>
-  getStats(): Promise<CacheStats>
+  get<T>(key: string): Promise<T | null>;
+  set<T>(key: string, value: T, ttl?: number): Promise<void>;
+  invalidate(pattern: string): Promise<void>;
+  getStats(): Promise<CacheStats>;
 }
 ```
 
-- [ ] ####  API Endpoints
+- [ ] #### API Endpoints
 
 ```typescript
 // REST API Endpoints
@@ -182,62 +193,62 @@ GET /api/system/cache-stats - Cache statistics
 
 ```typescript
 interface User {
-  id: string
-  email: string
-  preferences: UserPreferences
-  createdAt: Date
-  updatedAt: Date
+  id: string;
+  email: string;
+  preferences: UserPreferences;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 interface UserPreferences {
-  theme: 'light' | 'dark' | 'system'
-  defaultDashboard?: string
-  refreshInterval: number
-  notifications: NotificationSettings
+  theme: 'light' | 'dark' | 'system';
+  defaultDashboard?: string;
+  refreshInterval: number;
+  notifications: NotificationSettings;
 }
 
 interface Dashboard {
-  id: string
-  name: string
-  description?: string
-  isDefault: boolean
-  isPublic: boolean
-  ownerId: string
-  widgets: Widget[]
-  layout: LayoutConfig
-  createdAt: Date
-  updatedAt: Date
+  id: string;
+  name: string;
+  description?: string;
+  isDefault: boolean;
+  isPublic: boolean;
+  ownerId: string;
+  widgets: Widget[];
+  layout: LayoutConfig;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 interface Widget {
-  id: string
-  type: 'asset-list' | 'chart' | 'news' | 'market-summary'
-  title: string
-  config: WidgetConfig
-  position: WidgetPosition
+  id: string;
+  type: 'asset-list' | 'chart' | 'news' | 'market-summary';
+  title: string;
+  config: WidgetConfig;
+  position: WidgetPosition;
 }
 
 interface Asset {
-  symbol: string
-  name: string
-  price: number
-  change: number
-  changePercent: number
-  volume: number
-  marketCap?: number
-  lastUpdated: Date
-  source: DataSource
+  symbol: string;
+  name: string;
+  price: number;
+  change: number;
+  changePercent: number;
+  volume: number;
+  marketCap?: number;
+  lastUpdated: Date;
+  source: DataSource;
 }
 
 interface NewsArticle {
-  id: string
-  title: string
-  summary: string
-  url: string
-  publishedAt: Date
-  source: string
-  relatedAssets: string[]
-  sentiment?: 'positive' | 'negative' | 'neutral'
+  id: string;
+  title: string;
+  summary: string;
+  url: string;
+  publishedAt: Date;
+  source: string;
+  relatedAssets: string[];
+  sentiment?: 'positive' | 'negative' | 'neutral';
 }
 ```
 
@@ -245,29 +256,29 @@ interface NewsArticle {
 
 ```typescript
 interface DataSourceConfig {
-  name: string
-  apiKeys: string[]
+  name: string;
+  apiKeys: string[];
   rateLimit: {
-    requestsPerMinute: number
-    requestsPerHour: number
-  }
+    requestsPerMinute: number;
+    requestsPerHour: number;
+  };
   endpoints: {
-    assets: string
-    historical: string
-    news: string
-  }
+    assets: string;
+    historical: string;
+    news: string;
+  };
   cacheTTL: {
-    assets: number
-    historical: number
-    news: number
-  }
+    assets: number;
+    historical: number;
+    news: number;
+  };
 }
 
 interface CacheConfig {
-  defaultTTL: number
-  maxSize: number
-  cleanupInterval: number
-  persistToDisk: boolean
+  defaultTTL: number;
+  maxSize: number;
+  cleanupInterval: number;
+  persistToDisk: boolean;
 }
 ```
 
@@ -277,16 +288,16 @@ interface CacheConfig {
 
 ```typescript
 interface ErrorBoundaryState {
-  hasError: boolean
-  error?: Error
-  errorInfo?: ErrorInfo
+  hasError: boolean;
+  error?: Error;
+  errorInfo?: ErrorInfo;
 }
 
 interface ApiErrorResponse {
-  error: string
-  message: string
-  statusCode: number
-  timestamp: string
+  error: string;
+  message: string;
+  statusCode: number;
+  timestamp: string;
 }
 
 // Error handling strategies:
@@ -301,9 +312,9 @@ interface ApiErrorResponse {
 
 ```typescript
 interface ErrorHandler {
-  handleApiError(error: Error, req: Request, res: Response): void
-  handleCacheError(error: Error): void
-  handleDataSourceError(error: Error, source: string): void
+  handleApiError(error: Error, req: Request, res: Response): void;
+  handleCacheError(error: Error): void;
+  handleDataSourceError(error: Error, source: string): void;
 }
 
 // Error handling patterns:
@@ -330,25 +341,25 @@ The application follows a comprehensive testing approach using `test-results.md`
 ```typescript
 // Unit Tests - Vitest
 describe('AssetWidget', () => {
-  it('should display asset data correctly')
-  it('should handle loading states')
-  it('should handle error states')
-  it('should be accessible via keyboard navigation')
-})
+  it('should display asset data correctly');
+  it('should handle loading states');
+  it('should handle error states');
+  it('should be accessible via keyboard navigation');
+});
 
 // Integration Tests - React Testing Library
 describe('Dashboard Integration', () => {
-  it('should load and display dashboard data')
-  it('should handle real-time updates')
-  it('should persist user changes')
-})
+  it('should load and display dashboard data');
+  it('should handle real-time updates');
+  it('should persist user changes');
+});
 
 // E2E Tests - Playwright
 describe('User Workflows', () => {
-  it('should create and customize dashboard')
-  it('should switch between light and dark themes')
-  it('should work on mobile devices')
-})
+  it('should create and customize dashboard');
+  it('should switch between light and dark themes');
+  it('should work on mobile devices');
+});
 ```
 
 - [ ] ### Backend Testing
@@ -356,24 +367,24 @@ describe('User Workflows', () => {
 ```typescript
 // Unit Tests
 describe('DataAggregationService', () => {
-  it('should aggregate data from multiple sources')
-  it('should handle API failures gracefully')
-  it('should respect rate limits')
-})
+  it('should aggregate data from multiple sources');
+  it('should handle API failures gracefully');
+  it('should respect rate limits');
+});
 
 // Integration Tests
 describe('API Endpoints', () => {
-  it('should return dashboard data')
-  it('should handle cache refresh')
-  it('should validate request parameters')
-})
+  it('should return dashboard data');
+  it('should handle cache refresh');
+  it('should validate request parameters');
+});
 
 // Performance Tests
 describe('Performance', () => {
-  it('should handle 100 concurrent requests')
-  it('should respond within 200ms for cached data')
-  it('should not exceed memory limits')
-})
+  it('should handle 100 concurrent requests');
+  it('should respond within 200ms for cached data');
+  it('should not exceed memory limits');
+});
 ```
 
 - [ ] ### Accessibility Testing
@@ -381,12 +392,12 @@ describe('Performance', () => {
 ```typescript
 // Automated Accessibility Tests
 describe('Accessibility', () => {
-  it('should meet WCAG AA standards')
-  it('should support keyboard navigation')
-  it('should provide screen reader announcements')
-  it('should maintain focus management')
-  it('should have sufficient color contrast')
-})
+  it('should meet WCAG AA standards');
+  it('should support keyboard navigation');
+  it('should provide screen reader announcements');
+  it('should maintain focus management');
+  it('should have sufficient color contrast');
+});
 ```
 
 - [ ] ### Testing Validation Process

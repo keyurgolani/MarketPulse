@@ -2,25 +2,29 @@ import { z } from 'zod';
 import { BaseModel } from './BaseModel';
 
 // Asset metadata schema
-const AssetMetadataSchema = z.object({
-  sector: z.string().optional(),
-  industry: z.string().optional(),
-  marketCap: z.number().optional(),
-  peRatio: z.number().optional(),
-  dividendYield: z.number().optional(),
-  beta: z.number().optional(),
-  eps: z.number().optional(),
-  description: z.string().optional(),
-  website: z.string().url().optional(),
-  logo: z.string().url().optional(),
-}).default({});
+const AssetMetadataSchema = z
+  .object({
+    sector: z.string().optional(),
+    industry: z.string().optional(),
+    marketCap: z.number().optional(),
+    peRatio: z.number().optional(),
+    dividendYield: z.number().optional(),
+    beta: z.number().optional(),
+    eps: z.number().optional(),
+    description: z.string().optional(),
+    website: z.string().url().optional(),
+    logo: z.string().url().optional(),
+  })
+  .default({});
 
 // Asset schema
 const AssetSchema = z.object({
   id: z.string(),
   symbol: z.string().min(1).max(20),
   name: z.string().min(1).max(200),
-  type: z.enum(['stock', 'crypto', 'forex', 'commodity', 'index']).default('stock'),
+  type: z
+    .enum(['stock', 'crypto', 'forex', 'commodity', 'index'])
+    .default('stock'),
   exchange: z.string().optional(),
   currency: z.string().length(3).default('USD'),
   metadata: AssetMetadataSchema,
@@ -80,13 +84,9 @@ export class AssetModel extends BaseModel<Asset> {
    * Find asset by symbol
    */
   public async findBySymbol(symbol: string): Promise<Asset | null> {
-    try {
-      const query = `SELECT * FROM ${this.tableName} WHERE symbol = ? AND is_active = 1`;
-      const result = await this.db.get(query, [symbol.toUpperCase()]);
-      return this.deserialize(result);
-    } catch (error) {
-      throw error;
-    }
+    const query = `SELECT * FROM ${this.tableName} WHERE symbol = ? AND is_active = 1`;
+    const result = await this.db.get(query, [symbol.toUpperCase()]);
+    return this.deserialize(result);
   }
 
   /**
@@ -95,161 +95,165 @@ export class AssetModel extends BaseModel<Asset> {
   public async findBySymbols(symbols: string[]): Promise<Asset[]> {
     if (symbols.length === 0) return [];
 
-    try {
-      const upperSymbols = symbols.map(s => s.toUpperCase());
-      const placeholders = upperSymbols.map(() => '?').join(',');
-      const query = `
-        SELECT * FROM ${this.tableName} 
-        WHERE symbol IN (${placeholders}) AND is_active = 1
-        ORDER BY symbol
-      `;
-      
-      const results = await this.db.all(query, upperSymbols);
-      return results.map(result => this.deserialize(result)).filter(Boolean) as Asset[];
-    } catch (error) {
-      throw error;
-    }
+    const upperSymbols = symbols.map(s => s.toUpperCase());
+    const placeholders = upperSymbols.map(() => '?').join(',');
+    const query = `
+      SELECT * FROM ${this.tableName} 
+      WHERE symbol IN (${placeholders}) AND is_active = 1
+      ORDER BY symbol
+    `;
+
+    const results = await this.db.all(query, upperSymbols);
+    return results
+      .map(result => this.deserialize(result))
+      .filter(Boolean) as Asset[];
   }
 
   /**
    * Find assets by type
    */
   public async findByType(type: string, limit: number = 100): Promise<Asset[]> {
-    try {
-      const query = `
-        SELECT * FROM ${this.tableName} 
-        WHERE type = ? AND is_active = 1 
-        ORDER BY symbol 
-        LIMIT ?
-      `;
-      const results = await this.db.all(query, [type, limit]);
-      return results.map(result => this.deserialize(result)).filter(Boolean) as Asset[];
-    } catch (error) {
-      throw error;
-    }
+    const query = `
+      SELECT * FROM ${this.tableName} 
+      WHERE type = ? AND is_active = 1 
+      ORDER BY symbol 
+      LIMIT ?
+    `;
+    const results = await this.db.all(query, [type, limit]);
+    return results
+      .map(result => this.deserialize(result))
+      .filter(Boolean) as Asset[];
   }
 
   /**
    * Find assets by exchange
    */
-  public async findByExchange(exchange: string, limit: number = 100): Promise<Asset[]> {
-    try {
-      const query = `
-        SELECT * FROM ${this.tableName} 
-        WHERE exchange = ? AND is_active = 1 
-        ORDER BY symbol 
-        LIMIT ?
-      `;
-      const results = await this.db.all(query, [exchange, limit]);
-      return results.map(result => this.deserialize(result)).filter(Boolean) as Asset[];
-    } catch (error) {
-      throw error;
-    }
+  public async findByExchange(
+    exchange: string,
+    limit: number = 100
+  ): Promise<Asset[]> {
+    const query = `
+      SELECT * FROM ${this.tableName} 
+      WHERE exchange = ? AND is_active = 1 
+      ORDER BY symbol 
+      LIMIT ?
+    `;
+    const results = await this.db.all(query, [exchange, limit]);
+    return results
+      .map(result => this.deserialize(result))
+      .filter(Boolean) as Asset[];
   }
 
   /**
    * Search assets by symbol or name
    */
-  public async searchAssets(query: string, limit: number = 20): Promise<Asset[]> {
-    try {
-      const searchQuery = `
-        SELECT * FROM ${this.tableName} 
-        WHERE (symbol LIKE ? OR name LIKE ?) AND is_active = 1
-        ORDER BY 
-          CASE 
-            WHEN symbol = ? THEN 1
-            WHEN symbol LIKE ? THEN 2
-            WHEN name LIKE ? THEN 3
-            ELSE 4
-          END,
-          symbol
-        LIMIT ?
-      `;
-      
-      const upperQuery = query.toUpperCase();
-      const likeQuery = `%${upperQuery}%`;
-      const startQuery = `${upperQuery}%`;
-      
-      const results = await this.db.all(searchQuery, [
-        likeQuery, likeQuery, upperQuery, startQuery, startQuery, limit
-      ]);
-      
-      return results.map(result => this.deserialize(result)).filter(Boolean) as Asset[];
-    } catch (error) {
-      throw error;
-    }
+  public async searchAssets(
+    query: string,
+    limit: number = 20
+  ): Promise<Asset[]> {
+    const searchQuery = `
+      SELECT * FROM ${this.tableName} 
+      WHERE (symbol LIKE ? OR name LIKE ?) AND is_active = 1
+      ORDER BY 
+        CASE 
+          WHEN symbol = ? THEN 1
+          WHEN symbol LIKE ? THEN 2
+          WHEN name LIKE ? THEN 3
+          ELSE 4
+        END,
+        symbol
+      LIMIT ?
+    `;
+
+    const upperQuery = query.toUpperCase();
+    const likeQuery = `%${upperQuery}%`;
+    const startQuery = `${upperQuery}%`;
+
+    const results = await this.db.all(searchQuery, [
+      likeQuery,
+      likeQuery,
+      upperQuery,
+      startQuery,
+      startQuery,
+      limit,
+    ]);
+
+    return results
+      .map(result => this.deserialize(result))
+      .filter(Boolean) as Asset[];
   }
 
   /**
    * Update asset metadata
    */
-  public async updateMetadata(assetId: string, metadata: Partial<AssetMetadata>): Promise<Asset | null> {
-    try {
-      const asset = await this.findById(assetId);
-      if (!asset) {
-        return null;
-      }
-
-      const updatedMetadata = {
-        ...asset.metadata,
-        ...metadata,
-      };
-
-      return await this.update(assetId, { metadata: updatedMetadata });
-    } catch (error) {
-      throw error;
+  public async updateMetadata(
+    assetId: string,
+    metadata: Partial<AssetMetadata>
+  ): Promise<Asset | null> {
+    const asset = await this.findById(assetId);
+    if (!asset) {
+      return null;
     }
+
+    const updatedMetadata = {
+      ...asset.metadata,
+      ...metadata,
+    };
+
+    return await this.update(assetId, { metadata: updatedMetadata });
   }
 
   /**
    * Check if symbol exists
    */
-  public async symbolExists(symbol: string, excludeAssetId?: string): Promise<boolean> {
-    try {
-      let query = `SELECT 1 FROM ${this.tableName} WHERE symbol = ?`;
-      const params: any[] = [symbol.toUpperCase()];
+  public async symbolExists(
+    symbol: string,
+    excludeAssetId?: string
+  ): Promise<boolean> {
+    let query = `SELECT 1 FROM ${this.tableName} WHERE symbol = ?`;
+    const params: (string | number)[] = [symbol.toUpperCase()];
 
-      if (excludeAssetId) {
-        query += ` AND id != ?`;
-        params.push(excludeAssetId);
-      }
-
-      const result = await this.db.get(query, params);
-      return !!result;
-    } catch (error) {
-      throw error;
+    if (excludeAssetId) {
+      query += ` AND id != ?`;
+      params.push(excludeAssetId);
     }
+
+    const result = await this.db.get(query, params);
+    return !!result;
   }
 
   /**
    * Get popular assets (most watched)
    */
   public async getPopularAssets(limit: number = 20): Promise<Asset[]> {
-    try {
-      const query = `
-        SELECT a.*, COUNT(uw.asset_id) as watch_count
-        FROM ${this.tableName} a
-        LEFT JOIN user_watchlists uw ON a.id = uw.asset_id
-        WHERE a.is_active = 1
-        GROUP BY a.id
-        ORDER BY watch_count DESC, a.symbol
-        LIMIT ?
-      `;
-      
-      const results = await this.db.all(query, [limit]);
-      return results.map(result => this.deserialize(result)).filter(Boolean) as Asset[];
-    } catch (error) {
-      throw error;
-    }
+    const query = `
+      SELECT a.*, COUNT(uw.asset_id) as watch_count
+      FROM ${this.tableName} a
+      LEFT JOIN user_watchlists uw ON a.id = uw.asset_id
+      WHERE a.is_active = 1
+      GROUP BY a.id
+      ORDER BY watch_count DESC, a.symbol
+      LIMIT ?
+    `;
+
+    const results = await this.db.all(query, [limit]);
+    return results
+      .map(result => this.deserialize(result))
+      .filter(Boolean) as Asset[];
   }
 
   /**
    * Get assets with recent market data
    */
-  public async getAssetsWithRecentData(hours: number = 24, limit: number = 100): Promise<Asset[]> {
+  public async getAssetsWithRecentData(
+    hours: number = 24,
+    limit: number = 100
+  ): Promise<Asset[]> {
     try {
-      const cutoffTime = new Date(Date.now() - hours * 60 * 60 * 1000).toISOString();
-      
+      const cutoffTime = new Date(
+        Date.now() - hours * 60 * 60 * 1000
+      ).toISOString();
+
       const query = `
         SELECT DISTINCT a.*
         FROM ${this.tableName} a
@@ -258,10 +262,13 @@ export class AssetModel extends BaseModel<Asset> {
         ORDER BY a.symbol
         LIMIT ?
       `;
-      
+
       const results = await this.db.all(query, [cutoffTime, limit]);
-      return results.map(result => this.deserialize(result)).filter(Boolean) as Asset[];
+      return results
+        .map(result => this.deserialize(result))
+        .filter(Boolean) as Asset[];
     } catch (error) {
+      this.logger.error('Error getting assets with recent data:', error);
       throw error;
     }
   }
@@ -292,7 +299,10 @@ export class AssetModel extends BaseModel<Asset> {
       );
 
       // Assets by exchange
-      const exchangeResults = await this.db.all<{ exchange: string; count: number }>(
+      const exchangeResults = await this.db.all<{
+        exchange: string;
+        count: number;
+      }>(
         `SELECT exchange, COUNT(*) as count FROM ${this.tableName} 
          WHERE is_active = 1 AND exchange IS NOT NULL 
          GROUP BY exchange`
@@ -307,9 +317,11 @@ export class AssetModel extends BaseModel<Asset> {
 
       const assetsByExchange: Record<string, number> = {};
       if (Array.isArray(exchangeResults)) {
-        exchangeResults.forEach((result: { exchange: string; count: number }) => {
-          assetsByExchange[result.exchange] = result.count;
-        });
+        exchangeResults.forEach(
+          (result: { exchange: string; count: number }) => {
+            assetsByExchange[result.exchange] = result.count;
+          }
+        );
       }
 
       return {
@@ -319,6 +331,7 @@ export class AssetModel extends BaseModel<Asset> {
         assetsByExchange,
       };
     } catch (error) {
+      this.logger.error('Error getting asset statistics:', error);
       throw error;
     }
   }
@@ -327,24 +340,16 @@ export class AssetModel extends BaseModel<Asset> {
    * Deactivate asset (soft delete)
    */
   public async deactivateAsset(assetId: string): Promise<boolean> {
-    try {
-      const result = await this.update(assetId, { is_active: false });
-      return !!result;
-    } catch (error) {
-      throw error;
-    }
+    const result = await this.update(assetId, { is_active: false });
+    return !!result;
   }
 
   /**
    * Reactivate asset
    */
   public async reactivateAsset(assetId: string): Promise<boolean> {
-    try {
-      const result = await this.update(assetId, { is_active: true });
-      return !!result;
-    } catch (error) {
-      throw error;
-    }
+    const result = await this.update(assetId, { is_active: true });
+    return !!result;
   }
 }
 
@@ -358,23 +363,75 @@ export const assetModel = {
     return _assetModel;
   },
   // Delegate all methods
-  createAsset: (...args: Parameters<AssetModel['createAsset']>) => assetModel.instance.createAsset(...args),
-  findById: (...args: Parameters<AssetModel['findById']>) => assetModel.instance.findById(...args),
-  findBySymbol: (...args: Parameters<AssetModel['findBySymbol']>) => assetModel.instance.findBySymbol(...args),
-  findBySymbols: (...args: Parameters<AssetModel['findBySymbols']>) => assetModel.instance.findBySymbols(...args),
-  findByType: (...args: Parameters<AssetModel['findByType']>) => assetModel.instance.findByType(...args),
-  findByExchange: (...args: Parameters<AssetModel['findByExchange']>) => assetModel.instance.findByExchange(...args),
-  searchAssets: (...args: Parameters<AssetModel['searchAssets']>) => assetModel.instance.searchAssets(...args),
-  updateMetadata: (...args: Parameters<AssetModel['updateMetadata']>) => assetModel.instance.updateMetadata(...args),
-  symbolExists: (...args: Parameters<AssetModel['symbolExists']>) => assetModel.instance.symbolExists(...args),
-  getPopularAssets: (...args: Parameters<AssetModel['getPopularAssets']>) => assetModel.instance.getPopularAssets(...args),
-  getAssetsWithRecentData: (...args: Parameters<AssetModel['getAssetsWithRecentData']>) => assetModel.instance.getAssetsWithRecentData(...args),
-  getAssetStats: (...args: Parameters<AssetModel['getAssetStats']>) => assetModel.instance.getAssetStats(...args),
-  deactivateAsset: (...args: Parameters<AssetModel['deactivateAsset']>) => assetModel.instance.deactivateAsset(...args),
-  reactivateAsset: (...args: Parameters<AssetModel['reactivateAsset']>) => assetModel.instance.reactivateAsset(...args),
-  findAll: (...args: Parameters<AssetModel['findAll']>) => assetModel.instance.findAll(...args),
-  update: (...args: Parameters<AssetModel['update']>) => assetModel.instance.update(...args),
-  delete: (...args: Parameters<AssetModel['delete']>) => assetModel.instance.delete(...args),
-  count: (...args: Parameters<AssetModel['count']>) => assetModel.instance.count(...args),
-  exists: (...args: Parameters<AssetModel['exists']>) => assetModel.instance.exists(...args),
+  createAsset: (
+    ...args: Parameters<AssetModel['createAsset']>
+  ): ReturnType<AssetModel['createAsset']> =>
+    assetModel.instance.createAsset(...args),
+  findById: (
+    ...args: Parameters<AssetModel['findById']>
+  ): ReturnType<AssetModel['findById']> =>
+    assetModel.instance.findById(...args),
+  findBySymbol: (
+    ...args: Parameters<AssetModel['findBySymbol']>
+  ): ReturnType<AssetModel['findBySymbol']> =>
+    assetModel.instance.findBySymbol(...args),
+  findBySymbols: (
+    ...args: Parameters<AssetModel['findBySymbols']>
+  ): ReturnType<AssetModel['findBySymbols']> =>
+    assetModel.instance.findBySymbols(...args),
+  findByType: (
+    ...args: Parameters<AssetModel['findByType']>
+  ): ReturnType<AssetModel['findByType']> =>
+    assetModel.instance.findByType(...args),
+  findByExchange: (
+    ...args: Parameters<AssetModel['findByExchange']>
+  ): ReturnType<AssetModel['findByExchange']> =>
+    assetModel.instance.findByExchange(...args),
+  searchAssets: (
+    ...args: Parameters<AssetModel['searchAssets']>
+  ): ReturnType<AssetModel['searchAssets']> =>
+    assetModel.instance.searchAssets(...args),
+  updateMetadata: (
+    ...args: Parameters<AssetModel['updateMetadata']>
+  ): ReturnType<AssetModel['updateMetadata']> =>
+    assetModel.instance.updateMetadata(...args),
+  symbolExists: (
+    ...args: Parameters<AssetModel['symbolExists']>
+  ): ReturnType<AssetModel['symbolExists']> =>
+    assetModel.instance.symbolExists(...args),
+  getPopularAssets: (
+    ...args: Parameters<AssetModel['getPopularAssets']>
+  ): ReturnType<AssetModel['getPopularAssets']> =>
+    assetModel.instance.getPopularAssets(...args),
+  getAssetsWithRecentData: (
+    ...args: Parameters<AssetModel['getAssetsWithRecentData']>
+  ): ReturnType<AssetModel['getAssetsWithRecentData']> =>
+    assetModel.instance.getAssetsWithRecentData(...args),
+  getAssetStats: (
+    ...args: Parameters<AssetModel['getAssetStats']>
+  ): ReturnType<AssetModel['getAssetStats']> =>
+    assetModel.instance.getAssetStats(...args),
+  deactivateAsset: (
+    ...args: Parameters<AssetModel['deactivateAsset']>
+  ): ReturnType<AssetModel['deactivateAsset']> =>
+    assetModel.instance.deactivateAsset(...args),
+  reactivateAsset: (
+    ...args: Parameters<AssetModel['reactivateAsset']>
+  ): ReturnType<AssetModel['reactivateAsset']> =>
+    assetModel.instance.reactivateAsset(...args),
+  findAll: (
+    ...args: Parameters<AssetModel['findAll']>
+  ): ReturnType<AssetModel['findAll']> => assetModel.instance.findAll(...args),
+  update: (
+    ...args: Parameters<AssetModel['update']>
+  ): ReturnType<AssetModel['update']> => assetModel.instance.update(...args),
+  delete: (
+    ...args: Parameters<AssetModel['delete']>
+  ): ReturnType<AssetModel['delete']> => assetModel.instance.delete(...args),
+  count: (
+    ...args: Parameters<AssetModel['count']>
+  ): ReturnType<AssetModel['count']> => assetModel.instance.count(...args),
+  exists: (
+    ...args: Parameters<AssetModel['exists']>
+  ): ReturnType<AssetModel['exists']> => assetModel.instance.exists(...args),
 };
