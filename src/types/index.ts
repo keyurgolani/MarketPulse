@@ -384,9 +384,9 @@ export function groupBy<T, K extends string | number | symbol>(
   );
 }
 
-export function sortBy<T>(
+export function sortBy<T, K extends string | number | Date>(
   array: T[],
-  keyFn: (item: T) => unknown,
+  keyFn: (item: T) => K,
   order: SortOrder = SortOrder.ASC
 ): T[] {
   return [...array].sort((a, b) => {
@@ -530,25 +530,37 @@ export const getBrowserInfo = (): { name: string; version: string } | null => {
   if (!isClient) return null;
 
   const userAgent = navigator.userAgent;
-  const isChrome =
-    /Chrome/.test(userAgent) && /Google Inc/.test(navigator.vendor);
-  const isFirefox = /Firefox/.test(userAgent);
-  const isSafari =
-    /Safari/.test(userAgent) && /Apple Computer/.test(navigator.vendor);
-  const isEdge = /Edg/.test(userAgent);
-  const isOpera = /OPR/.test(userAgent);
 
-  return {
-    userAgent,
-    isChrome,
-    isFirefox,
-    isSafari,
-    isEdge,
-    isOpera,
-    isMobile: /Mobi|Android/i.test(userAgent),
-    isTablet: /Tablet|iPad/i.test(userAgent),
-    isDesktop: !/Mobi|Android|Tablet|iPad/i.test(userAgent),
-  };
+  // Detect browser name and version
+  let name = 'Unknown';
+  let version = 'Unknown';
+
+  if (/Chrome/.test(userAgent) && /Google Inc/.test(navigator.vendor)) {
+    name = 'Chrome';
+    const match = userAgent.match(/Chrome\/(\d+)/);
+    version = match ? match[1] : 'Unknown';
+  } else if (/Firefox/.test(userAgent)) {
+    name = 'Firefox';
+    const match = userAgent.match(/Firefox\/(\d+)/);
+    version = match ? match[1] : 'Unknown';
+  } else if (
+    /Safari/.test(userAgent) &&
+    /Apple Computer/.test(navigator.vendor)
+  ) {
+    name = 'Safari';
+    const match = userAgent.match(/Version\/(\d+)/);
+    version = match ? match[1] : 'Unknown';
+  } else if (/Edg/.test(userAgent)) {
+    name = 'Edge';
+    const match = userAgent.match(/Edg\/(\d+)/);
+    version = match ? match[1] : 'Unknown';
+  } else if (/OPR/.test(userAgent)) {
+    name = 'Opera';
+    const match = userAgent.match(/OPR\/(\d+)/);
+    version = match ? match[1] : 'Unknown';
+  }
+
+  return { name, version };
 };
 
 // Performance utilities

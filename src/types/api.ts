@@ -208,13 +208,19 @@ export function isApiResponse<T>(
 export function isPaginatedResponse<T>(
   response: unknown
 ): response is PaginatedResponse<T> {
+  if (response === null || typeof response !== 'object') {
+    return false;
+  }
+
+  const obj = response as Record<string, unknown>;
+
   return (
-    response !== null &&
-    typeof response === 'object' &&
-    'data' in response &&
-    'pagination' in response &&
-    Array.isArray((response as Record<string, unknown>).data) &&
-    (response as Record<string, unknown>).pagination &&
-    typeof (response as Record<string, unknown>).pagination.page === 'number'
+    'data' in obj &&
+    'pagination' in obj &&
+    Array.isArray(obj.data) &&
+    obj.pagination !== null &&
+    typeof obj.pagination === 'object' &&
+    'page' in (obj.pagination as Record<string, unknown>) &&
+    typeof (obj.pagination as Record<string, unknown>).page === 'number'
   );
 }

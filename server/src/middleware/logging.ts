@@ -3,6 +3,12 @@ import morgan from 'morgan';
 import { logger } from '@/utils/logger';
 import { config } from '@/config/environment';
 
+// Extend Request interface for custom properties
+interface ExtendedRequest extends Request {
+  id?: string;
+  user?: { id: string };
+}
+
 // Create a stream for Morgan HTTP logging
 export const logStream = {
   write: (message: string): void => {
@@ -12,12 +18,12 @@ export const logStream = {
 
 // Custom token for request ID
 morgan.token('id', (req: Request): string => {
-  return (req as Request & { id?: string }).id || 'unknown';
+  return (req as ExtendedRequest).id || 'unknown';
 });
 
 // Custom token for user ID
 morgan.token('user', (req: Request) => {
-  return (req as Record<string, unknown>).user?.id || 'anonymous';
+  return (req as ExtendedRequest).user?.id || 'anonymous';
 });
 
 // Custom token for response time in milliseconds
@@ -86,7 +92,7 @@ export const requestId = (
     req.get('X-Request-ID') ||
     req.get('X-Correlation-ID') ||
     generateRequestId();
-  (req as Request & { id: string }).id = id;
+  (req as ExtendedRequest).id = id;
   res.setHeader('X-Request-ID', id);
   next();
 };
@@ -110,7 +116,7 @@ export const responseTime = (
     // Log slow requests
     if (duration > 1000) {
       logger.warn('Slow request detected', {
-        requestId: (req as Record<string, unknown>).id,
+        requestId: (req as ExtendedRequest).id,
         method: req.method,
         url: req.url,
         duration,
@@ -135,7 +141,7 @@ export const requestLogger = (
 
   // Log incoming request
   logger.info('Incoming request', {
-    requestId: (req as Record<string, unknown>).id,
+    requestId: (req as ExtendedRequest).id,
     method: req.method,
     url: req.url,
     userAgent: req.get('User-Agent'),
@@ -149,9 +155,13 @@ export const requestLogger = (
   // Log request body for non-GET requests (excluding sensitive data)
   if (req.method !== 'GET' && req.body && Object.keys(req.body).length > 0) {
     const sanitizedBody = sanitizeRequestBody(req.body);
-    if (Object.keys(sanitizedBody).length > 0) {
+    if (
+      sanitizedBody &&
+      typeof sanitizedBody === 'object' &&
+      Object.keys(sanitizedBody).length > 0
+    ) {
       logger.debug('Request body', {
-        requestId: (req as Record<string, unknown>).id,
+        requestId: (req as ExtendedRequest).id,
         body: sanitizedBody,
       });
     }
@@ -164,7 +174,7 @@ export const requestLogger = (
 
     // Log response
     logger.info('Outgoing response', {
-      requestId: (req as Record<string, unknown>).id,
+      requestId: (req as ExtendedRequest).id,
       method: req.method,
       url: req.url,
       statusCode: res.statusCode,
@@ -178,7 +188,7 @@ export const requestLogger = (
       const sanitizedResponse = sanitizeResponseBody(body);
       if (sanitizedResponse) {
         logger.debug('Response body', {
-          requestId: (req as Record<string, unknown>).id,
+          requestId: (req as ExtendedRequest).id,
           statusCode: res.statusCode,
           body: sanitizedResponse,
         });
@@ -199,7 +209,7 @@ export const errorLogger = (
   next: NextFunction
 ): void => {
   logger.error('Request error', {
-    requestId: (req as Record<string, unknown>).id,
+    requestId: (req as ExtendedRequest).id,
     method: req.method,
     url: req.url,
     error: {
@@ -221,7 +231,7 @@ export const securityLogger = (
   details?: Record<string, unknown>
 ): void => {
   logger.warn(`Security event: ${event}`, {
-    requestId: (req as Record<string, unknown>).id,
+    requestId: (req as ExtendedRequest).id,
     event,
     method: req.method,
     url: req.url,
@@ -239,13 +249,13 @@ export const auditLogger = (
   details?: Record<string, unknown>
 ): void => {
   logger.info(`Audit event: ${action}`, {
-    requestId: (req as Record<string, unknown>).id,
+    requestId: (req as ExtendedRequest).id,
     action,
     method: req.method,
     url: req.url,
     ip: req.ip,
     userAgent: req.get('User-Agent'),
-    user: (req as Record<string, unknown>).user?.id || 'anonymous',
+    user: (req as ExtendedRequest).user?.id || 'anonymous',
     timestamp: new Date().toISOString(),
     ...details,
   });
@@ -272,7 +282,7 @@ function sanitizeRequestBody(body: unknown): unknown {
     'session',
   ];
 
-  const sanitized = { ...body };
+  const sanitized = { ...(body as Record<string, unknown>) };
   for (const field of sensitiveFields) {
     if (field in sanitized) {
       sanitized[field] = '[REDACTED]';
@@ -312,7 +322,7 @@ function sanitizeResponseBody(body: unknown): unknown {
     'authorization',
   ];
 
-  const sanitized = { ...body };
+  const sanitized = { ...(body as Record<string, unknown>) };
   for (const field of sensitiveFields) {
     if (field in sanitized) {
       sanitized[field] = '[REDACTED]';
@@ -328,6 +338,7 @@ declare global {
   namespace Express {
     interface Request {
       id?: string;
+      user?: { id: string };
     }
   }
 }

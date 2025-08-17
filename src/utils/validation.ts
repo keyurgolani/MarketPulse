@@ -801,15 +801,28 @@ export function validateData<T>(
  */
 export function createValidationMiddleware<T>(
   schema: z.ZodSchema<T>
-): (req: unknown, res: unknown, next: unknown) => void {
-  return (req: unknown, res: unknown, next: unknown): void => {
+): (
+  req: Record<string, unknown>,
+  res: Record<string, unknown>,
+  next: () => void
+) => void {
+  return (
+    req: Record<string, unknown>,
+    res: Record<string, unknown>,
+    next: () => void
+  ): void => {
     const result = validateData(schema, req.body);
     if (!result.success) {
-      return res.status(400).json({
+      const statusMethod = res.status as (code: number) => {
+        json: (data: unknown) => void;
+      };
+      return statusMethod(400).json({
         success: false,
         error: 'Validation failed',
-        details: result.errors.issues.map((err: Record<string, unknown>) => ({
-          field: err.path.join('.'),
+        details: result.errors.issues.map(err => ({
+          field: Array.isArray(err.path)
+            ? err.path.join('.')
+            : String(err.path),
           message: err.message,
           code: err.code,
         })),

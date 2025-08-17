@@ -37,9 +37,9 @@ const getSecurityConfig = (): SecurityConfig => {
             'http://127.0.0.1:3000',
             'http://127.0.0.1:5173',
           ]
-        : config.cors.origin
-          ? [config.cors.origin]
-          : false,
+        : ((config.cors.origin ? [config.cors.origin] : false) as
+            | string[]
+            | boolean),
       credentials: true,
       methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
       allowedHeaders: [

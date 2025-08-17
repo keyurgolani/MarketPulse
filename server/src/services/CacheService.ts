@@ -369,7 +369,10 @@ export class CacheService {
       },
       memory: {
         available: true,
-        stats: this.memoryCache.getStats(),
+        stats: this.memoryCache.getStats() as unknown as Record<
+          string,
+          unknown
+        >,
       },
       fallbackMode: this.fallbackMode,
     };

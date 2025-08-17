@@ -413,29 +413,36 @@ export interface ErrorAnalytics {
  * Type guard to check if error is an API error
  */
 export function isApiError(error: unknown): error is ApiError {
-  return (
-    error &&
-    typeof error.statusCode === 'number' &&
-    typeof error.endpoint === 'string'
-  );
+  if (!error || typeof error !== 'object') {
+    return false;
+  }
+
+  const obj = error as Record<string, unknown>;
+  return typeof obj.statusCode === 'number' && typeof obj.endpoint === 'string';
 }
 
 /**
  * Type guard to check if error is a validation error
  */
 export function isValidationError(error: unknown): error is ValidationError {
-  return (
-    error && typeof error.field === 'string' && typeof error.rule === 'string'
-  );
+  if (!error || typeof error !== 'object') {
+    return false;
+  }
+
+  const obj = error as Record<string, unknown>;
+  return typeof obj.field === 'string' && typeof obj.rule === 'string';
 }
 
 /**
  * Type guard to check if error is a network error
  */
 export function isNetworkError(error: unknown): error is NetworkError {
-  return (
-    error && typeof error.type === 'string' && typeof error.url === 'string'
-  );
+  if (!error || typeof error !== 'object') {
+    return false;
+  }
+
+  const obj = error as Record<string, unknown>;
+  return typeof obj.type === 'string' && typeof obj.url === 'string';
 }
 
 /**

@@ -104,20 +104,21 @@ export class RateLimiter {
             path: req.path,
           });
 
-          return res.status(429).json({
+          res.status(429).json({
             success: false,
             error: 'Too many requests',
             message: `Rate limit exceeded. Try again in ${resetTime} seconds.`,
             retryAfter: resetTime,
             timestamp: new Date().toISOString(),
           });
+          return;
         }
 
-        return next();
+        next();
       } catch (error) {
         logger.error('Rate limiter error', { error });
         // Allow request to proceed if rate limiting fails
-        return next();
+        next();
       }
     };
   }
@@ -143,21 +144,24 @@ export const rateLimiter = (
 ): void => {
   // Skip rate limiting in test environment only for specific tests
   if (config.nodeEnv === 'test' && !process.env.TEST_RATE_LIMITING) {
-    return next();
+    next();
+    return;
   }
 
   // Apply strict limiting to sensitive endpoints
   if (req.path.includes('/logs') || req.path.includes('/system')) {
-    return strictLimiter.middleware()(req, res, next);
+    strictLimiter.middleware()(req, res, next);
+    return;
   }
 
   // Apply API limiting to API endpoints
   if (req.path.startsWith('/api/')) {
-    return apiLimiter.middleware()(req, res, next);
+    apiLimiter.middleware()(req, res, next);
+    return;
   }
 
   // Apply general limiting to all other endpoints
-  return generalLimiter.middleware()(req, res, next);
+  generalLimiter.middleware()(req, res, next);
 };
 
 // Export limiter instances for testing

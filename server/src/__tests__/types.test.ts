@@ -73,7 +73,7 @@ const createMockResponse = (): Response => {
     error: vi.fn(),
     paginated: vi.fn(),
   };
-  return res as Response;
+  return res as unknown as Response;
 };
 
 // =============================================================================
@@ -236,12 +236,15 @@ describe('API Contract Types', () => {
       const typedHandler = createHandler(mockHandler);
       const req = createMockRequest();
       const res = createMockResponse();
-      res.success = vi.fn();
+      (res as Response & { success: (data: unknown) => void }).success =
+        vi.fn();
 
       await typedHandler(req as Request, res as Response, vi.fn());
 
       expect(mockHandler).toHaveBeenCalledWith(req, res);
-      expect(res.success).toHaveBeenCalledWith({ id: '123' });
+      expect(
+        (res as Response & { success: (data: unknown) => void }).success
+      ).toHaveBeenCalledWith({ id: '123' });
     });
 
     it('should create paginated handler', async () => {
@@ -254,11 +257,21 @@ describe('API Contract Types', () => {
       const paginatedHandler = createPaginatedHandler(mockHandler);
       const req = createMockRequest();
       const res = createMockResponse();
-      res.paginated = vi.fn();
+      (
+        res as Response & {
+          paginated: (data: unknown[], meta: unknown) => void;
+        }
+      ).paginated = vi.fn();
 
       await paginatedHandler(req as Request, res as Response, vi.fn());
 
-      expect(res.paginated).toHaveBeenCalledWith(
+      expect(
+        (
+          res as Response & {
+            paginated: (data: unknown[], meta: unknown) => void;
+          }
+        ).paginated
+      ).toHaveBeenCalledWith(
         [{ id: '1' }],
         expect.objectContaining({
           page: 1,
@@ -709,10 +722,13 @@ describe('Security and Sanitization', () => {
       expect(response.success).toBe(false);
       expect(response.error).toBe('Validation failed');
       expect(response.details).toHaveLength(1);
-      expect(response.details[0].field).toBe('name');
-      expect(response.details[0].message).toBe(
-        'Expected string, received number'
-      );
+      expect(
+        (response.details as Array<{ field: string; message: string }>)[0].field
+      ).toBe('name');
+      expect(
+        (response.details as Array<{ field: string; message: string }>)[0]
+          .message
+      ).toBe('Expected string, received number');
     });
   });
 });

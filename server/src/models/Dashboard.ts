@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { BaseModel } from './BaseModel';
+import { Widget } from './Widget';
 
 // Layout configuration schema
 const LayoutConfigSchema = z
@@ -185,7 +186,7 @@ export class DashboardModel extends BaseModel<Dashboard> {
    */
   public async getDashboardWithWidgets(
     dashboardId: string
-  ): Promise<(Dashboard & { widgets: unknown[] }) | null> {
+  ): Promise<(Dashboard & { widgets: Widget[] }) | null> {
     const dashboard = await this.findById(dashboardId);
     if (!dashboard) {
       return null;
@@ -234,7 +235,7 @@ export class DashboardModel extends BaseModel<Dashboard> {
       });
 
       // Clone widgets
-      for (const widget of original.widgets) {
+      for (const widget of original.widgets as Widget[]) {
         await this.db.run(
           `INSERT INTO widgets (id, dashboard_id, type, title, config, position_x, position_y, width, height, created_at, updated_at)
            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,

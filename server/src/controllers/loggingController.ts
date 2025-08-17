@@ -11,7 +11,7 @@ export const getLogFiles = asyncHandler(async (req: Request, res: Response) => {
     fileCount: logFiles.length,
   });
 
-  return res.json({
+  res.json({
     success: true,
     data: {
       files: logFiles,
@@ -27,11 +27,12 @@ export const getLogFile = asyncHandler(async (req: Request, res: Response) => {
     req.query;
 
   if (!filename) {
-    return res.status(400).json({
+    res.status(400).json({
       success: false,
       error: 'Filename is required',
       timestamp: new Date().toISOString(),
     });
+    return;
   }
 
   const query: Record<string, unknown> = {};
@@ -45,11 +46,12 @@ export const getLogFile = asyncHandler(async (req: Request, res: Response) => {
   if (limit) {
     const limitNum = parseInt(limit as string, 10);
     if (isNaN(limitNum) || limitNum < 1 || limitNum > 1000) {
-      return res.status(400).json({
+      res.status(400).json({
         success: false,
         error: 'Limit must be between 1 and 1000',
         timestamp: new Date().toISOString(),
       });
+      return;
     }
     query.limit = limitNum;
   }
@@ -58,11 +60,12 @@ export const getLogFile = asyncHandler(async (req: Request, res: Response) => {
   if (offset) {
     const offsetNum = parseInt(offset as string, 10);
     if (isNaN(offsetNum) || offsetNum < 0) {
-      return res.status(400).json({
+      res.status(400).json({
         success: false,
         error: 'Offset must be a non-negative integer',
         timestamp: new Date().toISOString(),
       });
+      return;
     }
     query.offset = offsetNum;
   }
@@ -71,13 +74,13 @@ export const getLogFile = asyncHandler(async (req: Request, res: Response) => {
     const result = await loggingService.readLogFile(filename, query);
 
     logger.info('Log file accessed', {
-      requestId: (req as Record<string, unknown>).id,
+      requestId: (req as Request & { id?: string }).id,
       filename,
       query,
       resultCount: result.entries.length,
     });
 
-    return res.json({
+    res.json({
       success: true,
       data: result,
       timestamp: new Date().toISOString(),
@@ -85,11 +88,12 @@ export const getLogFile = asyncHandler(async (req: Request, res: Response) => {
   } catch (error) {
     logger.error(`Error reading log file ${filename}:`, error);
     if (error instanceof Error && error.message.includes('not found')) {
-      return res.status(404).json({
+      res.status(404).json({
         success: false,
         error: `Log file ${filename} not found`,
         timestamp: new Date().toISOString(),
       });
+      return;
     }
     throw error;
   }
@@ -110,11 +114,12 @@ export const searchLogs = asyncHandler(async (req: Request, res: Response) => {
   if (limit) {
     const limitNum = parseInt(limit as string, 10);
     if (isNaN(limitNum) || limitNum < 1 || limitNum > 1000) {
-      return res.status(400).json({
+      res.status(400).json({
         success: false,
         error: 'Limit must be between 1 and 1000',
         timestamp: new Date().toISOString(),
       });
+      return;
     }
     query.limit = limitNum;
   }
@@ -123,11 +128,12 @@ export const searchLogs = asyncHandler(async (req: Request, res: Response) => {
   if (offset) {
     const offsetNum = parseInt(offset as string, 10);
     if (isNaN(offsetNum) || offsetNum < 0) {
-      return res.status(400).json({
+      res.status(400).json({
         success: false,
         error: 'Offset must be a non-negative integer',
         timestamp: new Date().toISOString(),
       });
+      return;
     }
     query.offset = offsetNum;
   }
@@ -135,12 +141,12 @@ export const searchLogs = asyncHandler(async (req: Request, res: Response) => {
   const result = await loggingService.searchLogs(query);
 
   logger.info('Logs searched', {
-    requestId: (req as Record<string, unknown>).id,
+    requestId: (req as Request & { id?: string }).id,
     query,
     resultCount: result.entries.length,
   });
 
-  return res.json({
+  res.json({
     success: true,
     data: result,
     timestamp: new Date().toISOString(),
@@ -151,10 +157,10 @@ export const getLogStats = asyncHandler(async (req: Request, res: Response) => {
   const stats = await loggingService.getLogStats();
 
   logger.info('Log stats accessed', {
-    requestId: (req as Record<string, unknown>).id,
+    requestId: (req as Request & { id?: string }).id,
   });
 
-  return res.json({
+  res.json({
     success: true,
     data: stats,
     timestamp: new Date().toISOString(),
@@ -170,11 +176,12 @@ export const cleanupLogs = asyncHandler(async (req: Request, res: Response) => {
   if (maxAge) {
     const maxAgeNum = parseInt(maxAge, 10);
     if (isNaN(maxAgeNum) || maxAgeNum < 1) {
-      return res.status(400).json({
+      res.status(400).json({
         success: false,
         error: 'maxAge must be a positive integer (days)',
         timestamp: new Date().toISOString(),
       });
+      return;
     }
     options.maxAge = maxAgeNum;
   }
@@ -183,11 +190,12 @@ export const cleanupLogs = asyncHandler(async (req: Request, res: Response) => {
   if (maxSize) {
     const maxSizeNum = parseInt(maxSize, 10);
     if (isNaN(maxSizeNum) || maxSizeNum < 1) {
-      return res.status(400).json({
+      res.status(400).json({
         success: false,
         error: 'maxSize must be a positive integer (bytes)',
         timestamp: new Date().toISOString(),
       });
+      return;
     }
     options.maxSize = maxSizeNum;
   }
@@ -196,11 +204,12 @@ export const cleanupLogs = asyncHandler(async (req: Request, res: Response) => {
   if (maxFiles) {
     const maxFilesNum = parseInt(maxFiles, 10);
     if (isNaN(maxFilesNum) || maxFilesNum < 1) {
-      return res.status(400).json({
+      res.status(400).json({
         success: false,
         error: 'maxFiles must be a positive integer',
         timestamp: new Date().toISOString(),
       });
+      return;
     }
     options.maxFiles = maxFilesNum;
   }
@@ -208,13 +217,13 @@ export const cleanupLogs = asyncHandler(async (req: Request, res: Response) => {
   const result = await loggingService.cleanupLogs(options);
 
   logger.info('Log cleanup performed', {
-    requestId: (req as Record<string, unknown>).id,
+    requestId: (req as Request & { id?: string }).id,
     options,
     deletedFiles: result.deletedFiles.length,
     freedSpace: result.freedSpace,
   });
 
-  return res.json({
+  res.json({
     success: true,
     message: `Cleaned up ${result.deletedFiles.length} log files, freed ${Math.round((result.freedSpace / 1024 / 1024) * 100) / 100} MB`,
     data: result,
@@ -227,23 +236,24 @@ export const archiveLogs = asyncHandler(async (req: Request, res: Response) => {
   const maxAgeNum = maxAge ? parseInt(maxAge, 10) : 30;
 
   if (isNaN(maxAgeNum) || maxAgeNum < 1) {
-    return res.status(400).json({
+    res.status(400).json({
       success: false,
       error: 'maxAge must be a positive integer (days)',
       timestamp: new Date().toISOString(),
     });
+    return;
   }
 
   const result = await loggingService.archiveLogs(maxAgeNum);
 
   logger.info('Log archival performed', {
-    requestId: (req as Record<string, unknown>).id,
+    requestId: (req as Request & { id?: string }).id,
     maxAge: maxAgeNum,
     archivedFiles: result.archivedFiles.length,
     archiveSize: result.archiveSize,
   });
 
-  return res.json({
+  res.json({
     success: true,
     message: `Archived ${result.archivedFiles.length} log files, total size ${Math.round((result.archiveSize / 1024 / 1024) * 100) / 100} MB`,
     data: result,
@@ -256,32 +266,34 @@ export const downloadLogFile = asyncHandler(
     const { filename } = req.params;
 
     if (!filename) {
-      return res.status(400).json({
+      res.status(400).json({
         success: false,
         error: 'Filename is required',
         timestamp: new Date().toISOString(),
       });
+      return;
     }
 
     const logFiles = await loggingService.getLogFiles();
     const logFile = logFiles.find(f => f.name === filename);
 
     if (!logFile) {
-      return res.status(404).json({
+      res.status(404).json({
         success: false,
         error: `Log file ${filename} not found`,
         timestamp: new Date().toISOString(),
       });
+      return;
     }
 
     logger.info('Log file downloaded', {
-      requestId: (req as Record<string, unknown>).id,
+      requestId: (req as Request & { id?: string }).id,
       filename,
       size: logFile.size,
     });
 
     res.setHeader('Content-Type', 'text/plain');
     res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
-    return res.sendFile(logFile.path);
+    res.sendFile(logFile.path);
   }
 );

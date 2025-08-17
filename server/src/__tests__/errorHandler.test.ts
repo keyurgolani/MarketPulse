@@ -435,7 +435,7 @@ describe('Error Utility Functions', () => {
       // Give async operation time to complete
       setTimeout(() => {
         expect(mockNext).toHaveBeenCalledWith(expect.any(Error));
-        expect(mockNext.mock.calls[0][0].message).toBe('Async error');
+        expect(mockNext.mock.calls[0]?.[0]?.message).toBe('Async error');
         done();
       }, 10);
     });

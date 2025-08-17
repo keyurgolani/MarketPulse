@@ -22,13 +22,11 @@ export class ValidationError extends Error {
   constructor(errors: z.ZodError) {
     super('Request validation failed');
     this.name = 'ValidationError';
-    this.validationErrors = errors.issues.map(
-      (err: Record<string, unknown>) => ({
-        field: err.path.join('.'),
-        message: err.message,
-        code: err.code,
-      })
-    );
+    this.validationErrors = errors.issues.map(err => ({
+      field: err.path.join('.'),
+      message: err.message,
+      code: err.code,
+    }));
   }
 }
 
@@ -282,31 +280,57 @@ export interface FileUploadConfig {
 export function validateFileUpload(config: FileUploadConfig) {
   return (req: Request, res: Response, next: NextFunction): void => {
     try {
-      const files = (req as Record<string, unknown>).files as
-        | unknown[]
-        | undefined;
+      const files = (req as Request & { files?: unknown[] }).files;
 
       if (!files || files.length === 0) {
         return next();
       }
 
+      // Type guard for file objects
+      const isFileObject = (
+        obj: unknown
+      ): obj is {
+        size: number;
+        mimetype: string;
+        originalname: string;
+      } => {
+        return (
+          typeof obj === 'object' &&
+          obj !== null &&
+          'size' in obj &&
+          'mimetype' in obj &&
+          'originalname' in obj &&
+          typeof (obj as Record<string, unknown>).size === 'number' &&
+          typeof (obj as Record<string, unknown>).mimetype === 'string' &&
+          typeof (obj as Record<string, unknown>).originalname === 'string'
+        );
+      };
+
       // Check number of files
       if (config.maxFiles && files.length > config.maxFiles) {
         const error = new Error(
           `Too many files. Maximum allowed: ${config.maxFiles}`
-        );
-        (error as unknown as { statusCode: number }).statusCode = 400;
+        ) as Error & { statusCode: number };
+        error.statusCode = 400;
         throw error;
       }
 
       // Validate each file
       for (const file of files) {
+        if (!isFileObject(file)) {
+          const error = new Error('Invalid file object') as Error & {
+            statusCode: number;
+          };
+          error.statusCode = 400;
+          throw error;
+        }
+
         // Check file size
         if (file.size > config.maxFileSize) {
           const error = new Error(
             `File too large. Maximum size: ${config.maxFileSize} bytes`
-          );
-          (error as unknown as { statusCode: number }).statusCode = 400;
+          ) as Error & { statusCode: number };
+          error.statusCode = 400;
           throw error;
         }
 
@@ -314,8 +338,8 @@ export function validateFileUpload(config: FileUploadConfig) {
         if (!config.allowedMimeTypes.includes(file.mimetype)) {
           const error = new Error(
             `Invalid file type. Allowed types: ${config.allowedMimeTypes.join(', ')}`
-          );
-          (error as unknown as { statusCode: number }).statusCode = 400;
+          ) as Error & { statusCode: number };
+          error.statusCode = 400;
           throw error;
         }
 
@@ -324,13 +348,14 @@ export function validateFileUpload(config: FileUploadConfig) {
         if (!extension || !config.allowedExtensions.includes(extension)) {
           const error = new Error(
             `Invalid file extension. Allowed extensions: ${config.allowedExtensions.join(', ')}`
-          );
-          (error as unknown as { statusCode: number }).statusCode = 400;
+          ) as Error & { statusCode: number };
+          error.statusCode = 400;
           throw error;
         }
 
         // Sanitize filename
-        file.originalname = InputSanitizer.sanitizeFilePath(file.originalname);
+        (file as { originalname: string }).originalname =
+          InputSanitizer.sanitizeFilePath(file.originalname);
       }
 
       next();

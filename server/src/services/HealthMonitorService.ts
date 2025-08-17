@@ -157,11 +157,11 @@ export class HealthMonitorService {
       services: {
         database: {
           status: dbHealth.status,
-          details: dbHealth.details,
+          ...(dbHealth.details && { details: dbHealth.details }),
         },
         cache: {
           status: cacheHealth.status,
-          details: cacheHealth.details,
+          ...(cacheHealth.details && { details: cacheHealth.details }),
         },
       },
       environment: {

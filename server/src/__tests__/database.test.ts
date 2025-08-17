@@ -121,10 +121,15 @@ describe('Database Integration', () => {
     let testUser: { id: string; email: string; username: string };
 
     beforeEach(async () => {
-      testUser = await userModel.createUser({
+      const user = await userModel.createUser({
         email: 'dashboard@example.com',
         username: 'dashboarduser',
       });
+      testUser = {
+        id: user.id,
+        email: user.email,
+        username: user.username || 'dashboarduser',
+      };
     });
 
     it('should create a new dashboard', async () => {

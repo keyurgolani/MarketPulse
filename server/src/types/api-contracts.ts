@@ -3,7 +3,85 @@
  * Defines Express request/response types and middleware interfaces
  */
 
-import { Request, Response } from 'express';
+import { Request, Response, NextFunction } from 'express';
+import { ParsedQs } from 'qs';
+
+// =============================================================================
+// Market Data Types
+// =============================================================================
+
+/**
+ * Market quote data structure
+ */
+export interface MarketQuote {
+  symbol: string;
+  name: string;
+  shortName: string;
+  price: number;
+  change: number;
+  changePercent: number;
+  volume: number;
+  marketCap: number;
+  currency: string;
+  exchange: string;
+  lastUpdated: Date;
+  source: string;
+  // Optional fields for additional data
+  high?: number;
+  low?: number;
+  open?: number;
+  previousClose?: number;
+  timestamp?: number;
+}
+
+/**
+ * Historical data point
+ */
+export interface HistoricalDataPoint {
+  timestamp: number;
+  open: number;
+  high: number;
+  low: number;
+  close: number;
+  volume: number;
+}
+
+/**
+ * Historical data structure
+ */
+export interface HistoricalData {
+  symbol: string;
+  meta: {
+    currency: string;
+    exchange: string;
+    instrumentType: string;
+    regularMarketPrice: number;
+    timezone: string;
+  };
+  data: HistoricalDataPoint[];
+}
+
+/**
+ * Symbol search result
+ */
+export interface SymbolSearchResult {
+  symbol: string;
+  name: string;
+  exchange: string;
+  type: string;
+  sector?: string;
+  industry?: string;
+  source: string;
+}
+
+/**
+ * Health check result
+ */
+export interface HealthCheckResult {
+  status: 'healthy' | 'unhealthy';
+  latency: number;
+  error?: string;
+}
 // Define server-side API response types
 export interface ApiResponse<T = unknown> {
   data: T;
@@ -33,7 +111,8 @@ export interface ErrorResponse {
   details?: Record<string, unknown>;
 }
 
-export interface ValidationErrorResponse extends ErrorResponse {
+export interface ValidationErrorResponse
+  extends Omit<ErrorResponse, 'details'> {
   details: Array<{
     field: string;
     message: string;
@@ -55,7 +134,7 @@ export interface ValidationErrorResponse extends ErrorResponse {
  */
 export interface TypedRequest<
   TBody = unknown,
-  TQuery extends Record<string, unknown> = Record<string, unknown>,
+  TQuery extends ParsedQs = ParsedQs,
   TParams extends Record<string, string> = Record<string, string>,
 > extends Request {
   body: TBody;
@@ -92,13 +171,13 @@ export interface TypedResponse<TData = unknown> extends Response {
  */
 export type ApiHandler<
   TBody = unknown,
-  TQuery extends Record<string, unknown> = Record<string, unknown>,
+  TQuery extends ParsedQs = ParsedQs,
   TParams extends Record<string, string> = Record<string, string>,
   TResponse = unknown,
 > = (
   req: TypedRequest<TBody, TQuery, TParams>,
   res: TypedResponse<TResponse>
-) => Promise<void> | void;
+) => Promise<TResponse>;
 
 // =============================================================================
 // Dashboard API Types
@@ -490,7 +569,12 @@ export class ValidationError extends ApiError {
       code: string;
     }>
   ) {
-    super(400, message, 'VALIDATION_ERROR', errors);
+    super(
+      400,
+      message,
+      'VALIDATION_ERROR',
+      errors as unknown as Record<string, unknown>
+    );
     this.name = 'ValidationError';
   }
 }
@@ -553,7 +637,7 @@ export class ExternalServiceError extends ApiError {
       502,
       `External service error: ${service}`,
       'EXTERNAL_SERVICE_ERROR',
-      originalError
+      originalError as Record<string, unknown>
     );
     this.name = 'ExternalServiceError';
   }
@@ -570,12 +654,17 @@ export function createSuccessResponse<T>(
   data: T,
   meta?: Record<string, unknown>
 ): ApiResponse<T> {
-  return {
+  const response: ApiResponse<T> = {
     success: true,
     data,
     timestamp: Date.now(),
-    meta,
   };
+
+  if (meta !== undefined) {
+    response.meta = meta;
+  }
+
+  return response;
 }
 
 /**
@@ -591,7 +680,7 @@ export function createPaginatedResponse<T>(
   },
   meta?: Record<string, unknown>
 ): PaginatedResponse<T> {
-  return {
+  const response: PaginatedResponse<T> = {
     success: true,
     data,
     pagination: {
@@ -600,8 +689,13 @@ export function createPaginatedResponse<T>(
       hasPrev: pagination.page > 1,
     },
     timestamp: Date.now(),
-    meta,
   };
+
+  if (meta !== undefined) {
+    response.meta = meta;
+  }
+
+  return response;
 }
 
 /**
@@ -613,14 +707,19 @@ export function createErrorResponse(
   details?: Record<string, unknown>,
   path?: string
 ): ErrorResponse {
-  return {
+  const response: ErrorResponse = {
     error,
     message: error,
     statusCode,
     timestamp: new Date().toISOString(),
     path: path || '',
-    details,
   };
+
+  if (details !== undefined) {
+    response.details = details;
+  }
+
+  return response;
 }
 
 // =============================================================================
@@ -632,22 +731,16 @@ export function createErrorResponse(
  */
 export function asyncHandler<
   TBody = unknown,
-  TQuery extends Record<string, unknown> = Record<string, unknown>,
+  TQuery extends ParsedQs = ParsedQs,
   TParams extends Record<string, string> = Record<string, string>,
   TResponse = unknown,
 >(
   handler: ApiHandler<TBody, TQuery, TParams, TResponse>
-): (
-  req: TypedRequest<TBody, TQuery, TParams>,
-  res: TypedResponse<TResponse>,
-  next: (error?: Error) => void
-) => void {
-  return (
-    req: TypedRequest<TBody, TQuery, TParams>,
-    res: TypedResponse<TResponse>,
-    next: (error?: Error) => void
-  ) => {
-    Promise.resolve(handler(req, res)).catch(next);
+): (req: Request, res: Response, next: NextFunction) => void {
+  return (req: Request, res: Response, next: NextFunction) => {
+    const typedReq = req as TypedRequest<TBody, TQuery, TParams>;
+    const typedRes = res as TypedResponse<TResponse>;
+    Promise.resolve(handler(typedReq, typedRes)).catch(next);
   };
 }
 
@@ -656,7 +749,7 @@ export function asyncHandler<
  */
 export function createHandler<
   TBody = unknown,
-  TQuery extends Record<string, unknown> = Record<string, unknown>,
+  TQuery extends ParsedQs = ParsedQs,
   TParams extends Record<string, string> = Record<string, string>,
   TResponse = unknown,
 >(
@@ -666,8 +759,12 @@ export function createHandler<
   ) => Promise<TResponse>
 ): (req: Request, res: Response, next: NextFunction) => void {
   return asyncHandler(async (req, res) => {
-    const result = await handler(req, res);
+    const result = await handler(
+      req as TypedRequest<TBody, TQuery, TParams>,
+      res
+    );
     res.success(result);
+    return result;
   });
 }
 
@@ -676,7 +773,7 @@ export function createHandler<
  */
 export function createPaginatedHandler<
   TBody = unknown,
-  TQuery extends Record<string, unknown> = Record<string, unknown>,
+  TQuery extends ParsedQs = ParsedQs,
   TParams extends Record<string, string> = Record<string, string>,
   TResponse = unknown,
 >(
@@ -691,7 +788,10 @@ export function createPaginatedHandler<
   }>
 ): (req: Request, res: Response, next: NextFunction) => void {
   return asyncHandler(async (req, res) => {
-    const result = await handler(req, res);
+    const result = await handler(
+      req as TypedRequest<TBody, TQuery, TParams>,
+      res
+    );
     const totalPages = Math.ceil(result.total / result.limit);
 
     res.paginated(result.data, {

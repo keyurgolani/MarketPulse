@@ -5,6 +5,7 @@
 
 import { z } from 'zod';
 import { Request, Response, NextFunction } from 'express';
+import { ParsedQs } from 'qs';
 
 // =============================================================================
 // Request Validation Schemas
@@ -291,11 +292,11 @@ export function validateBody<T>(schema: z.ZodSchema<T>) {
           success: false,
           error: 'Validation failed',
           message: 'Request body validation failed',
-          details: result.error.issues.map((err: Record<string, unknown>) => ({
+          details: result.error.issues.map(err => ({
             field: err.path.join('.'),
             message: err.message,
             code: err.code,
-            received: err.input,
+            received: 'input' in err ? err.input : undefined,
           })),
           timestamp: new Date().toISOString(),
         });
@@ -328,11 +329,11 @@ export function validateParams<T>(schema: z.ZodSchema<T>) {
           success: false,
           error: 'Invalid parameters',
           message: 'Request parameters validation failed',
-          details: result.error.issues.map((err: Record<string, unknown>) => ({
+          details: result.error.issues.map(err => ({
             field: err.path.join('.'),
             message: err.message,
             code: err.code,
-            received: err.input,
+            received: 'input' in err ? err.input : undefined,
           })),
           timestamp: new Date().toISOString(),
         });
@@ -366,18 +367,18 @@ export function validateQuery<T>(schema: z.ZodSchema<T>) {
           success: false,
           error: 'Invalid query parameters',
           message: 'Query parameters validation failed',
-          details: result.error.issues.map((err: Record<string, unknown>) => ({
+          details: result.error.issues.map(err => ({
             field: err.path.join('.'),
             message: err.message,
             code: err.code,
-            received: err.input,
+            received: 'input' in err ? err.input : undefined,
           })),
           timestamp: new Date().toISOString(),
         });
         return;
       }
 
-      req.query = result.data as Record<string, unknown>;
+      req.query = result.data as ParsedQs;
       next();
     } catch {
       res.status(500).json({
@@ -514,6 +515,24 @@ export function validateFileUpload(file: unknown): {
     return { isValid: false, error: 'No file provided' };
   }
 
+  // Type guard for file object
+  const isFileObject = (
+    obj: unknown
+  ): obj is { size: number; mimetype: string } => {
+    return (
+      typeof obj === 'object' &&
+      obj !== null &&
+      'size' in obj &&
+      'mimetype' in obj &&
+      typeof (obj as Record<string, unknown>).size === 'number' &&
+      typeof (obj as Record<string, unknown>).mimetype === 'string'
+    );
+  };
+
+  if (!isFileObject(file)) {
+    return { isValid: false, error: 'Invalid file object' };
+  }
+
   const maxSize = 5 * 1024 * 1024; // 5MB
   if (file.size > maxSize) {
     return { isValid: false, error: 'File too large (max 5MB)' };
@@ -573,11 +592,11 @@ export function createValidationErrorResponse(
     success: false,
     error: 'Validation failed',
     message: 'The request contains invalid data',
-    details: errors.issues.map((err: Record<string, unknown>) => ({
+    details: errors.issues.map(err => ({
       field: err.path.join('.'),
       message: err.message,
       code: err.code,
-      received: err.input,
+      received: 'input' in err ? err.input : undefined,
     })),
     timestamp: new Date().toISOString(),
   };

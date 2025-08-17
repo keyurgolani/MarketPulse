@@ -242,7 +242,10 @@ export class LoggingService {
             levelCounts[entry.level] = (levelCounts[entry.level] || 0) + 1;
 
             // Count categories
-            if (entry.meta?.category) {
+            if (
+              entry.meta?.category &&
+              typeof entry.meta.category === 'string'
+            ) {
               categoryCounts[entry.meta.category] =
                 (categoryCounts[entry.meta.category] || 0) + 1;
             }
@@ -252,18 +255,15 @@ export class LoggingService {
         }
       }
 
-      const result: Record<string, unknown> = {
+      return {
         files: logFiles.length,
         totalSize,
         totalLines,
         levelCounts,
         categoryCounts,
+        ...(oldestEntry && { oldestEntry }),
+        ...(newestEntry && { newestEntry }),
       };
-
-      if (oldestEntry) result.oldestEntry = oldestEntry;
-      if (newestEntry) result.newestEntry = newestEntry;
-
-      return result;
     } catch (error) {
       logger.error('Error getting log stats:', error);
       throw error;

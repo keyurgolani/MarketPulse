@@ -203,10 +203,8 @@ describe('Validation Middleware', () => {
 
       expect(response.body.success).toBe(false);
       expect(response.body.error.code).toBe('VALIDATION_ERROR');
-      expect(response.body.error.details.validationErrors).toHaveLength(1);
-      expect(response.body.error.details.validationErrors[0].location).toBe(
-        'body'
-      );
+      expect(response.body.error.details.validationErrors).toHaveLength(3);
+      expect(response.body.error.details.validationErrors[0].type).toBe('body');
     });
 
     it('should reject missing required fields', async () => {

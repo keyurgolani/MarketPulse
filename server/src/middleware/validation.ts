@@ -19,13 +19,12 @@ export const validate = (
     if (schema.body) {
       const { error } = schema.body.validate(req.body, { abortEarly: false });
       if (error) {
-        errors.push({
-          location: 'body',
-          details: error.details.map(detail => ({
+        error.details.forEach(detail => {
+          errors.push({
             field: detail.path.join('.'),
             message: detail.message,
-            value: detail.context?.value,
-          })),
+            type: 'body',
+          });
         });
       }
     }
@@ -34,13 +33,12 @@ export const validate = (
     if (schema.query) {
       const { error } = schema.query.validate(req.query, { abortEarly: false });
       if (error) {
-        errors.push({
-          location: 'query',
-          details: error.details.map(detail => ({
+        error.details.forEach(detail => {
+          errors.push({
             field: detail.path.join('.'),
             message: detail.message,
-            value: detail.context?.value,
-          })),
+            type: 'query',
+          });
         });
       }
     }
@@ -51,13 +49,12 @@ export const validate = (
         abortEarly: false,
       });
       if (error) {
-        errors.push({
-          location: 'params',
-          details: error.details.map(detail => ({
+        error.details.forEach(detail => {
+          errors.push({
             field: detail.path.join('.'),
             message: detail.message,
-            value: detail.context?.value,
-          })),
+            type: 'params',
+          });
         });
       }
     }
@@ -68,13 +65,12 @@ export const validate = (
         abortEarly: false,
       });
       if (error) {
-        errors.push({
-          location: 'headers',
-          details: error.details.map(detail => ({
+        error.details.forEach(detail => {
+          errors.push({
             field: detail.path.join('.'),
             message: detail.message,
-            value: detail.context?.value,
-          })),
+            type: 'headers',
+          });
         });
       }
     }

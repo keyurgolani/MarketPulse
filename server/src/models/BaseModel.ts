@@ -13,6 +13,7 @@ export abstract class BaseModel<T extends BaseModelInterface> {
   protected db: Database;
   protected tableName: string;
   protected schema: z.ZodSchema<T>;
+  protected logger = logger;
 
   constructor(tableName: string, schema: z.ZodSchema<T>) {
     this.db = getDatabase();

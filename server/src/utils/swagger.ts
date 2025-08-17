@@ -882,7 +882,11 @@ export function validateSwaggerSpec(): { valid: boolean; errors: string[] } {
       errors.push('No API paths defined');
     }
 
-    if (!spec.components?.schemas) {
+    if (
+      !spec.components ||
+      typeof spec.components !== 'object' ||
+      !('schemas' in spec.components)
+    ) {
       errors.push('No component schemas defined');
     }
 
