@@ -18,73 +18,16 @@ export default defineConfig({
     ],
   },
   resolve: {
-    alias: [
-      // Server aliases (for server tests)
-      {
-        find: /^@\/config/,
-        replacement: fileURLToPath(
-          new URL('./server/src/config', import.meta.url)
-        ),
-      },
-      {
-        find: /^@\/controllers/,
-        replacement: fileURLToPath(
-          new URL('./server/src/controllers', import.meta.url)
-        ),
-      },
-      {
-        find: /^@\/middleware/,
-        replacement: fileURLToPath(
-          new URL('./server/src/middleware', import.meta.url)
-        ),
-      },
-      {
-        find: /^@\/models/,
-        replacement: fileURLToPath(
-          new URL('./server/src/models', import.meta.url)
-        ),
-      },
-      {
-        find: /^@\/routes/,
-        replacement: fileURLToPath(
-          new URL('./server/src/routes', import.meta.url)
-        ),
-      },
-      {
-        find: /^@\/services/,
-        replacement: fileURLToPath(
-          new URL('./server/src/services', import.meta.url)
-        ),
-      },
-      {
-        find: /^@\/utils/,
-        replacement: fileURLToPath(
-          new URL('./server/src/utils', import.meta.url)
-        ),
-      },
-      // Frontend aliases (fallback for non-server paths)
-      {
-        find: /^@\/(?!.*server)/,
-        replacement: fileURLToPath(new URL('./src', import.meta.url)),
-      },
-      {
-        find: '@/components',
-        replacement: fileURLToPath(
-          new URL('./src/components', import.meta.url)
-        ),
-      },
-      {
-        find: '@/hooks',
-        replacement: fileURLToPath(new URL('./src/hooks', import.meta.url)),
-      },
-      {
-        find: '@/stores',
-        replacement: fileURLToPath(new URL('./src/stores', import.meta.url)),
-      },
-      {
-        find: '@/types',
-        replacement: fileURLToPath(new URL('./src/types', import.meta.url)),
-      },
-    ],
+    alias: {
+      '@': fileURLToPath(new URL('./src', import.meta.url)),
+      '@/components': fileURLToPath(
+        new URL('./src/components', import.meta.url)
+      ),
+      '@/hooks': fileURLToPath(new URL('./src/hooks', import.meta.url)),
+      '@/services': fileURLToPath(new URL('./src/services', import.meta.url)),
+      '@/stores': fileURLToPath(new URL('./src/stores', import.meta.url)),
+      '@/types': fileURLToPath(new URL('./src/types', import.meta.url)),
+      '@/utils': fileURLToPath(new URL('./src/utils', import.meta.url)),
+    },
   },
 });

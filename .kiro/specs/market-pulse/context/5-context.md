@@ -17,8 +17,8 @@ Implement multi-level caching with TTL management and performance monitoring to 
 
 ## Subtasks Status
 
-- [x] 5.1 Implement aggressive caching strategy with TTL management ✅
-- [x] 5.2 Add cache monitoring and performance metrics ✅
+- - [ ] 5.1 Implement aggressive caching strategy with TTL management ✅
+- - [ ] 5.2 Add cache monitoring and performance metrics ✅
 
 ## TASK 5 COMPLETED ✅
 

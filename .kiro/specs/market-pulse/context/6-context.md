@@ -29,9 +29,9 @@ Task 6 has 3 sub-tasks:
 
 ## Progress Tracking
 
-- [x] Sub-task 6.1: Dashboard management API endpoints ✅
-- [x] Sub-task 6.2: Asset data API endpoints with caching ✅
-- [x] Sub-task 6.3: News API endpoints with filtering ✅
+- - [ ] Sub-task 6.1: Dashboard management API endpoints ✅
+- - [ ] Sub-task 6.2: Asset data API endpoints with caching ✅
+- - [ ] Sub-task 6.3: News API endpoints with filtering ✅
 
 ## Resolution Summary
 

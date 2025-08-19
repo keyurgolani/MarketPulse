@@ -2,7 +2,91 @@
 
 ## Project Overview
 
-MarketPulse is a comprehensive financial dashboard platform built with React, TypeScript, and modern web technologies.
+MarketPulse is a comprehensive financial dashboard platform built with React, TypeScript, and modern web technologies. This file tracks command alternatives, temporary files, and reusable validation scripts as specified in the comprehensive development guidelines.
+
+## Command Alternatives and Known Issues
+
+### Security Vulnerabilities (Non-blocking)
+
+| Package | Version | Issue                            | Impact           | Status                             |
+| ------- | ------- | -------------------------------- | ---------------- | ---------------------------------- |
+| esbuild | 0.21.5  | Development server vulnerability | Development only | Documented - Production unaffected |
+| vite    | 5.4.19  | Depends on vulnerable esbuild    | Development only | Documented - Production unaffected |
+
+**Note:** These vulnerabilities only affect the development server and do not impact production builds. The built application is secure.
+
+### Failed Commands and Working Alternatives
+
+| Failed Command               | Issue                         | Working Alternative                   | Notes                          |
+| ---------------------------- | ----------------------------- | ------------------------------------- | ------------------------------ |
+| `cd server && npm test`      | cd not allowed in executeBash | `npm test` with `path: "server"`      | Use path parameter instead     |
+| `curl http://localhost:5173` | Dev server timeout            | `npm run build && npm run preview`    | Use built version for testing  |
+| Direct browser testing       | No headless browser           | Check built files + production deploy | Validate through build process |
+
+### Commands That May Hang (Use Timeouts)
+
+- `npm install` - Use `timeout 60 npm install`
+- `npm run build` - Use `timeout 120 npm run build`
+- `npm test` - Use `timeout 120 npm test`
+- `./scripts/deploy.sh` - Use `timeout 300 ./scripts/deploy.sh`
+
+## Temporary and Debug Files Tracking
+
+### Current Temporary Files
+
+| File/Directory                      | Purpose                 | Status    | Can Delete                      |
+| ----------------------------------- | ----------------------- | --------- | ------------------------------- |
+| `test-results.md`                   | Test execution tracking | Active    | No - Keep updated               |
+| `dist/`                             | Production build output | Generated | Yes - Regenerated on build      |
+| `node_modules/`                     | Dependencies            | Managed   | No - Required                   |
+| `server/dist/`                      | Backend build output    | Generated | Yes - Regenerated on build      |
+| `.kiro/specs/market-pulse/context/` | Task context files      | Active    | No - Required for task tracking |
+
+### Validation Scripts Created
+
+| Script              | Purpose                          | Location       | Reusable                         |
+| ------------------- | -------------------------------- | -------------- | -------------------------------- |
+| `test-results.md`   | Comprehensive test tracking      | Root directory | Yes - Update for new test cycles |
+| `scripts/deploy.sh` | Production deployment validation | `scripts/`     | Yes - Full deployment pipeline   |
+
+## Reusable Validation Patterns
+
+### Test Execution Pattern
+
+```bash
+# 1. Check existing test status
+cat test-results.md
+
+# 2. Execute test with timeout
+timeout 60 npm run [test-command]
+
+# 3. Update test-results.md with results
+# 4. Fix issues if any
+# 5. Re-run until passing
+```
+
+### Build Validation Pattern
+
+```bash
+# 1. Type check
+timeout 60 npm run type-check
+
+# 2. Lint check
+timeout 60 npm run lint
+
+# 3. Build
+timeout 120 npm run build
+
+# 4. Test
+timeout 120 npm test
+```
+
+### Production Deployment Pattern
+
+```bash
+# Full validation pipeline
+timeout 300 ./scripts/deploy.sh production
+```
 
 ## Strict TypeScript Guidelines
 
@@ -17,14 +101,14 @@ All code in this project must follow strict TypeScript guidelines:
 
 ## Working Commands
 
-- [ ] ### Development
+- - [ ] ### Development
 
 - `npm run dev` - Start development servers (frontend + backend)
 - `npm run dev:client` - Start frontend development server only
 - `npm run build` - Build production application
 - `npm run preview` - Preview production build locally
 
-- [ ] ### Quality Assurance
+- - [ ] ### Quality Assurance
 
 - `npm run test` - Run unit tests with Vitest
 - `npm run test:watch` - Run tests in watch mode
@@ -34,14 +118,14 @@ All code in this project must follow strict TypeScript guidelines:
 - `npm run type-check` - Run TypeScript type checking
 - `npm run qa` - Run all quality checks (lint + type + test)
 
-- [ ] ### Deployment
+- - [ ] ### Deployment
 
 - `./scripts/deploy.sh production` - Full production deployment with validation
 - `./scripts/deploy.sh development` - Development environment setup
 
 ## Validation Scripts
 
-- [ ] ### Deployment Validation
+- - [ ] ### Deployment Validation
 
 The `scripts/deploy.sh` script provides comprehensive validation:
 
@@ -55,7 +139,7 @@ The `scripts/deploy.sh` script provides comprehensive validation:
 - Bundle size analysis
 - Preview server startup test
 
-- [ ] ### Browser Validation
+- - [ ] ### Browser Validation
 
 - Application loads without console errors
 - Theme toggle functionality works
@@ -64,7 +148,7 @@ The `scripts/deploy.sh` script provides comprehensive validation:
 
 ## Known Working Configuration
 
-- [ ] ### Technology Stack
+- - [ ] ### Technology Stack
 
 - **Frontend**: React 18, TypeScript 5.x, Vite
 - **Styling**: Tailwind CSS with custom design system
@@ -72,14 +156,14 @@ The `scripts/deploy.sh` script provides comprehensive validation:
 - **Testing**: Vitest, React Testing Library, Playwright (E2E)
 - **Code Quality**: ESLint, Prettier, Husky pre-commit hooks
 
-- [ ] ### Build Configuration
+- - [ ] ### Build Configuration
 
 - Vite with React plugin and TypeScript support
 - Path aliases configured for clean imports (@/components, @/hooks, etc.)
 - Code splitting with vendor, router, charts, and UI chunks
 - PostCSS with Tailwind CSS and Autoprefixer
 
-- [ ] ### Project Structure
+- - [ ] ### Project Structure
 
 ```
 src/
@@ -102,19 +186,19 @@ src/
 
 ## Issues and Solutions
 
-- [ ] ### ESLint TypeScript Version Warning
+- - [ ] ### ESLint TypeScript Version Warning
 
 - **Issue**: TypeScript 5.9.2 not officially supported by @typescript-eslint
 - **Status**: Warning only, functionality works correctly
 - **Solution**: Consider downgrading TypeScript or upgrading ESLint when newer versions are available
 
-- [ ] ### CSS Import Order Warning
+- - [ ] ### CSS Import Order Warning
 
 - **Issue**: @import statements must precede other CSS rules
 - **Status**: Fixed by moving font imports to top of globals.css
 - **Solution**: Always place @import statements before @tailwind directives
 
-- [ ] ### Pre-commit Hook Configuration
+- - [ ] ### Pre-commit Hook Configuration
 
 - **Issue**: commitlint not configured but referenced in Husky
 - **Status**: Removed commitlint hook, using lint-staged only
@@ -122,7 +206,7 @@ src/
 
 ## Testing and Validation Framework
 
-- [ ] ### Systematic Testing Approach
+- - [ ] ### Systematic Testing Approach
 
 The project follows a comprehensive testing methodology using `test-results.md` to track progress:
 
@@ -133,7 +217,7 @@ The project follows a comprehensive testing methodology using `test-results.md` 
 5. **Zero-error policy** - No test marked complete until fully passing
 6. **Regression prevention** - Existing functionality validated after changes
 
-- [ ] ### Test Categories
+- - [ ] ### Test Categories
 
 1. **Project Structure Tests** - Directory structure and file organization
 2. **Package Configuration Tests** - Dependencies and build configuration
@@ -147,7 +231,7 @@ The project follows a comprehensive testing methodology using `test-results.md` 
 10. **API Endpoint Tests** - Backend functionality validation
 11. **Production Build Tests** - Deployment readiness verification
 
-- [ ] ### Testing Workflow
+- - [ ] ### Testing Workflow
 
 ```bash
 # 1. Check test status

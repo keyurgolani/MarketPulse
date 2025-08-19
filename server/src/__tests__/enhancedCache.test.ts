@@ -31,7 +31,7 @@ describe('EnhancedCacheService', () => {
       deletePattern: jest.fn(),
       healthCheck: jest.fn(),
       getStats: jest.fn(),
-    } as any;
+    };
 
     // Mock CacheService.getInstance
     (CacheService.getInstance as any).mockReturnValue(mockCacheService);

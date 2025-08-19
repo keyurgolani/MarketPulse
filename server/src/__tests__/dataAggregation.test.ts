@@ -20,8 +20,26 @@ const MockedGoogleFinanceService = GoogleFinanceService as any;
 
 describe('DataAggregationService', () => {
   let dataAggregationService: DataAggregationService;
-  let mockYahooService: any;
-  let mockGoogleService: any;
+  let mockYahooService: {
+    getQuote: jest.MockedFunction<(symbol: string) => Promise<unknown>>;
+    getHistoricalData: jest.MockedFunction<
+      (symbol: string, period?: string) => Promise<unknown>
+    >;
+    searchSymbols: jest.MockedFunction<(query: string) => Promise<unknown>>;
+    getMarketSummary: jest.MockedFunction<() => Promise<unknown>>;
+    getHealthStatus: jest.MockedFunction<() => Promise<unknown>>;
+    getStats: jest.MockedFunction<() => Promise<unknown>>;
+  };
+  let mockGoogleService: {
+    getQuote: jest.MockedFunction<(symbol: string) => Promise<unknown>>;
+    getHistoricalData: jest.MockedFunction<
+      (symbol: string, period?: string) => Promise<unknown>
+    >;
+    searchSymbols: jest.MockedFunction<(query: string) => Promise<unknown>>;
+    getMarketSummary: jest.MockedFunction<() => Promise<unknown>>;
+    getHealthStatus: jest.MockedFunction<() => Promise<unknown>>;
+    getStats: jest.MockedFunction<() => Promise<unknown>>;
+  };
 
   beforeEach(() => {
     jest.clearAllMocks();

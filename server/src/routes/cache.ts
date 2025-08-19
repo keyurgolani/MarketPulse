@@ -66,7 +66,7 @@ router.get('/value/:key', getCacheValue);
 /**
  * @route POST /api/cache/value/:key
  * @desc Set cache value by key
- * @body { value: any, ttl?: number }
+ * @body { value: unknown, ttl?: number }
  * @access Public
  */
 router.post('/value/:key', setCacheValue);

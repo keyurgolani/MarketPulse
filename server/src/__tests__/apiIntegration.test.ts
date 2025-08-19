@@ -212,11 +212,13 @@ describe('ApiKeyManager', () => {
 describe('ApiCacheService', () => {
   let cacheService: ApiCacheService;
   let mockCacheService: {
-    get: any;
-    set: any;
-    delete: any;
-    deletePattern: any;
-    getKeys: any;
+    get: jest.MockedFunction<(key: string) => Promise<unknown>>;
+    set: jest.MockedFunction<
+      (key: string, value: unknown, ttl?: number) => Promise<void>
+    >;
+    delete: jest.MockedFunction<(key: string) => Promise<void>>;
+    deletePattern: jest.MockedFunction<(pattern: string) => Promise<number>>;
+    getKeys: jest.MockedFunction<(pattern?: string) => Promise<string[]>>;
   };
 
   beforeEach(() => {
@@ -226,7 +228,7 @@ describe('ApiCacheService', () => {
       delete: jest.fn(),
       deletePattern: jest.fn().mockResolvedValue(0),
       getKeys: jest.fn().mockResolvedValue([]),
-    } as any;
+    };
 
     cacheService = new ApiCacheService(mockCacheService as any);
   });

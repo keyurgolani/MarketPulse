@@ -25,12 +25,12 @@ describe('CacheMonitoringService', () => {
     mockCacheService = {
       getStats: jest.fn(),
       keys: jest.fn(),
-    } as any;
+    };
 
     mockEnhancedCacheService = {
       getMetrics: jest.fn(),
       getHealth: jest.fn(),
-    } as any;
+    };
 
     // Mock default return values
     mockCacheService.getStats.mockResolvedValue({
