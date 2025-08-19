@@ -22,7 +22,7 @@ The frontend currently has only a basic placeholder App.tsx. All UI components, 
 
 ## Implementation Tasks
 
-- [x] ### Task 1: Frontend Core Components and UI Foundation
+- [ ] ### Task 1: Frontend Core Components and UI Foundation
   **Details:** [task-1-frontend-components.md](./task-1-frontend-components.md)
   **Context:** [context/task-1-context.md](./context/task-1-context.md)
   **Requirements:** 6.1, 7.1, 8.1, 9.1, 10.1, 11.1
@@ -46,7 +46,7 @@ The frontend currently has only a basic placeholder App.tsx. All UI components, 
 - [x] API client handles errors gracefully
 - [x] Error boundaries catch and display errors appropriately
 
-- [ ] ### Task 2: Dashboard System Implementation
+- [-] ### Task 2: Dashboard System Implementation
   **Details:** [task-2-dashboard-system.md](./task-2-dashboard-system.md)
   **Context:** [context/task-2-context.md](./context/task-2-context.md)
   **Requirements:** 1.1, 2.1, 2.2, 2.3, 2.4
@@ -55,7 +55,7 @@ The frontend currently has only a basic placeholder App.tsx. All UI components, 
 **Validation Status:** ❌ Not Started
 
 - [ ] #### Implementation Details
-- [ ] 2.1 Implement dashboard layout and navigation
+- [x] 2.1 Implement dashboard layout and navigation
 - [ ] 2.2 Create owner-configured default dashboards
 - [ ] 2.3 Build custom dashboard creation and editing
 - [ ] 2.4 Implement dashboard persistence and synchronization

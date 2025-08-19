@@ -11,3 +11,6 @@ export * from './apiStore';
 
 // User store
 export * from './userStore';
+
+// Dashboard store
+export * from './dashboardStore';
