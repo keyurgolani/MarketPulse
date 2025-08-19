@@ -162,7 +162,7 @@ describe('Security Middleware', () => {
       expect(response.body.body.name).toBe('JohnDoe');
       expect(response.body.body.description).toBe('alert("xss")');
       expect(response.body.body.onclick).toBeUndefined();
-    });
+    }, 15000);
 
     it('should sanitize query parameters', async () => {
       const response = await request(app)

@@ -2,23 +2,26 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import compression from 'compression';
-import { config } from '@/config/environment';
-import { logger } from '@/utils/logger';
-import { errorHandler } from '@/middleware/errorHandler';
-import { rateLimiter } from '@/middleware/rateLimiter';
+import { config } from './config/environment';
+import { logger } from './utils/logger';
+import { errorHandler } from './middleware/errorHandler';
+import { rateLimiter } from './middleware/rateLimiter';
 import {
   httpLogger,
   requestId,
   responseTime,
   requestLogger,
   errorLogger,
-} from '@/middleware/logging';
-import { systemRoutes } from '@/routes/system';
-import { cacheRoutes } from '@/routes/cache';
-import { healthRoutes } from '@/routes/health';
-import { loggingRoutes } from '@/routes/logging';
-import { cacheService } from '@/services/CacheService';
-import { databaseManager } from '@/config/database';
+} from './middleware/logging';
+import { systemRoutes } from './routes/system';
+import { cacheRoutes } from './routes/cache';
+import { healthRoutes } from './routes/health';
+import { loggingRoutes } from './routes/logging';
+import { dashboardRoutes } from './routes/dashboards';
+import { assetRoutes } from './routes/assets';
+import { newsRoutes } from './routes/news';
+import { cacheService } from './services/CacheService';
+import { databaseManager } from './config/database';
 
 const app = express();
 
@@ -52,6 +55,9 @@ app.use('/api/system', systemRoutes);
 app.use('/api/cache', cacheRoutes);
 app.use('/api/health', healthRoutes);
 app.use('/api/logs', loggingRoutes);
+app.use('/api/dashboards', dashboardRoutes);
+app.use('/api/assets', assetRoutes);
+app.use('/api/news', newsRoutes);
 
 // Health check endpoint
 app.get('/health', (req, res) => {

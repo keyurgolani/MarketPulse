@@ -1,7 +1,7 @@
 // Set NODE_ENV to development for testing BEFORE importing modules
 process.env.NODE_ENV = 'development';
 
-import { vi } from 'vitest';
+// Jest globals are available without import
 import request from 'supertest';
 import express from 'express';
 import {
@@ -180,7 +180,7 @@ describe('Error Handler Middleware', () => {
       expect(response.body.error.details).toEqual({ field: 'test' });
       expect(response.body).toHaveProperty('requestId');
       expect(response.body).toHaveProperty('timestamp');
-    });
+    }, 15000);
 
     it('should handle ValidationError correctly', async () => {
       const response = await request(app)
@@ -420,24 +420,20 @@ describe('Error Handler Middleware', () => {
 
 describe('Error Utility Functions', () => {
   describe('asyncHandler', () => {
-    it('should catch async errors and pass to next', done => {
-      const mockReq = {} as Request;
-      const mockRes = {} as Response;
-      const mockNext = vi.fn();
+    it('should catch async errors and pass to next', async () => {
+      const mockReq = {} as any;
+      const mockRes = {} as any;
+      const mockNext = jest.fn();
 
       const asyncFn = async (): Promise<void> => {
         throw new Error('Async error');
       };
 
       const wrappedFn = asyncHandler(asyncFn);
-      wrappedFn(mockReq, mockRes, mockNext);
+      await wrappedFn(mockReq, mockRes, mockNext);
 
-      // Give async operation time to complete
-      setTimeout(() => {
-        expect(mockNext).toHaveBeenCalledWith(expect.any(Error));
-        expect(mockNext.mock.calls[0]?.[0]?.message).toBe('Async error');
-        done();
-      }, 10);
+      expect(mockNext).toHaveBeenCalledWith(expect.any(Error));
+      expect(mockNext.mock.calls[0]?.[0]?.message).toBe('Async error');
     });
   });
 

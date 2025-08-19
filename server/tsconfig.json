@@ -24,6 +24,7 @@
     "allowUnusedLabels": false,
     "allowUnreachableCode": false,
     "exactOptionalPropertyTypes": true,
+    "types": ["jest", "node"],
     "baseUrl": "./src",
     "paths": {
       "@/*": ["*"],
@@ -36,13 +37,6 @@
       "@/utils/*": ["utils/*"]
     }
   },
-  "include": [
-    "src/**/*"
-  ],
-  "exclude": [
-    "node_modules",
-    "dist",
-    "**/*.test.ts",
-    "**/*.spec.ts"
-  ]
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist"]
 }

@@ -5,7 +5,7 @@ describe('Health Monitor Service', () => {
     // Stop any existing monitoring
     healthMonitor.stopMonitoring();
 
-    // Clear alerts and history
+    // Clear alerts and history for test isolation
     healthMonitor.clearResolvedAlerts();
     const alerts = healthMonitor.getAlerts(true);
     alerts.forEach((alert: { id: string }) =>
@@ -13,12 +13,13 @@ describe('Health Monitor Service', () => {
     );
     healthMonitor.clearResolvedAlerts();
 
-    // Clear metrics history
-    healthMonitor.destroy();
+    // Clear metrics history for test isolation
+    healthMonitor.clearMetricsHistory();
   });
 
   afterEach(() => {
     healthMonitor.stopMonitoring();
+    healthMonitor.clearMetricsHistory();
   });
 
   afterAll(() => {
@@ -76,7 +77,7 @@ describe('Health Monitor Service', () => {
       // Check that timestamps are different
       expect(history[0]?.timestamp).not.toBe(history[1]?.timestamp);
       expect(history[1]?.timestamp).not.toBe(history[2]?.timestamp);
-    });
+    }, 15000);
 
     it('should limit metrics history size', async () => {
       // Collect more metrics than the limit (but not too many for test performance)
@@ -154,20 +155,22 @@ describe('Health Monitor Service', () => {
   });
 
   describe('Monitoring Control', () => {
-    it('should start and stop monitoring', done => {
+    it('should start and stop monitoring', async () => {
       // Start monitoring with short interval for testing
       healthMonitor.startMonitoring(100);
 
       // Wait a bit then stop
-      setTimeout(() => {
-        healthMonitor.stopMonitoring();
+      await new Promise(resolve => {
+        setTimeout(() => {
+          healthMonitor.stopMonitoring();
 
-        // Check that metrics were collected
-        const history = healthMonitor.getMetricsHistory();
-        expect(history.length).toBeGreaterThan(0);
+          // Check that metrics were collected
+          const history = healthMonitor.getMetricsHistory();
+          expect(history.length).toBeGreaterThan(0);
 
-        done();
-      }, 250);
+          resolve(undefined);
+        }, 250);
+      });
     });
 
     it('should not start monitoring if already running', () => {

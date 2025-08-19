@@ -3,14 +3,7 @@
  * Comprehensive tests for Yahoo Finance API integration
  */
 
-import {
-  describe,
-  it,
-  expect,
-  beforeEach,
-  afterEach,
-  jest,
-} from '@jest/globals';
+// Jest globals are available without import
 import axios from 'axios';
 import {
   YahooFinanceService,
@@ -33,19 +26,15 @@ jest.mock('../utils/logger', () => ({
   },
 }));
 
-const mockedAxios = axios as jest.Mocked<typeof axios>;
-const MockedRateLimitService = RateLimitService as jest.MockedClass<
-  typeof RateLimitService
->;
-const MockedApiKeyManager = ApiKeyManager as jest.MockedClass<
-  typeof ApiKeyManager
->;
+const mockedAxios = axios as any;
+const MockedRateLimitService = RateLimitService as any;
+const MockedApiKeyManager = ApiKeyManager as any;
 
 describe('YahooFinanceService', () => {
   let service: YahooFinanceService;
-  let mockAxiosInstance: jest.Mocked<typeof axios>;
-  let mockRateLimiter: jest.Mocked<RateLimitService>;
-  let mockApiKeyManager: jest.Mocked<ApiKeyManager>;
+  let mockAxiosInstance: any;
+  let mockRateLimiter: any;
+  let mockApiKeyManager: any;
 
   beforeEach(() => {
     // Reset all mocks
@@ -196,10 +185,12 @@ describe('YahooFinanceService', () => {
       expect(result).toEqual({
         symbol: 'AAPL',
         name: 'AAPL',
+        shortName: 'AAPL',
         price: 150.0,
         change: 2.0,
         changePercent: (2.0 / 148.0) * 100,
         volume: 1000000,
+        marketCap: 0,
         currency: 'USD',
         exchange: 'NMS',
         lastUpdated: new Date(1640995200 * 1000),
@@ -377,6 +368,7 @@ describe('YahooFinanceService', () => {
           currency: 'USD',
           exchange: 'NMS',
           instrumentType: 'EQUITY',
+          regularMarketPrice: 150,
           firstTradeDate: 345479400,
           regularMarketTime: 1640995200,
           timezone: 'EST',
@@ -413,16 +405,16 @@ describe('YahooFinanceService', () => {
               indicators: {
                 quote: [
                   {
-                    open: [149.0, null, 150.5],
-                    high: [151.0, null, 152.0],
-                    low: [148.5, null, 149.0],
-                    close: [150.0, null, 151.5],
-                    volume: [1000000, null, 1100000],
+                    open: [149.0, null as any, 150.5],
+                    high: [151.0, null as any, 152.0],
+                    low: [148.5, null as any, 149.0],
+                    close: [150.0, null as any, 151.5],
+                    volume: [1000000, null as any, 1100000],
                   },
                 ],
                 adjclose: [
                   {
-                    adjclose: [150.0, null, 151.5],
+                    adjclose: [150.0, null as any, 151.5],
                   },
                 ],
               },
@@ -497,6 +489,7 @@ describe('YahooFinanceService', () => {
           type: 'Equity',
           sector: 'Technology',
           industry: 'Consumer Electronics',
+          source: 'yahoo-finance',
         },
         {
           symbol: 'MSFT',
@@ -505,6 +498,7 @@ describe('YahooFinanceService', () => {
           type: 'Equity',
           sector: 'Technology',
           industry: 'Software',
+          source: 'yahoo-finance',
         },
       ]);
     });
@@ -529,10 +523,12 @@ describe('YahooFinanceService', () => {
       const mockQuote = {
         symbol: '^GSPC',
         name: '^GSPC',
+        shortName: 'S&P 500',
         price: 4000.0,
         change: 50.0,
         changePercent: 1.27,
         volume: 1000000,
+        marketCap: 0,
         currency: 'USD',
         exchange: 'SNP',
         lastUpdated: new Date(),
@@ -556,10 +552,12 @@ describe('YahooFinanceService', () => {
       const mockQuote = {
         symbol: '^GSPC',
         name: '^GSPC',
+        shortName: 'S&P 500',
         price: 4000.0,
         change: 50.0,
         changePercent: 1.27,
         volume: 1000000,
+        marketCap: 0,
         currency: 'USD',
         exchange: 'SNP',
         lastUpdated: new Date(),
@@ -585,10 +583,12 @@ describe('YahooFinanceService', () => {
       jest.spyOn(service, 'getQuote').mockResolvedValue({
         symbol: 'AAPL',
         name: 'AAPL',
+        shortName: 'Apple Inc.',
         price: 150.0,
         change: 2.0,
         changePercent: 1.35,
         volume: 1000000,
+        marketCap: 2500000000000,
         currency: 'USD',
         exchange: 'NMS',
         lastUpdated: new Date(),

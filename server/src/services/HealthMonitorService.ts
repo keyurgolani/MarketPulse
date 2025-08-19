@@ -466,6 +466,14 @@ export class HealthMonitorService {
   }
 
   /**
+   * Clear metrics history
+   */
+  public clearMetricsHistory(): void {
+    this.metricsHistory.length = 0;
+    logger.debug('Metrics history cleared');
+  }
+
+  /**
    * Destroy the health monitor and cleanup resources
    */
   public destroy(): void {

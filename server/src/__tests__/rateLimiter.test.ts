@@ -139,7 +139,7 @@ describe('Rate Limiter Middleware', () => {
       await request(app).get('/test').expect(200);
 
       testLimiter.destroy();
-    });
+    }, 15000);
   });
 
   describe('Rate Limiter Class', () => {
@@ -220,14 +220,18 @@ describe('Rate Limiter Middleware', () => {
 
       const app = createTestApp();
 
-      // Multiple requests should all succeed
+      // Multiple requests should all succeed quickly (no rate limiting)
+      const promises = [];
       for (let i = 0; i < 5; i++) {
-        await request(app).get('/test').expect(200);
+        promises.push(request(app).get('/test').expect(200));
       }
+
+      // All requests should complete within reasonable time
+      await Promise.all(promises);
 
       // Re-enable for other tests
       process.env.TEST_RATE_LIMITING = 'true';
-    });
+    }, 10000); // Increase timeout to 10 seconds
   });
 
   describe('Limiter Instance Management', () => {

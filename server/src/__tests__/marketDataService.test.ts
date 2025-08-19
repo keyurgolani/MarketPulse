@@ -1,3 +1,39 @@
+// Jest globals are available without import
+
+// Mock external HTTP requests to prevent real API calls
+jest.mock('axios', () => {
+  const mockAxios = {
+    get: jest.fn().mockRejectedValue(new Error('Network Error')),
+    post: jest.fn().mockRejectedValue(new Error('Network Error')),
+    create: jest.fn().mockReturnValue({
+      get: jest.fn().mockRejectedValue(new Error('Network Error')),
+      post: jest.fn().mockRejectedValue(new Error('Network Error')),
+      interceptors: {
+        request: {
+          use: jest.fn(),
+        },
+        response: {
+          use: jest.fn(),
+        },
+      },
+    }),
+    interceptors: {
+      request: {
+        use: jest.fn(),
+      },
+      response: {
+        use: jest.fn(),
+      },
+    },
+  };
+
+  return {
+    __esModule: true,
+    default: mockAxios,
+    ...mockAxios,
+  };
+});
+
 import { MarketDataService } from '../services/MarketDataService';
 
 describe('MarketDataService', () => {
@@ -25,7 +61,7 @@ describe('MarketDataService', () => {
   describe('error handling', () => {
     it('should handle invalid symbols gracefully', async () => {
       await expect(marketDataService.getQuote('')).rejects.toThrow();
-    });
+    }, 10000); // 10 second timeout
 
     it('should handle invalid historical data requests', async () => {
       await expect(

@@ -3,7 +3,6 @@
  * Tests for external API integration components
  */
 
-import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import { RateLimitService } from '../services/RateLimitService';
 import { ApiKeyManager } from '../utils/apiKeyManager';
 import { ApiCacheService } from '../services/ApiCacheService';
@@ -78,7 +77,11 @@ describe('RateLimitService', () => {
 
 describe('ApiKeyManager', () => {
   let keyManager: ApiKeyManager;
-  const testKeys = ['key1', 'key2', 'key3'];
+  const testKeys = [
+    'test-key-12345678',
+    'test-key-87654321',
+    'test-key-11223344',
+  ];
 
   beforeEach(() => {
     keyManager = new ApiKeyManager(testKeys, 3, 5);
@@ -98,10 +101,10 @@ describe('ApiKeyManager', () => {
     });
 
     it('should filter out demo keys in production', () => {
-      const keysWithDemo = ['demo-key-1', 'real-key-1', 'demo-key-2'];
+      const keysWithDemo = ['demo-key-1', 'real-key-12345678', 'demo-key-2'];
       const manager = new ApiKeyManager(keysWithDemo);
       const stats = manager.getStats();
-      expect(stats.totalKeys).toBe(1); // Only real-key-1 should remain
+      expect(stats.totalKeys).toBe(1); // Only real-key-12345678 should remain
     });
   });
 
@@ -173,12 +176,12 @@ describe('ApiKeyManager', () => {
 
     it('should improve health score', () => {
       const initialStatuses = keyManager.getKeyStatuses();
-      const initialScore = initialStatuses[0]?.healthScore;
+      const initialScore = initialStatuses[0]?.healthScore ?? 0;
 
       keyManager.recordSuccess();
 
       const updatedStatuses = keyManager.getKeyStatuses();
-      const updatedScore = updatedStatuses[0]?.healthScore;
+      const updatedScore = updatedStatuses[0]?.healthScore ?? 0;
       expect(updatedScore).toBeGreaterThanOrEqual(initialScore);
     });
   });
@@ -209,11 +212,11 @@ describe('ApiKeyManager', () => {
 describe('ApiCacheService', () => {
   let cacheService: ApiCacheService;
   let mockCacheService: {
-    get: jest.Mock;
-    set: jest.Mock;
-    delete: jest.Mock;
-    deleteByPattern: jest.Mock;
-    getKeys: jest.Mock;
+    get: any;
+    set: any;
+    delete: any;
+    deletePattern: any;
+    getKeys: any;
   };
 
   beforeEach(() => {
@@ -221,11 +224,11 @@ describe('ApiCacheService', () => {
       get: jest.fn(),
       set: jest.fn(),
       delete: jest.fn(),
-      deleteByPattern: jest.fn().mockResolvedValue(0),
+      deletePattern: jest.fn().mockResolvedValue(0),
       getKeys: jest.fn().mockResolvedValue([]),
-    };
+    } as any;
 
-    cacheService = new ApiCacheService(mockCacheService);
+    cacheService = new ApiCacheService(mockCacheService as any);
   });
 
   describe('getOrFetch', () => {
@@ -310,12 +313,12 @@ describe('ApiCacheService', () => {
     });
 
     it('should invalidate by pattern', async () => {
-      mockCacheService.deleteByPattern.mockResolvedValue(5);
+      mockCacheService.deletePattern.mockResolvedValue(5);
 
       const deletedCount = await cacheService.invalidate('test:*');
 
       expect(deletedCount).toBe(5);
-      expect(mockCacheService.deleteByPattern).toHaveBeenCalledWith('test:*');
+      expect(mockCacheService.deletePattern).toHaveBeenCalledWith('test:*');
     });
   });
 
@@ -426,17 +429,23 @@ describe('Error Handling', () => {
 
   describe('isRetryableError', () => {
     it('should identify retryable network errors', () => {
-      const networkError = { code: 'ECONNRESET' };
+      const networkError = Object.assign(new Error('Network error'), {
+        code: 'ECONNRESET',
+      });
       expect(isRetryableError(networkError)).toBe(true);
     });
 
     it('should identify retryable HTTP status codes', () => {
-      const httpError = { response: { status: 503 } };
+      const httpError = Object.assign(new Error('HTTP error'), {
+        response: { status: 503 },
+      });
       expect(isRetryableError(httpError)).toBe(true);
     });
 
     it('should identify non-retryable errors', () => {
-      const clientError = { response: { status: 400 } };
+      const clientError = Object.assign(new Error('Client error'), {
+        response: { status: 400 },
+      });
       expect(isRetryableError(clientError)).toBe(false);
     });
 
@@ -454,17 +463,21 @@ describe('Error Handling', () => {
 
   describe('getRetryDelay', () => {
     it('should extract delay from Retry-After header', () => {
-      const error = { response: { headers: { 'retry-after': '30' } } };
+      const error = Object.assign(new Error('Retry error'), {
+        response: { headers: { 'retry-after': '30' } },
+      });
       expect(getRetryDelay(error)).toBe(30000);
     });
 
     it('should use default delay for rate limiting', () => {
-      const error = { response: { status: 429 } };
+      const error = Object.assign(new Error('Rate limit error'), {
+        response: { status: 429, headers: {} },
+      });
       expect(getRetryDelay(error)).toBe(60000);
     });
 
     it('should use default delay for unknown errors', () => {
-      const error = {};
+      const error = new Error('Unknown error');
       expect(getRetryDelay(error)).toBe(1000);
     });
   });

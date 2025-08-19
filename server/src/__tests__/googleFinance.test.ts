@@ -1,11 +1,35 @@
+// Jest globals are available without import
 import { GoogleFinanceService } from '../services/GoogleFinanceService';
-// Types imported for potential future use in test data
+import axios from 'axios';
+
+// Mock axios
+jest.mock('axios');
+const mockedAxios = axios as any;
+
+// Mock the axios instance
+const mockAxiosInstance = {
+  get: jest.fn(),
+  post: jest.fn(),
+  interceptors: {
+    request: { use: jest.fn() },
+    response: { use: jest.fn() },
+  },
+};
 
 describe('GoogleFinanceService', () => {
   let googleFinanceService: GoogleFinanceService;
 
   beforeEach(() => {
+    jest.clearAllMocks();
+
+    // Mock axios.create to return our mock instance
+    mockedAxios.create = jest.fn().mockReturnValue(mockAxiosInstance);
+
     googleFinanceService = new GoogleFinanceService();
+  });
+
+  afterEach(() => {
+    jest.resetAllMocks();
   });
 
   describe('initialization', () => {
@@ -26,6 +50,21 @@ describe('GoogleFinanceService', () => {
 
   describe('getQuote', () => {
     it('should return quote data structure', async () => {
+      // Mock successful API response
+      const mockResponse = {
+        data: {
+          symbol: 'AAPL',
+          price: 150.25,
+          change: 2.5,
+          changePercent: 1.69,
+          volume: 50000000,
+          marketCap: 2500000000000,
+          lastUpdated: new Date().toISOString(),
+        },
+      };
+
+      mockAxiosInstance.get.mockResolvedValueOnce(mockResponse);
+
       const quote = await googleFinanceService.getQuote('AAPL');
 
       expect(quote).toBeDefined();
@@ -44,6 +83,44 @@ describe('GoogleFinanceService', () => {
 
   describe('getHistoricalData', () => {
     it('should return historical data structure', async () => {
+      // Mock successful historical data response
+      const mockResponse = {
+        data: {
+          symbol: 'AAPL',
+          meta: {
+            currency: 'USD',
+            symbol: 'AAPL',
+            exchangeName: 'NASDAQ',
+            instrumentType: 'EQUITY',
+            firstTradeDate: 345479400,
+            regularMarketTime: Date.now(),
+            gmtoffset: -18000,
+            timezone: 'EST',
+            exchangeTimezoneName: 'America/New_York',
+          },
+          data: [
+            {
+              timestamp: Date.now() - 86400000,
+              open: 148.5,
+              high: 152.3,
+              low: 147.8,
+              close: 150.25,
+              volume: 45000000,
+            },
+            {
+              timestamp: Date.now() - 172800000,
+              open: 146.2,
+              high: 149.1,
+              low: 145.5,
+              close: 148.5,
+              volume: 42000000,
+            },
+          ],
+        },
+      };
+
+      mockAxiosInstance.get.mockResolvedValueOnce(mockResponse);
+
       const data = await googleFinanceService.getHistoricalData('AAPL', '1mo');
 
       expect(data).toBeDefined();
@@ -71,6 +148,17 @@ describe('GoogleFinanceService', () => {
 
   describe('searchSymbols', () => {
     it('should return search results structure', async () => {
+      // Mock successful search response
+      const mockResponse = {
+        data: [
+          ['Apple Inc.', 'AAPL', 'NASDAQ', 'Stock'],
+          ['Apple Hospitality REIT Inc.', 'APLE', 'NYSE', 'REIT'],
+          ['Applied Materials Inc.', 'AMAT', 'NASDAQ', 'Stock'],
+        ],
+      };
+
+      mockAxiosInstance.get.mockResolvedValueOnce(mockResponse);
+
       const results = await googleFinanceService.searchSymbols('Apple', 5);
 
       expect(Array.isArray(results)).toBe(true);
@@ -93,6 +181,30 @@ describe('GoogleFinanceService', () => {
 
   describe('getMarketSummary', () => {
     it('should return market summary data', async () => {
+      // Mock successful market summary response
+      const mockResponse = {
+        data: [
+          {
+            symbol: 'SPY',
+            name: 'SPDR S&P 500 ETF Trust',
+            price: 445.2,
+            change: 2.15,
+            changePercent: 0.48,
+            source: 'google-finance',
+          },
+          {
+            symbol: 'QQQ',
+            name: 'Invesco QQQ Trust',
+            price: 375.8,
+            change: -1.25,
+            changePercent: -0.33,
+            source: 'google-finance',
+          },
+        ],
+      };
+
+      mockAxiosInstance.get.mockResolvedValueOnce(mockResponse);
+
       const summary = await googleFinanceService.getMarketSummary();
 
       expect(Array.isArray(summary)).toBe(true);
@@ -109,6 +221,13 @@ describe('GoogleFinanceService', () => {
 
   describe('healthCheck', () => {
     it('should return health status', async () => {
+      // Mock successful health check response
+      const mockResponse = {
+        data: { status: 'ok' },
+      };
+
+      mockAxiosInstance.get.mockResolvedValueOnce(mockResponse);
+
       const health = await googleFinanceService.healthCheck();
 
       expect(health).toBeDefined();

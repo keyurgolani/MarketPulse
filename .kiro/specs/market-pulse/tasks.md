@@ -62,7 +62,7 @@ Responsive design, animations, testing, deployment, and final polish
   - Cache monitoring and performance metrics
   - Background refresh and invalidation
 
-- [ ] **[Task 6: Core API Endpoints](./task-6-core-api-endpoints.md)**
+- [x] **[Task 6: Core API Endpoints](./task-6-core-api-endpoints.md)** ✅
   - Dashboard management API endpoints
   - Asset data API endpoints with caching
   - News API endpoints with filtering
@@ -206,7 +206,7 @@ Maintain `.kiro/specs/market-pulse/project-context.md` with:
 
 - [x] Task 4: External API Integration and Data Aggregation ✅
 - [x] Task 5: Caching System and Performance Optimization ✅
-- [ ] Task 6: Core API Endpoints
+- [x] Task 6: Core API Endpoints ✅
 
 ### Phase 3: Frontend Architecture & UI Foundation
 

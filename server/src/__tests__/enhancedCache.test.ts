@@ -3,6 +3,7 @@
  * Comprehensive testing for advanced caching features
  */
 
+// Jest globals are available without import
 import { EnhancedCacheService } from '../services/EnhancedCacheService';
 import { CacheService } from '../services/CacheService';
 import { cacheConfig, getTTL, shouldWarmCache } from '../config/cache';
@@ -14,7 +15,7 @@ jest.mock('../utils/logger');
 
 describe('EnhancedCacheService', () => {
   let enhancedCacheService: EnhancedCacheService;
-  let mockCacheService: jest.Mocked<CacheService>;
+  let mockCacheService: any;
 
   beforeEach(() => {
     // Reset mocks
@@ -30,10 +31,10 @@ describe('EnhancedCacheService', () => {
       deletePattern: jest.fn(),
       healthCheck: jest.fn(),
       getStats: jest.fn(),
-    } as unknown as jest.Mocked<CacheService>;
+    } as any;
 
     // Mock CacheService.getInstance
-    (CacheService.getInstance as jest.Mock).mockReturnValue(mockCacheService);
+    (CacheService.getInstance as any).mockReturnValue(mockCacheService);
 
     enhancedCacheService = new EnhancedCacheService();
   });
