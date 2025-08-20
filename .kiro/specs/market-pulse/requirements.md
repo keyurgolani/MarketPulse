@@ -185,3 +185,58 @@ MarketPulse is a comprehensive financial dashboard platform that enables owner-c
 3. WHEN issues are found THEN the system SHALL provide clear descriptions and resolution steps
 4. WHEN tests are re-run THEN the system SHALL update previous results with new outcomes
 5. WHEN regression testing occurs THEN the system SHALL verify existing functionality continues working
+
+### Requirement 17
+
+**User Story:** As a user, I want asset charts to display dynamic Y-axis bounds, so that I can better visualize changes in asset values regardless of the price range.
+
+#### Acceptance Criteria
+
+1. WHEN asset charts are displayed THEN the system SHALL calculate dynamic min/max bounds based on visible data
+2. WHEN chart data changes THEN the system SHALL automatically adjust Y-axis scaling for optimal visibility
+3. WHEN zooming or panning charts THEN the system SHALL recalculate bounds based on the visible data range
+4. WHEN multiple assets are compared THEN the system SHALL use appropriate scaling to show relative changes clearly
+
+### Requirement 18
+
+**User Story:** As a system administrator, I want to configure multiple API keys for each external data source with automatic fallback, so that the system maintains service availability when rate limits are reached.
+
+#### Acceptance Criteria
+
+1. WHEN configuring data sources THEN the system SHALL allow multiple API keys per external service
+2. WHEN rate limits are encountered THEN the system SHALL automatically switch to the next available API key
+3. WHEN all keys for a source are rate-limited THEN the system SHALL implement exponential backoff and retry logic
+4. WHEN keys become available again THEN the system SHALL resume normal operation automatically
+
+### Requirement 19
+
+**User Story:** As a developer, I want comprehensive test coverage with feature-specific test buckets, so that all application aspects are validated systematically.
+
+#### Acceptance Criteria
+
+1. WHEN tests are organized THEN the system SHALL group tests by feature (core, asset graph, news, fear greed index, dashboard layout)
+2. WHEN test suites run THEN the system SHALL include unit tests, backend API tests, frontend tests, and UI element interaction tests
+3. WHEN browser testing occurs THEN the system SHALL use curl/wget for HTML validation and browser APIs for interaction testing
+4. WHEN test results are reported THEN the system SHALL provide clear categorization and success/failure metrics
+
+### Requirement 20
+
+**User Story:** As a quality assurance engineer, I want test-driven development with comprehensive test creation before implementation, so that all components meet requirements and function correctly.
+
+#### Acceptance Criteria
+
+1. WHEN new components are developed THEN the system SHALL create comprehensive tests BEFORE implementing the component
+2. WHEN tests are written THEN the system SHALL NOT modify tests to match failing code implementations
+3. WHEN components are implemented THEN the system SHALL write code to satisfy both tests and requirements
+4. WHEN tests fail THEN the system SHALL fix the implementation rather than changing the tests
+
+### Requirement 21
+
+**User Story:** As a developer, I want strict TypeScript enforcement with zero tolerance for `any` types, so that the codebase maintains type safety and prevents runtime errors.
+
+#### Acceptance Criteria
+
+1. WHEN writing code THEN the system SHALL never use `any` type anywhere in non-test code
+2. WHEN type is unknown THEN the system SHALL use `unknown` type with proper type guards
+3. WHEN functions are defined THEN the system SHALL include explicit return types for all public functions
+4. WHEN compilation occurs THEN the system SHALL enforce strict null checks and proper error handling

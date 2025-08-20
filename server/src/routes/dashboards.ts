@@ -66,4 +66,72 @@ router.post(
   DashboardController.cloneDashboard
 );
 
+// Sharing endpoints
+// POST /api/dashboards/:id/share - Create share token
+router.post(
+  '/:id/share',
+  validate({ params: DashboardIdSchema }),
+  authenticate,
+  DashboardController.createShareToken
+);
+
+// GET /api/dashboards/:id/share - Get share tokens
+router.get(
+  '/:id/share',
+  validate({ params: DashboardIdSchema }),
+  authenticate,
+  DashboardController.getShareTokens
+);
+
+// DELETE /api/dashboards/:id/share/:tokenId - Revoke share token
+router.delete(
+  '/:id/share/:tokenId',
+  validate({
+    params: Joi.object({
+      id: Joi.string().min(1).required(),
+      tokenId: Joi.string().min(1).required(),
+    }),
+  }),
+  authenticate,
+  DashboardController.revokeShareToken
+);
+
+// User permission endpoints
+// POST /api/dashboards/:id/permissions - Grant user permission
+router.post(
+  '/:id/permissions',
+  validate({ params: DashboardIdSchema }),
+  authenticate,
+  DashboardController.grantUserPermission
+);
+
+// GET /api/dashboards/:id/permissions - Get user permissions
+router.get(
+  '/:id/permissions',
+  validate({ params: DashboardIdSchema }),
+  authenticate,
+  DashboardController.getUserPermissions
+);
+
+// DELETE /api/dashboards/:id/permissions/:userId - Revoke user permission
+router.delete(
+  '/:id/permissions/:userId',
+  validate({
+    params: Joi.object({
+      id: Joi.string().min(1).required(),
+      userId: Joi.string().min(1).required(),
+    }),
+  }),
+  authenticate,
+  DashboardController.revokeUserPermission
+);
+
+// GET /api/dashboards/:id/embed - Get embed code
+router.get(
+  '/:id/embed',
+  validate({ params: DashboardIdSchema }),
+  optionalAuth,
+  DashboardController.getEmbedCode
+);
+
 export { router as dashboardRoutes };

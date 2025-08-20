@@ -13,6 +13,7 @@ export default defineConfig({
       '**/node_modules/**',
       '**/dist/**',
       '**/server/**', // Exclude backend tests - they use Jest
+      '**/tests/e2e/**', // Exclude E2E tests - they use Playwright
       '**/.{idea,git,cache,output,temp}/**',
       '**/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tsup,build}.config.*',
     ],

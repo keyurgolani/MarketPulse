@@ -6,6 +6,10 @@ import {
   UpdateDashboardData,
   LayoutConfig,
 } from '../models/Dashboard';
+import { shareTokenModel } from '../models/ShareToken';
+import { userPermissionModel } from '../models/UserPermission';
+import { dashboardPersistenceService } from '../services/DashboardPersistenceService';
+import { webSocketService } from '../services/WebSocketService';
 import { logger } from '../utils/logger';
 
 // Extend user type for authentication
@@ -114,7 +118,7 @@ export class DashboardController {
       let dashboards;
 
       if (search) {
-        // Search dashboards
+        // Search dashboards (no caching for search results)
         dashboards = await dashboardModel.searchDashboards(
           search,
           userId,
@@ -122,13 +126,16 @@ export class DashboardController {
           20
         );
       } else {
-        // Get user's dashboards
-        dashboards = await dashboardModel.findByOwner(userId, include_public);
+        // Get user's dashboards with caching
+        dashboards = await dashboardPersistenceService.getUserDashboards(
+          userId,
+          include_public
+        );
       }
 
       // Get default dashboards if requested
       const defaultDashboards = include_public
-        ? await dashboardModel.findDefaultDashboards()
+        ? await dashboardPersistenceService.getDefaultDashboards()
         : [];
 
       // Combine and deduplicate
@@ -291,7 +298,17 @@ export class DashboardController {
           dashboardData.layout_config as Partial<LayoutConfig>;
       }
 
-      const dashboard = await dashboardModel.createDashboard(createData);
+      const dashboard =
+        await dashboardPersistenceService.createDashboard(createData);
+
+      // Broadcast dashboard creation to connected users
+      webSocketService.broadcastDashboardChange(dashboard.id, {
+        type: 'dashboard_created',
+        dashboardId: dashboard.id,
+        userId,
+        data: dashboard,
+        timestamp: Date.now(),
+      });
 
       logger.info('Dashboard created successfully', {
         dashboardId: dashboard.id,
@@ -383,6 +400,9 @@ export class DashboardController {
         return;
       }
 
+      // Get client version for conflict detection
+      const clientVersion = req.headers['x-client-version'] as string;
+
       // Handle setting as default (only one default per user)
       if (updateData.is_default === true) {
         await dashboardModel.setAsDefault(id, userId);
@@ -403,7 +423,8 @@ export class DashboardController {
         }
         if (updateData.layout_config) {
           // Get the current dashboard to merge layout config
-          const currentDashboard = await dashboardModel.findById(id);
+          const currentDashboard =
+            await dashboardPersistenceService.getDashboard(id);
           if (currentDashboard) {
             // Merge layout config with proper type filtering
             const mergedConfig = { ...currentDashboard.layout_config };
@@ -447,13 +468,24 @@ export class DashboardController {
           }
         }
 
-        // Remove layout_config from updatePayload to avoid type issues
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const { layout_config, ...cleanUpdatePayload } = updatePayload;
-        await dashboardModel.update(id, cleanUpdatePayload);
+        // Use persistence service for update with conflict detection
+        await dashboardPersistenceService.updateDashboard(
+          id,
+          updatePayload,
+          clientVersion
+        );
       }
 
       const updatedDashboard = await dashboardModel.findById(id);
+
+      // Broadcast dashboard update to connected users
+      webSocketService.broadcastDashboardChange(id, {
+        type: 'dashboard_updated',
+        dashboardId: id,
+        userId,
+        data: updatedDashboard,
+        timestamp: Date.now(),
+      });
 
       logger.info('Dashboard updated successfully', {
         dashboardId: id,
@@ -530,7 +562,16 @@ export class DashboardController {
         return;
       }
 
-      await dashboardModel.delete(id);
+      await dashboardPersistenceService.deleteDashboard(id);
+
+      // Broadcast dashboard deletion to connected users
+      webSocketService.broadcastDashboardChange(id, {
+        type: 'dashboard_deleted',
+        dashboardId: id,
+        userId,
+        data: { id, name: existingDashboard.name },
+        timestamp: Date.now(),
+      });
 
       logger.info('Dashboard deleted successfully', {
         dashboardId: id,
@@ -647,7 +688,8 @@ export class DashboardController {
     next: NextFunction
   ): Promise<void> {
     try {
-      const defaultDashboards = await dashboardModel.findDefaultDashboards();
+      const defaultDashboards =
+        await dashboardPersistenceService.getDefaultDashboards();
 
       logger.info('Default dashboards retrieved successfully', {
         count: defaultDashboards.length,
@@ -716,6 +758,685 @@ export class DashboardController {
       });
     } catch (error) {
       logger.error('Error retrieving public dashboards', {
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
+      next(error);
+    }
+  }
+
+  /**
+   * Create share token for dashboard
+   * @route POST /api/dashboards/:id/share
+   */
+  static async createShareToken(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
+    try {
+      const { id: dashboardId } = req.params as { id: string };
+      const userId = req.user?.id || 'default-user';
+
+      // Validate request body
+      const shareTokenSchema = z.object({
+        permissions: z.enum(['view', 'edit']).default('view'),
+        expiresAt: z.string().datetime().optional(),
+        maxAccessCount: z.number().positive().optional(),
+      });
+
+      const validation = shareTokenSchema.safeParse(req.body);
+      if (!validation.success) {
+        res.status(400).json({
+          success: false,
+          error: 'Invalid request data',
+          details: validation.error.issues,
+          timestamp: new Date().toISOString(),
+        });
+        return;
+      }
+
+      const { permissions, expiresAt, maxAccessCount } = validation.data;
+
+      // Check if dashboard exists and user has permission
+      const dashboard = await dashboardModel.findById(dashboardId);
+      if (!dashboard) {
+        res.status(404).json({
+          success: false,
+          error: 'Dashboard not found',
+          timestamp: new Date().toISOString(),
+        });
+        return;
+      }
+
+      // Check if user has permission to share this dashboard
+      const hasPermission =
+        dashboard.owner_id === userId ||
+        (await userPermissionModel.hasPermission(dashboardId, userId, 'admin'));
+
+      if (!hasPermission) {
+        res.status(403).json({
+          success: false,
+          error: 'Insufficient permissions to share this dashboard',
+          timestamp: new Date().toISOString(),
+        });
+        return;
+      }
+
+      // Create share token
+      const shareToken = await shareTokenModel.createShareToken({
+        dashboard_id: dashboardId,
+        created_by: userId,
+        permissions,
+        expires_at: expiresAt ? new Date(expiresAt) : null,
+        max_access_count: maxAccessCount || null,
+      });
+
+      logger.info('Share token created successfully', {
+        dashboardId,
+        tokenId: shareToken.id,
+        permissions,
+        createdBy: userId,
+      });
+
+      res.status(201).json({
+        success: true,
+        data: {
+          token: shareToken,
+          shareUrl: `${req.protocol}://${req.get('host')}/shared/${shareToken.token}`,
+        },
+        timestamp: new Date().toISOString(),
+      });
+    } catch (error) {
+      logger.error('Error creating share token', {
+        dashboardId: req.params.id,
+        userId: req.user?.id,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
+      next(error);
+    }
+  }
+
+  /**
+   * Get share tokens for dashboard
+   * @route GET /api/dashboards/:id/share
+   */
+  static async getShareTokens(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
+    try {
+      const { id: dashboardId } = req.params as { id: string };
+      const userId = req.user?.id || 'default-user';
+
+      // Check if dashboard exists and user has permission
+      const dashboard = await dashboardModel.findById(dashboardId);
+      if (!dashboard) {
+        res.status(404).json({
+          success: false,
+          error: 'Dashboard not found',
+          timestamp: new Date().toISOString(),
+        });
+        return;
+      }
+
+      // Check if user has permission to view share tokens
+      const hasPermission =
+        dashboard.owner_id === userId ||
+        (await userPermissionModel.hasPermission(dashboardId, userId, 'admin'));
+
+      if (!hasPermission) {
+        res.status(403).json({
+          success: false,
+          error: 'Insufficient permissions to view share tokens',
+          timestamp: new Date().toISOString(),
+        });
+        return;
+      }
+
+      // Get share tokens
+      const shareTokens = await shareTokenModel.findByDashboard(dashboardId);
+      const tokenStats = await shareTokenModel.getTokenStats(dashboardId);
+
+      logger.info('Share tokens retrieved successfully', {
+        dashboardId,
+        tokenCount: shareTokens.length,
+        userId,
+      });
+
+      res.json({
+        success: true,
+        data: {
+          tokens: shareTokens.map(token => ({
+            id: token.id,
+            permissions: token.permissions,
+            created_at: token.created_at,
+            expires_at: token.expires_at,
+            max_access_count: token.max_access_count,
+            access_count: token.access_count,
+            is_active: token.is_active,
+            shareUrl: `${req.protocol}://${req.get('host')}/shared/${token.token}`,
+          })),
+          stats: tokenStats,
+        },
+        timestamp: new Date().toISOString(),
+      });
+    } catch (error) {
+      logger.error('Error retrieving share tokens', {
+        dashboardId: req.params.id,
+        userId: req.user?.id,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
+      next(error);
+    }
+  }
+
+  /**
+   * Revoke share token
+   * @route DELETE /api/dashboards/:id/share/:tokenId
+   */
+  static async revokeShareToken(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
+    try {
+      const { id: dashboardId, tokenId } = req.params as {
+        id: string;
+        tokenId: string;
+      };
+      const userId = req.user?.id || 'default-user';
+
+      // Check if dashboard exists and user has permission
+      const dashboard = await dashboardModel.findById(dashboardId);
+      if (!dashboard) {
+        res.status(404).json({
+          success: false,
+          error: 'Dashboard not found',
+          timestamp: new Date().toISOString(),
+        });
+        return;
+      }
+
+      // Check if user has permission to revoke share tokens
+      const hasPermission =
+        dashboard.owner_id === userId ||
+        (await userPermissionModel.hasPermission(dashboardId, userId, 'admin'));
+
+      if (!hasPermission) {
+        res.status(403).json({
+          success: false,
+          error: 'Insufficient permissions to revoke share tokens',
+          timestamp: new Date().toISOString(),
+        });
+        return;
+      }
+
+      // Revoke share token
+      const revokedToken = await shareTokenModel.deactivateToken(tokenId);
+      if (!revokedToken) {
+        res.status(404).json({
+          success: false,
+          error: 'Share token not found',
+          timestamp: new Date().toISOString(),
+        });
+        return;
+      }
+
+      logger.info('Share token revoked successfully', {
+        dashboardId,
+        tokenId,
+        userId,
+      });
+
+      res.json({
+        success: true,
+        message: 'Share token revoked successfully',
+        timestamp: new Date().toISOString(),
+      });
+    } catch (error) {
+      logger.error('Error revoking share token', {
+        dashboardId: req.params.id,
+        tokenId: req.params.tokenId,
+        userId: req.user?.id,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
+      next(error);
+    }
+  }
+
+  /**
+   * Grant user permission to dashboard
+   * @route POST /api/dashboards/:id/permissions
+   */
+  static async grantUserPermission(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
+    try {
+      const { id: dashboardId } = req.params as { id: string };
+      const userId = req.user?.id || 'default-user';
+
+      // Validate request body
+      const permissionSchema = z.object({
+        userId: z.string().min(1),
+        permission: z.enum(['view', 'edit', 'admin']),
+        expiresAt: z.string().datetime().optional(),
+      });
+
+      const validation = permissionSchema.safeParse(req.body);
+      if (!validation.success) {
+        res.status(400).json({
+          success: false,
+          error: 'Invalid request data',
+          details: validation.error.issues,
+          timestamp: new Date().toISOString(),
+        });
+        return;
+      }
+
+      const { userId: targetUserId, permission, expiresAt } = validation.data;
+
+      // Check if dashboard exists and user has permission
+      const dashboard = await dashboardModel.findById(dashboardId);
+      if (!dashboard) {
+        res.status(404).json({
+          success: false,
+          error: 'Dashboard not found',
+          timestamp: new Date().toISOString(),
+        });
+        return;
+      }
+
+      // Check if user has permission to grant permissions
+      const hasPermission =
+        dashboard.owner_id === userId ||
+        (await userPermissionModel.hasPermission(dashboardId, userId, 'admin'));
+
+      if (!hasPermission) {
+        res.status(403).json({
+          success: false,
+          error: 'Insufficient permissions to grant user permissions',
+          timestamp: new Date().toISOString(),
+        });
+        return;
+      }
+
+      // Grant user permission
+      const userPermission = await userPermissionModel.grantPermission({
+        dashboard_id: dashboardId,
+        user_id: targetUserId,
+        permission,
+        granted_by: userId,
+        expires_at: expiresAt ? new Date(expiresAt) : null,
+      });
+
+      logger.info('User permission granted successfully', {
+        dashboardId,
+        targetUserId,
+        permission,
+        grantedBy: userId,
+      });
+
+      res.status(201).json({
+        success: true,
+        data: {
+          permission: userPermission,
+        },
+        timestamp: new Date().toISOString(),
+      });
+    } catch (error) {
+      logger.error('Error granting user permission', {
+        dashboardId: req.params.id,
+        userId: req.user?.id,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
+      next(error);
+    }
+  }
+
+  /**
+   * Get user permissions for dashboard
+   * @route GET /api/dashboards/:id/permissions
+   */
+  static async getUserPermissions(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
+    try {
+      const { id: dashboardId } = req.params as { id: string };
+      const userId = req.user?.id || 'default-user';
+
+      // Check if dashboard exists and user has permission
+      const dashboard = await dashboardModel.findById(dashboardId);
+      if (!dashboard) {
+        res.status(404).json({
+          success: false,
+          error: 'Dashboard not found',
+          timestamp: new Date().toISOString(),
+        });
+        return;
+      }
+
+      // Check if user has permission to view user permissions
+      const hasPermission =
+        dashboard.owner_id === userId ||
+        (await userPermissionModel.hasPermission(dashboardId, userId, 'admin'));
+
+      if (!hasPermission) {
+        res.status(403).json({
+          success: false,
+          error: 'Insufficient permissions to view user permissions',
+          timestamp: new Date().toISOString(),
+        });
+        return;
+      }
+
+      // Get user permissions
+      const permissions =
+        await userPermissionModel.findByDashboard(dashboardId);
+      const permissionStats =
+        await userPermissionModel.getPermissionStats(dashboardId);
+
+      logger.info('User permissions retrieved successfully', {
+        dashboardId,
+        permissionCount: permissions.length,
+        userId,
+      });
+
+      res.json({
+        success: true,
+        data: {
+          permissions: permissions.map(perm => ({
+            id: perm.id,
+            user_id: perm.user_id,
+            permission: perm.permission,
+            granted_by: perm.granted_by,
+            granted_at: perm.granted_at,
+            expires_at: perm.expires_at,
+            is_active: perm.is_active,
+          })),
+          stats: permissionStats,
+        },
+        timestamp: new Date().toISOString(),
+      });
+    } catch (error) {
+      logger.error('Error retrieving user permissions', {
+        dashboardId: req.params.id,
+        userId: req.user?.id,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
+      next(error);
+    }
+  }
+
+  /**
+   * Revoke user permission
+   * @route DELETE /api/dashboards/:id/permissions/:userId
+   */
+  static async revokeUserPermission(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
+    try {
+      const { id: dashboardId, userId: targetUserId } = req.params as {
+        id: string;
+        userId: string;
+      };
+      const userId = req.user?.id || 'default-user';
+
+      // Check if dashboard exists and user has permission
+      const dashboard = await dashboardModel.findById(dashboardId);
+      if (!dashboard) {
+        res.status(404).json({
+          success: false,
+          error: 'Dashboard not found',
+          timestamp: new Date().toISOString(),
+        });
+        return;
+      }
+
+      // Check if user has permission to revoke user permissions
+      const hasPermission =
+        dashboard.owner_id === userId ||
+        (await userPermissionModel.hasPermission(dashboardId, userId, 'admin'));
+
+      if (!hasPermission) {
+        res.status(403).json({
+          success: false,
+          error: 'Insufficient permissions to revoke user permissions',
+          timestamp: new Date().toISOString(),
+        });
+        return;
+      }
+
+      // Revoke user permission
+      const revoked = await userPermissionModel.revokePermission(
+        dashboardId,
+        targetUserId
+      );
+      if (!revoked) {
+        res.status(404).json({
+          success: false,
+          error: 'User permission not found',
+          timestamp: new Date().toISOString(),
+        });
+        return;
+      }
+
+      logger.info('User permission revoked successfully', {
+        dashboardId,
+        targetUserId,
+        revokedBy: userId,
+      });
+
+      res.json({
+        success: true,
+        message: 'User permission revoked successfully',
+        timestamp: new Date().toISOString(),
+      });
+    } catch (error) {
+      logger.error('Error revoking user permission', {
+        dashboardId: req.params.id,
+        targetUserId: req.params.userId,
+        userId: req.user?.id,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
+      next(error);
+    }
+  }
+
+  /**
+   * Access shared dashboard via token
+   * @route GET /api/shared/:token
+   */
+  static async accessSharedDashboard(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
+    try {
+      const { token } = req.params as { token: string };
+
+      // Validate and increment access count for share token
+      const shareToken =
+        await shareTokenModel.validateAndIncrementAccess(token);
+      if (!shareToken) {
+        res.status(404).json({
+          success: false,
+          error: 'Invalid or expired share token',
+          timestamp: new Date().toISOString(),
+        });
+        return;
+      }
+
+      // Get dashboard with widgets
+      const dashboard = await dashboardModel.getDashboardWithWidgets(
+        shareToken.dashboard_id
+      );
+      if (!dashboard) {
+        res.status(404).json({
+          success: false,
+          error: 'Dashboard not found',
+          timestamp: new Date().toISOString(),
+        });
+        return;
+      }
+
+      logger.info('Shared dashboard accessed successfully', {
+        token,
+        dashboardId: shareToken.dashboard_id,
+        accessCount: shareToken.access_count,
+      });
+
+      res.json({
+        success: true,
+        data: {
+          dashboard,
+          shareInfo: {
+            permissions: shareToken.permissions,
+            accessCount: shareToken.access_count,
+            maxAccessCount: shareToken.max_access_count,
+            expiresAt: shareToken.expires_at,
+          },
+        },
+        timestamp: new Date().toISOString(),
+      });
+    } catch (error) {
+      logger.error('Error accessing shared dashboard', {
+        token: req.params.token,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
+      next(error);
+    }
+  }
+
+  /**
+   * Get embed code for dashboard
+   * @route GET /api/dashboards/:id/embed
+   */
+  static async getEmbedCode(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
+    try {
+      const { id: dashboardId } = req.params as { id: string };
+      const userId = req.user?.id || 'default-user';
+
+      // Validate query parameters
+      const querySchema = z.object({
+        width: z
+          .string()
+          .transform(val => parseInt(val, 10))
+          .pipe(z.number().min(300))
+          .optional(),
+        height: z
+          .string()
+          .transform(val => parseInt(val, 10))
+          .pipe(z.number().min(200))
+          .optional(),
+        theme: z.enum(['light', 'dark', 'auto']).optional(),
+        showHeader: z
+          .string()
+          .transform(val => val === 'true')
+          .optional(),
+        showControls: z
+          .string()
+          .transform(val => val === 'true')
+          .optional(),
+      });
+
+      const validation = querySchema.safeParse(req.query);
+      if (!validation.success) {
+        res.status(400).json({
+          success: false,
+          error: 'Invalid query parameters',
+          details: validation.error.issues,
+          timestamp: new Date().toISOString(),
+        });
+        return;
+      }
+
+      const {
+        width = 800,
+        height = 600,
+        theme = 'auto',
+        showHeader = true,
+        showControls = false,
+      } = validation.data;
+
+      // Check if dashboard exists and user has permission
+      const dashboard = await dashboardModel.findById(dashboardId);
+      if (!dashboard) {
+        res.status(404).json({
+          success: false,
+          error: 'Dashboard not found',
+          timestamp: new Date().toISOString(),
+        });
+        return;
+      }
+
+      // Check if user has permission to generate embed code
+      const hasPermission =
+        dashboard.owner_id === userId ||
+        (await userPermissionModel.hasPermission(dashboardId, userId, 'view'));
+
+      if (!hasPermission) {
+        res.status(403).json({
+          success: false,
+          error: 'Insufficient permissions to generate embed code',
+          timestamp: new Date().toISOString(),
+        });
+        return;
+      }
+
+      // Generate embed URL
+      const embedUrl =
+        `${req.protocol}://${req.get('host')}/embed/${dashboardId}?` +
+        `theme=${theme}&showHeader=${showHeader}&showControls=${showControls}`;
+
+      // Generate embed code
+      const embedCode = `<iframe
+  src="${embedUrl}"
+  width="${width}"
+  height="${height}"
+  frameborder="0"
+  style="border: none; border-radius: 8px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);"
+  title="${dashboard.name} - MarketPulse Dashboard"
+  allowfullscreen>
+</iframe>`;
+
+      logger.info('Embed code generated successfully', {
+        dashboardId,
+        userId,
+        width,
+        height,
+        theme,
+      });
+
+      res.json({
+        success: true,
+        data: {
+          embedCode,
+          embedUrl,
+          options: {
+            width,
+            height,
+            theme,
+            showHeader,
+            showControls,
+          },
+        },
+        timestamp: new Date().toISOString(),
+      });
+    } catch (error) {
+      logger.error('Error generating embed code', {
+        dashboardId: req.params.id,
+        userId: req.user?.id,
         error: error instanceof Error ? error.message : 'Unknown error',
       });
       next(error);

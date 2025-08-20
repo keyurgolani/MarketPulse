@@ -20,149 +20,248 @@ This implementation plan reflects the current state of the MarketPulse applicati
 
 The frontend currently has only a basic placeholder App.tsx. All UI components, state management, and frontend functionality need to be implemented.
 
+## Task Execution Guidelines (Mandatory)
+
+### Test-Driven Development Workflow
+
+1. **Test-Results Setup**: Check if `test-results.md` exists, create if not
+2. **Test Categories**: List all test types for current service state
+3. **Systematic Execution**: Run tests one by one, logging results and issues
+4. **Issue Tracking**: For each test, identify issues, fix them, mark as resolved
+5. **Continuous Updates**: Update test results after each fix
+6. **Completion Criteria**: Mark test done only when fully passing
+
+### Before Starting Any Task
+
+1. **Context Management**: Check if `.kiro/specs/market-pulse/context/{task-name}-context.md` exists
+   - If exists: Load context and resume from last checkpoint
+   - If not: Create context file with task objective and current state analysis
+2. **Code Analysis**: Perform comprehensive code analysis to identify exact fix locations
+3. **Exit Criteria**: Define crisp and clear exit criteria for the task and each sub-step
+4. **Test Setup**: Ensure `test-results.md` is updated with relevant test categories
+5. **TDD Preparation**: Write comprehensive tests BEFORE implementing components
+
+### During Task Execution
+
+1. **Context Updates**: Update task context file after every significant step
+2. **Test-First Development**: Create/update test files before writing component code
+3. **Continuous Testing**: Run tests after each change, update `test-results.md`
+4. **Integration Checks**: Verify backend-frontend integration consistency
+5. **Browser Validation**: Use browser console logs and puppeteer for validation
+6. **Zero Errors Policy**: Fix all linting, compilation, build, deployment errors immediately
+7. **Code Quality**: Break large files into single-responsibility modules
+8. **Duplicate Elimination**: Remove duplicate implementations, create single source of truth
+
+### Task Completion Criteria
+
+1. **Implementation Complete**: All implementation checkboxes marked
+2. **Validation Complete**: All validation checkboxes marked
+3. **Tests Passing**: All relevant tests in `test-results.md` marked as done
+4. **Production Ready**: `./scripts/deploy.sh production` runs successfully
+5. **Browser Clean**: Application loads without console errors
+6. **Features Working**: All implemented features function correctly
+7. **Code Quality**: No lint warnings, no unused code, single source of truth maintained
+8. **Integration Verified**: Backend-frontend integration consistent
+
 ## Implementation Tasks
 
-- [ ] ### Task 1: Frontend Core Components and UI Foundation
-  **Details:** [task-1-frontend-components.md](./task-1-frontend-components.md)
+- [x] ### Task 1: Frontend Core Components and UI Foundation
+  **Details:** [uber-tasks/task-1-frontend-core.md](./uber-tasks/task-1-frontend-core.md)
   **Context:** [context/task-1-context.md](./context/task-1-context.md)
   **Requirements:** 6.1, 7.1, 8.1, 9.1, 10.1, 11.1
 
 **Implementation Status:** ✅ Completed
 **Validation Status:** ✅ Completed
 
-- [x] #### Implementation Details
-- [x] 1.1 Create base UI components with accessibility
-- [x] 1.2 Implement responsive layout system
-- [x] 1.3 Create theme system with dark/light mode
-- [x] 1.4 Set up state management with Zustand
-- [x] 1.5 Implement API client and service layer
-- [x] 1.6 Create error boundaries and loading states
-
-- [x] #### Validation Details
-- [x] Browser console shows no errors
-- [x] All components render correctly
-- [x] Theme switching works properly
-- [x] State management functions correctly
-- [x] API client handles errors gracefully
-- [x] Error boundaries catch and display errors appropriately
-
-- [-] ### Task 2: Dashboard System Implementation
-  **Details:** [task-2-dashboard-system.md](./task-2-dashboard-system.md)
+- [x] ### Task 2: Dashboard System Implementation
+  **Details:** [uber-tasks/task-2-dashboard-system.md](./uber-tasks/task-2-dashboard-system.md)
   **Context:** [context/task-2-context.md](./context/task-2-context.md)
   **Requirements:** 1.1, 2.1, 2.2, 2.3, 2.4
+
+**Implementation Status:** ✅ Completed
+**Validation Status:** ✅ Completed
+
+- [ ] ### Task 3: Widget Framework and Components
+  **Details:** [uber-tasks/task-3-widget-framework.md](./uber-tasks/task-3-widget-framework.md)
+  **Context:** [context/task-3-context.md](./context/task-3-context.md)
+  **Requirements:** 9.1, 9.2, 9.3, 9.4
+
+**Implementation Status:** ❌ Not Started
+**Validation Status:** ❌ Not Started
+
+- [ ] ### Task 4: Data Visualization and Charts
+  **Details:** [uber-tasks/task-4-data-visualization.md](./uber-tasks/task-4-data-visualization.md)
+  **Context:** [context/task-4-context.md](./context/task-4-context.md)
+  **Requirements:** 9.1, 9.2, 9.3, 9.4
+
+**Implementation Status:** ❌ Not Started
+**Validation Status:** ❌ Not Started
+
+- [ ] ### Task 5: Real-time Data Integration
+  **Details:** [uber-tasks/task-5-realtime-integration.md](./uber-tasks/task-5-realtime-integration.md)
+  **Context:** [context/task-5-context.md](./context/task-5-context.md)
+  **Requirements:** 3.1, 3.2, 3.3, 3.4
+
+**Implementation Status:** ❌ Not Started
+**Validation Status:** ❌ Not Started
+
+- [ ] ### Task 6: News and Content Integration
+  **Details:** [task-6-news-integration.md](./task-6-news-integration.md)
+  **Context:** [context/task-6-context.md](./context/task-6-context.md)
+  **Requirements:** 5.1, 5.2, 5.3, 5.4
 
 **Implementation Status:** ❌ Not Started
 **Validation Status:** ❌ Not Started
 
 - [ ] #### Implementation Details
-- [x] 2.1 Implement dashboard layout and navigation
-- [ ] 2.2 Create owner-configured default dashboards
-- [ ] 2.3 Build custom dashboard creation and editing
-- [ ] 2.4 Implement dashboard persistence and synchronization
-- [ ] 2.5 Add dashboard sharing and permissions
-
-- [ ] #### Validation Details
-- [ ] Dashboard navigation works smoothly
-- [ ] Default dashboards load correctly
-- [ ] Custom dashboard creation functions properly
-- [ ] Dashboard data persists correctly
-- [ ] Sharing and permissions work as expected
-
-- [ ] ### Task 3: Widget Framework and Components
-
-  **Details:** [task-3-widget-framework.md](./task-3-widget-framework.md)
-  **Requirements:** 9.1, 9.2, 9.3, 9.4
-
-- [ ] 3.1 Create configurable widget system
-- [ ] 3.2 Implement asset list and grid widgets
-- [ ] 3.3 Build price ticker and watchlist widgets
-- [ ] 3.4 Add widget drag-and-drop functionality
-- [ ] 3.5 Create widget configuration interface
-
-- [ ] ### Task 4: Data Visualization and Charts
-
-  **Details:** [task-4-data-visualization.md](./task-4-data-visualization.md)
-  **Requirements:** 9.1, 9.2, 9.3, 9.4
-
-- [ ] 4.1 Implement dynamic chart components
-- [ ] 4.2 Create price charts with technical indicators
-- [ ] 4.3 Build market summary and heatmap widgets
-- [ ] 4.4 Add chart interactivity and export features
-- [ ] 4.5 Implement responsive chart layouts
-
-- [ ] ### Task 5: Real-time Data Integration
-
-  **Details:** [task-5-realtime-integration.md](./task-5-realtime-integration.md)
-  **Requirements:** 3.1, 3.2, 3.3, 3.4
-
-- [ ] 5.1 Set up WebSocket client connections
-- [ ] 5.2 Implement real-time price updates
-- [ ] 5.3 Create data subscription management
-- [ ] 5.4 Add connection status indicators
-- [ ] 5.5 Implement offline handling and recovery
-
-- [ ] ### Task 6: News and Content Integration
-
-  **Details:** [task-6-news-integration.md](./task-6-news-integration.md)
-  **Requirements:** 5.1, 5.2, 5.3, 5.4
-
 - [ ] 6.1 Build news widget and article display
 - [ ] 6.2 Implement news filtering and search
 - [ ] 6.3 Add asset-specific news tagging
 - [ ] 6.4 Create news caching and real-time updates
 - [ ] 6.5 Implement news sentiment analysis display
 
-- [ ] ### Task 7: User Management and Preferences
+- [ ] #### Validation Details
+- [ ] News widgets display articles correctly
+- [ ] Filtering and search return accurate results
+- [ ] Asset-specific news shows relevant content
+- [ ] News caching improves performance
+- [ ] Sentiment analysis displays meaningful data
 
+**Exit Criteria:**
+
+- News widgets load and display articles without errors
+- Search and filtering functions work accurately
+- Asset-specific news correlation is correct
+- Caching reduces API calls and improves performance
+- Sentiment analysis provides valuable insights
+
+- [ ] ### Task 7: User Management and Preferences
   **Details:** [task-7-user-management.md](./task-7-user-management.md)
+  **Context:** [context/task-7-context.md](./context/task-7-context.md)
   **Requirements:** 7.1, 7.2, 7.3, 7.4
 
+**Implementation Status:** ❌ Not Started
+**Validation Status:** ❌ Not Started
+
+- [ ] #### Implementation Details
 - [ ] 7.1 Implement user authentication system
 - [ ] 7.2 Create user preferences management
 - [ ] 7.3 Add theme switching functionality
 - [ ] 7.4 Implement user session management
 - [ ] 7.5 Create user profile and settings interface
 
-- [ ] ### Task 8: Performance Optimization and Caching
+- [ ] #### Validation Details
+- [ ] Authentication system works securely
+- [ ] User preferences save and load correctly
+- [ ] Theme switching functions smoothly
+- [ ] Session management handles all scenarios
+- [ ] Profile interface is user-friendly
 
+**Exit Criteria:**
+
+- Authentication system is secure and reliable
+- User preferences persist across sessions
+- Theme switching works without page refresh
+- Session management handles timeouts gracefully
+- Profile interface is intuitive and accessible
+
+- [ ] ### Task 8: Performance Optimization and Caching
   **Details:** [task-8-performance-optimization.md](./task-8-performance-optimization.md)
+  **Context:** [context/task-8-context.md](./context/task-8-context.md)
   **Requirements:** 4.1, 4.2, 4.3, 4.4, 14.1, 14.2, 14.3, 14.4
 
+**Implementation Status:** ❌ Not Started
+**Validation Status:** ❌ Not Started
+
+- [ ] #### Implementation Details
 - [ ] 8.1 Implement client-side caching strategies
 - [ ] 8.2 Add code splitting and lazy loading
 - [ ] 8.3 Optimize rendering performance
 - [ ] 8.4 Implement virtualization for large datasets
 - [ ] 8.5 Add performance monitoring and metrics
 
-- [ ] ### Task 9: Accessibility and Responsive Design
+- [ ] #### Validation Details
+- [ ] Caching reduces API calls significantly
+- [ ] Code splitting improves initial load time
+- [ ] Rendering performance meets benchmarks
+- [ ] Virtualization handles large datasets smoothly
+- [ ] Performance metrics provide actionable insights
 
+**Exit Criteria:**
+
+- Client-side caching reduces redundant API calls by 80%
+- Initial page load time is under 3 seconds
+- Rendering performance maintains 60fps
+- Large datasets scroll smoothly with virtualization
+- Performance monitoring identifies bottlenecks accurately
+
+- [ ] ### Task 9: Accessibility and Responsive Design
   **Details:** [task-9-accessibility-responsive.md](./task-9-accessibility-responsive.md)
+  **Context:** [context/task-9-context.md](./context/task-9-context.md)
   **Requirements:** 6.1, 6.2, 6.3, 6.4, 8.1, 8.2, 8.3, 8.4
 
+**Implementation Status:** ❌ Not Started
+**Validation Status:** ❌ Not Started
+
+- [ ] #### Implementation Details
 - [ ] 9.1 Implement WCAG-AA accessibility compliance
 - [ ] 9.2 Create responsive design across all devices
 - [ ] 9.3 Add keyboard navigation support
 - [ ] 9.4 Implement screen reader optimization
 - [ ] 9.5 Add accessibility testing and validation
 
-- [ ] ### Task 10: UI Polish and Animations
+- [ ] #### Validation Details
+- [ ] WCAG-AA compliance verified with automated tools
+- [ ] Responsive design works on all target devices
+- [ ] Keyboard navigation covers all functionality
+- [ ] Screen readers announce content correctly
+- [ ] Accessibility tests pass all requirements
 
+**Exit Criteria:**
+
+- WCAG-AA compliance score of 100%
+- Responsive design works flawlessly on mobile, tablet, desktop
+- All functionality accessible via keyboard navigation
+- Screen reader compatibility verified
+- Accessibility audit tools show no violations
+
+- [ ] ### Task 10: UI Polish and Animations
   **Details:** [task-10-ui-polish.md](./task-10-ui-polish.md)
+  **Context:** [context/task-10-context.md](./context/task-10-context.md)
   **Requirements:** 10.1, 10.2, 10.3, 10.4
 
+**Implementation Status:** ❌ Not Started
+**Validation Status:** ❌ Not Started
+
+- [ ] #### Implementation Details
 - [ ] 10.1 Implement smooth animations and transitions
 - [ ] 10.2 Create loading states and error handling
 - [ ] 10.3 Add micro-interactions and feedback
 - [ ] 10.4 Implement visual state indicators
 - [ ] 10.5 Polish overall user experience
 
+- [ ] #### Validation Details
+- [ ] Animations run smoothly at 60fps
+- [ ] Loading states provide clear feedback
+- [ ] Micro-interactions enhance usability
+- [ ] Visual indicators communicate state clearly
+- [ ] Overall UX feels polished and professional
+
+**Exit Criteria:**
+
+- All animations maintain 60fps performance
+- Loading states provide meaningful feedback
+- Micro-interactions feel natural and responsive
+- Visual state indicators are clear and consistent
+- User experience feels polished and professional
+
 - [ ] ### Task 11: Testing and Quality Assurance
   **Details:** [task-11-testing-qa.md](./task-11-testing-qa.md)
   **Context:** [context/task-11-context.md](./context/task-11-context.md)
   **Requirements:** 15.1, 15.2, 15.3, 15.4, 15.5, 16.1, 16.2, 16.3
 
-**Implementation Status:** ✅ Partially Complete (Basic tests passing)
-**Validation Status:** ✅ Partially Complete (Initial validation done)
+**Implementation Status:** 🔄 Partially Complete (Basic tests passing)
+**Validation Status:** 🔄 Partially Complete (Initial validation done)
 
 - [ ] #### Implementation Details
 - [x] 11.1 Build comprehensive unit test suite (Backend: 405 tests, Frontend: 53 tests)
@@ -171,6 +270,7 @@ The frontend currently has only a basic placeholder App.tsx. All UI components, 
 - [ ] 11.4 Add accessibility testing
 - [ ] 11.5 Implement performance testing
 - [x] 11.6 Execute systematic testing validation (test-results.md created)
+- [ ] 11.7 Create feature-specific test buckets (core, asset graph, news, dashboard)
 
 - [ ] #### Validation Details
 - [x] Backend unit tests pass (22 suites, 405 tests)
@@ -181,28 +281,82 @@ The frontend currently has only a basic placeholder App.tsx. All UI components, 
 - [ ] E2E tests validate user workflows
 - [ ] Accessibility tests meet WCAG-AA standards
 - [ ] Performance tests meet benchmarks
+- [ ] All test categories in test-results.md completed
+
+**Exit Criteria:**
+
+- All test categories in test-results.md show 100% pass rate
+- Integration tests cover all API endpoints
+- E2E tests validate complete user workflows
+- Accessibility tests achieve WCAG-AA compliance
+- Performance tests meet all benchmarks
+- Test suite runs successfully in CI/CD pipeline
 
 - [ ] ### Task 12: Production Deployment and Monitoring
-
   **Details:** [task-12-deployment-monitoring.md](./task-12-deployment-monitoring.md)
+  **Context:** [context/task-12-context.md](./context/task-12-context.md)
   **Requirements:** 13.1, 13.2, 13.3, 13.4
 
+**Implementation Status:** ❌ Not Started
+**Validation Status:** ❌ Not Started
+
+- [ ] #### Implementation Details
 - [ ] 12.1 Set up production build pipeline
 - [ ] 12.2 Implement deployment automation
 - [ ] 12.3 Add monitoring and logging
 - [ ] 12.4 Create health checks and alerts
 - [ ] 12.5 Implement error tracking and recovery
 
-- [ ] ### Task 13: Final Integration and Code Quality
+- [ ] #### Validation Details
+- [ ] Production build pipeline runs without errors
+- [ ] Deployment automation works reliably
+- [ ] Monitoring captures all critical metrics
+- [ ] Health checks detect issues accurately
+- [ ] Error tracking provides actionable insights
 
+**Exit Criteria:**
+
+- `./scripts/deploy.sh production` runs successfully
+- Production environment serves application without errors
+- All monitoring systems are operational
+- Health checks validate all services
+- Error tracking and recovery systems are functional
+
+- [ ] ### Task 13: Final Integration and Code Quality
   **Details:** [task-13-final-integration.md](./task-13-final-integration.md)
+  **Context:** [context/task-13-context.md](./context/task-13-context.md)
   **Requirements:** 11.1, 11.2, 11.3, 11.4, 11.5, 12.1, 12.2, 12.3
 
+**Implementation Status:** ❌ Not Started
+**Validation Status:** ❌ Not Started
+
+- [ ] #### Implementation Details
 - [ ] 13.1 Code consolidation and refactoring
 - [ ] 13.2 Remove duplicate implementations
 - [ ] 13.3 Optimize imports and dependencies
 - [ ] 13.4 Final quality assurance validation
 - [ ] 13.5 Production readiness verification
+- [ ] 13.6 Eliminate all unused code and components
+- [ ] 13.7 Apply linting to entire codebase
+
+- [ ] #### Validation Details
+- [ ] All duplicate code eliminated
+- [ ] No unused imports or dependencies
+- [ ] Linting passes with zero warnings
+- [ ] Code quality meets highest standards
+- [ ] Production deployment successful
+- [ ] All features work end-to-end
+- [ ] Browser console shows zero errors
+
+**Exit Criteria:**
+
+- Codebase has single source of truth for all features
+- Zero lint warnings across entire project
+- All unused code and dependencies removed
+- Production deployment runs flawlessly
+- Application loads and functions perfectly in production
+- All tests pass with 100% success rate
+- Browser console shows no errors or warnings
 
 ## Task Execution Guidelines
 

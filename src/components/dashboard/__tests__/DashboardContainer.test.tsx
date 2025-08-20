@@ -3,10 +3,19 @@
  * Tests for the main dashboard container component
  */
 
+import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
 import { DashboardContainer } from '../DashboardContainer';
 import type { Dashboard } from '@/types/dashboard';
+
+// Helper function to render with Router context
+const renderWithRouter = (
+  component: React.ReactElement
+): ReturnType<typeof render> => {
+  return render(<MemoryRouter>{component}</MemoryRouter>);
+};
 
 // Mock the dashboard store
 vi.mock('@/stores/dashboardStore', () => ({
@@ -24,7 +33,11 @@ vi.mock('@/stores/apiStore', () => ({
 
 // Mock child components
 vi.mock('../DashboardLayout', () => ({
-  DashboardLayout: ({ dashboard }: { dashboard: Dashboard }) => (
+  DashboardLayout: ({
+    dashboard,
+  }: {
+    dashboard: Dashboard;
+  }): React.JSX.Element => (
     <div data-testid="dashboard-layout">
       Dashboard Layout for {dashboard.name}
     </div>
@@ -32,7 +45,11 @@ vi.mock('../DashboardLayout', () => ({
 }));
 
 vi.mock('../DashboardHeader', () => ({
-  DashboardHeader: ({ dashboard }: { dashboard: Dashboard }) => (
+  DashboardHeader: ({
+    dashboard,
+  }: {
+    dashboard: Dashboard;
+  }): React.JSX.Element => (
     <div data-testid="dashboard-header">
       Dashboard Header for {dashboard.name}
     </div>
@@ -40,7 +57,11 @@ vi.mock('../DashboardHeader', () => ({
 }));
 
 vi.mock('../DashboardTabs', () => ({
-  DashboardTabs: ({ dashboards }: { dashboards: Dashboard[] }) => (
+  DashboardTabs: ({
+    dashboards,
+  }: {
+    dashboards: Dashboard[];
+  }): React.JSX.Element => (
     <div data-testid="dashboard-tabs">{dashboards.length} dashboard tabs</div>
   ),
 }));
@@ -106,7 +127,7 @@ describe('DashboardContainer', () => {
     vi.clearAllMocks();
   });
 
-  it('renders loading state when no dashboard is active', async () => {
+  it('renders loading state when no dashboard is active', async (): Promise<void> => {
     const { useActiveDashboard, useDashboardStore } = await import(
       '@/stores/dashboardStore'
     );
@@ -123,12 +144,12 @@ describe('DashboardContainer', () => {
       clearError: vi.fn(),
     });
 
-    render(<DashboardContainer />);
+    renderWithRouter(<DashboardContainer />);
 
     expect(screen.getByText('Loading dashboards...')).toBeInTheDocument();
   });
 
-  it('renders dashboard when active dashboard is available', async () => {
+  it('renders dashboard when active dashboard is available', async (): Promise<void> => {
     const { useActiveDashboard, useDashboardStore } = await import(
       '@/stores/dashboardStore'
     );
@@ -145,7 +166,7 @@ describe('DashboardContainer', () => {
       clearError: vi.fn(),
     });
 
-    render(<DashboardContainer />);
+    renderWithRouter(<DashboardContainer />);
 
     await waitFor(() => {
       expect(screen.getByTestId('dashboard-layout')).toBeInTheDocument();
@@ -153,7 +174,7 @@ describe('DashboardContainer', () => {
     });
   });
 
-  it('renders error state when there is an error', async () => {
+  it('renders error state when there is an error', async (): Promise<void> => {
     const { useActiveDashboard, useDashboardStore } = await import(
       '@/stores/dashboardStore'
     );
@@ -170,13 +191,13 @@ describe('DashboardContainer', () => {
       clearError: vi.fn(),
     });
 
-    render(<DashboardContainer />);
+    renderWithRouter(<DashboardContainer />);
 
     expect(screen.getByText('Failed to Load Dashboards')).toBeInTheDocument();
     expect(screen.getByText('Failed to load dashboards')).toBeInTheDocument();
   });
 
-  it('renders empty state when no dashboards are available', async () => {
+  it('renders empty state when no dashboards are available', async (): Promise<void> => {
     const { useActiveDashboard, useDashboardStore } = await import(
       '@/stores/dashboardStore'
     );
@@ -193,7 +214,7 @@ describe('DashboardContainer', () => {
       clearError: vi.fn(),
     });
 
-    render(<DashboardContainer />);
+    renderWithRouter(<DashboardContainer />);
 
     expect(screen.getByText('No Dashboards Available')).toBeInTheDocument();
     expect(
@@ -201,7 +222,7 @@ describe('DashboardContainer', () => {
     ).toBeInTheDocument();
   });
 
-  it('shows tabs when multiple dashboards are available', async () => {
+  it('shows tabs when multiple dashboards are available', async (): Promise<void> => {
     const { useActiveDashboard, useDashboardStore } = await import(
       '@/stores/dashboardStore'
     );
@@ -224,7 +245,7 @@ describe('DashboardContainer', () => {
       clearError: vi.fn(),
     });
 
-    render(<DashboardContainer showTabs={true} />);
+    renderWithRouter(<DashboardContainer showTabs={true} />);
 
     await waitFor(() => {
       expect(screen.getByTestId('dashboard-tabs')).toBeInTheDocument();
@@ -232,7 +253,7 @@ describe('DashboardContainer', () => {
     });
   });
 
-  it('hides tabs when showTabs is false', async () => {
+  it('hides tabs when showTabs is false', async (): Promise<void> => {
     const { useActiveDashboard, useDashboardStore } = await import(
       '@/stores/dashboardStore'
     );
@@ -249,7 +270,7 @@ describe('DashboardContainer', () => {
       clearError: vi.fn(),
     });
 
-    render(<DashboardContainer showTabs={false} />);
+    renderWithRouter(<DashboardContainer showTabs={false} />);
 
     await waitFor(() => {
       expect(screen.queryByTestId('dashboard-tabs')).not.toBeInTheDocument();

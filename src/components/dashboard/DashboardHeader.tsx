@@ -7,6 +7,7 @@ import React, { useCallback } from 'react';
 import type { Dashboard } from '@/types/dashboard';
 import { useEditMode, useDashboardStore } from '@/stores/dashboardStore';
 import { Button } from '@/components/ui/Button';
+import { SyncStatusIndicator } from './SyncStatusIndicator';
 
 export interface DashboardHeaderProps {
   /** Dashboard to display header for */
@@ -92,40 +93,18 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
         </div>
 
         {/* Dashboard Actions */}
-        <div className="flex items-center space-x-2">
-          {/* Refresh Button */}
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleRefresh}
-            aria-label="Refresh dashboard"
-            title="Refresh dashboard data"
-          >
-            <svg
-              className="w-4 h-4"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-              />
-            </svg>
-            Refresh
-          </Button>
+        <div className="flex items-center space-x-4">
+          {/* Sync Status */}
+          <SyncStatusIndicator compact={true} />
 
-          {/* Share Button */}
-          {!dashboard.isDefault && (
+          <div className="flex items-center space-x-2">
+            {/* Refresh Button */}
             <Button
               variant="ghost"
               size="sm"
-              onClick={handleShare}
-              aria-label="Share dashboard"
-              title="Share dashboard"
+              onClick={handleRefresh}
+              aria-label="Refresh dashboard"
+              title="Refresh dashboard data"
             >
               <svg
                 className="w-4 h-4"
@@ -138,39 +117,66 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   strokeWidth={2}
-                  d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z"
+                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
                 />
               </svg>
-              Share
+              Refresh
             </Button>
-          )}
 
-          {/* Edit Button */}
-          {!dashboard.isDefault && (
-            <Button
-              variant={editMode ? 'primary' : 'outline'}
-              size="sm"
-              onClick={handleEditToggle}
-              aria-label={editMode ? 'Exit edit mode' : 'Enter edit mode'}
-              title={editMode ? 'Exit edit mode' : 'Edit dashboard'}
-            >
-              <svg
-                className="w-4 h-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                xmlns="http://www.w3.org/2000/svg"
+            {/* Share Button */}
+            {!dashboard.isDefault && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleShare}
+                aria-label="Share dashboard"
+                title="Share dashboard"
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                />
-              </svg>
-              {editMode ? 'Done' : 'Edit'}
-            </Button>
-          )}
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z"
+                  />
+                </svg>
+                Share
+              </Button>
+            )}
+
+            {/* Edit Button */}
+            {!dashboard.isDefault && (
+              <Button
+                variant={editMode ? 'primary' : 'outline'}
+                size="sm"
+                onClick={handleEditToggle}
+                aria-label={editMode ? 'Exit edit mode' : 'Enter edit mode'}
+                title={editMode ? 'Exit edit mode' : 'Edit dashboard'}
+              >
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                  />
+                </svg>
+                {editMode ? 'Done' : 'Edit'}
+              </Button>
+            )}
+          </div>
         </div>
       </div>
 

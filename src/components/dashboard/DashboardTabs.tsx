@@ -18,6 +18,8 @@ export interface DashboardTabsProps {
   onNewDashboard?: () => void;
   /** Maximum number of visible tabs before overflow */
   maxVisibleTabs?: number;
+  /** Whether tabs should be collapsible on small screens */
+  collapsible?: boolean;
   /** Optional className for styling */
   className?: string;
 }
@@ -27,11 +29,17 @@ export const DashboardTabs: React.FC<DashboardTabsProps> = ({
   activeDashboardId,
   onDashboardChange,
   onNewDashboard,
+  maxVisibleTabs = 6,
+  collapsible = false,
   className = '',
 }) => {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [showLeftScroll, setShowLeftScroll] = useState(false);
   const [showRightScroll, setShowRightScroll] = useState(false);
+
+  // Determine visible tabs based on maxVisibleTabs
+  const visibleDashboards = dashboards.slice(0, maxVisibleTabs);
+  const hasOverflow = dashboards.length > maxVisibleTabs;
 
   // Check scroll state
   const checkScrollState = useCallback((): void => {
@@ -184,18 +192,19 @@ export const DashboardTabs: React.FC<DashboardTabsProps> = ({
             role="tablist"
             aria-label="Dashboard tabs"
           >
-            {dashboards.map(dashboard => {
-              const isActive = dashboard.id === activeDashboardId;
+            {(collapsible && hasOverflow ? visibleDashboards : dashboards).map(
+              dashboard => {
+                const isActive = dashboard.id === activeDashboardId;
 
-              return (
-                <button
-                  key={dashboard.id}
-                  data-dashboard-id={dashboard.id}
-                  role="tab"
-                  aria-selected={isActive}
-                  aria-controls={`dashboard-panel-${dashboard.id}`}
-                  tabIndex={isActive ? 0 : -1}
-                  className={`
+                return (
+                  <button
+                    key={dashboard.id}
+                    data-dashboard-id={dashboard.id}
+                    role="tab"
+                    aria-selected={isActive}
+                    aria-controls={`dashboard-panel-${dashboard.id}`}
+                    tabIndex={isActive ? 0 : -1}
+                    className={`
                     flex items-center space-x-2 px-4 py-2 text-sm font-medium rounded-t-lg
                     transition-colors duration-200 whitespace-nowrap
                     focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
@@ -205,67 +214,68 @@ export const DashboardTabs: React.FC<DashboardTabsProps> = ({
                         : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700'
                     }
                   `}
-                  onClick={() => handleTabClick(dashboard.id)}
-                  onKeyDown={e => handleKeyDown(e, dashboard.id)}
-                >
-                  {/* Dashboard icon */}
-                  <div className="flex-shrink-0">
-                    {dashboard.isDefault ? (
-                      <svg
-                        className="w-4 h-4"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
-                        />
-                      </svg>
-                    ) : (
-                      <svg
-                        className="w-4 h-4"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
-                        />
-                      </svg>
-                    )}
-                  </div>
-
-                  {/* Dashboard name */}
-                  <span className="truncate max-w-[150px]">
-                    {dashboard.name}
-                  </span>
-
-                  {/* Status indicators */}
-                  {dashboard.isPublic && (
+                    onClick={() => handleTabClick(dashboard.id)}
+                    onKeyDown={e => handleKeyDown(e, dashboard.id)}
+                  >
+                    {/* Dashboard icon */}
                     <div className="flex-shrink-0">
-                      <svg
-                        className="w-3 h-3 text-green-500"
-                        fill="currentColor"
-                        viewBox="0 0 20 20"
-                        aria-label="Public dashboard"
-                      >
-                        <path
-                          fillRule="evenodd"
-                          d="M10 18a8 8 0 100-16 8 8 0 000 16zM4.332 8.027a6.012 6.012 0 011.912-2.706C6.512 5.73 6.974 6 7.5 6A1.5 1.5 0 019 7.5V8a2 2 0 004 0 2 2 0 011.523-1.943A5.977 5.977 0 0116 10c0 .34-.028.675-.083 1H15a2 2 0 00-2 2v2.197A5.973 5.973 0 0110 16v-2a2 2 0 00-2-2 2 2 0 01-2-2 2 2 0 00-1.668-1.973z"
-                          clipRule="evenodd"
-                        />
-                      </svg>
+                      {dashboard.isDefault ? (
+                        <svg
+                          className="w-4 h-4"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
+                          />
+                        </svg>
+                      ) : (
+                        <svg
+                          className="w-4 h-4"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                          />
+                        </svg>
+                      )}
                     </div>
-                  )}
-                </button>
-              );
-            })}
+
+                    {/* Dashboard name */}
+                    <span className="truncate max-w-[150px]">
+                      {dashboard.name}
+                    </span>
+
+                    {/* Status indicators */}
+                    {dashboard.isPublic && (
+                      <div className="flex-shrink-0">
+                        <svg
+                          className="w-3 h-3 text-green-500"
+                          fill="currentColor"
+                          viewBox="0 0 20 20"
+                          aria-label="Public dashboard"
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M10 18a8 8 0 100-16 8 8 0 000 16zM4.332 8.027a6.012 6.012 0 011.912-2.706C6.512 5.73 6.974 6 7.5 6A1.5 1.5 0 019 7.5V8a2 2 0 004 0 2 2 0 011.523-1.943A5.977 5.977 0 0116 10c0 .34-.028.675-.083 1H15a2 2 0 00-2 2v2.197A5.973 5.973 0 0110 16v-2a2 2 0 00-2-2 2 2 0 01-2-2 2 2 0 00-1.668-1.973z"
+                            clipRule="evenodd"
+                          />
+                        </svg>
+                      </div>
+                    )}
+                  </button>
+                );
+              }
+            )}
           </div>
         </div>
 

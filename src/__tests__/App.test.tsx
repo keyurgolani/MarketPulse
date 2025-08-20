@@ -2,6 +2,7 @@
  * App Component Tests
  */
 
+import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import App from '../App';
@@ -22,7 +23,11 @@ vi.mock('@/stores/apiStore', () => ({
 
 // Mock the dashboard container
 vi.mock('@/components/dashboard', () => ({
-  DashboardContainer: ({ className }: { className?: string }) => (
+  DashboardContainer: ({
+    className,
+  }: {
+    className?: string;
+  }): React.JSX.Element => (
     <div className={className} data-testid="dashboard-container">
       Dashboard Container
     </div>
@@ -34,84 +39,33 @@ describe('App', () => {
     vi.clearAllMocks();
   });
 
-  it('renders MarketPulse heading', async () => {
-    const { useDashboardStore } = await import('@/stores/dashboardStore');
-
-    (useDashboardStore as any).mockReturnValue({
-      dashboards: [],
-      defaultDashboards: [],
-      isLoading: false,
-      error: null,
-      loadDashboards: vi.fn(),
-      loadDefaultDashboards: vi.fn(),
-      setActiveDashboard: vi.fn(),
-      clearError: vi.fn(),
-    });
-
+  it('renders deprecated message', (): void => {
     render(<App />);
-    const heading = screen.getByRole('heading', { name: /marketpulse/i });
+    const heading = screen.getByRole('heading', {
+      name: /app component deprecated/i,
+    });
     expect(heading).toBeInTheDocument();
   });
 
-  it('renders dashboard container', async () => {
-    const { useDashboardStore } = await import('@/stores/dashboardStore');
-
-    (useDashboardStore as any).mockReturnValue({
-      dashboards: [],
-      defaultDashboards: [],
-      isLoading: false,
-      error: null,
-      loadDashboards: vi.fn(),
-      loadDefaultDashboards: vi.fn(),
-      setActiveDashboard: vi.fn(),
-      clearError: vi.fn(),
-    });
-
+  it('renders deprecation notice', (): void => {
     render(<App />);
-    const dashboardContainer = screen.getByTestId('dashboard-container');
-    expect(dashboardContainer).toBeInTheDocument();
+    const notice = screen.getByText(/this component has been replaced/i);
+    expect(notice).toBeInTheDocument();
   });
 
-  it('renders theme toggle button', async () => {
-    const { useDashboardStore } = await import('@/stores/dashboardStore');
-
-    (useDashboardStore as any).mockReturnValue({
-      dashboards: [],
-      defaultDashboards: [],
-      isLoading: false,
-      error: null,
-      loadDashboards: vi.fn(),
-      loadDefaultDashboards: vi.fn(),
-      setActiveDashboard: vi.fn(),
-      clearError: vi.fn(),
-    });
-
+  it('displays centered layout', (): void => {
     render(<App />);
-    const themeButton = screen.getByRole('button', {
-      name: /switch to.*theme/i,
-    });
-    expect(themeButton).toBeInTheDocument();
+    const container = screen
+      .getByText(/app component deprecated/i)
+      .closest('div');
+    expect(container).toHaveClass('text-center');
   });
 
-  it('renders with proper layout structure', async () => {
-    const { useDashboardStore } = await import('@/stores/dashboardStore');
-
-    (useDashboardStore as any).mockReturnValue({
-      dashboards: [],
-      defaultDashboards: [],
-      isLoading: false,
-      error: null,
-      loadDashboards: vi.fn(),
-      loadDefaultDashboards: vi.fn(),
-      setActiveDashboard: vi.fn(),
-      clearError: vi.fn(),
-    });
-
+  it('shows full screen layout', (): void => {
     render(<App />);
-
-    // Check for main layout elements
-    expect(screen.getByRole('banner')).toBeInTheDocument(); // header
-    expect(screen.getByRole('main')).toBeInTheDocument(); // main content
-    expect(screen.getByRole('contentinfo')).toBeInTheDocument(); // footer
+    const container = screen
+      .getByText(/app component deprecated/i)
+      .closest('div');
+    expect(container?.parentElement).toHaveClass('h-screen');
   });
 });

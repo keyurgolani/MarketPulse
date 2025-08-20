@@ -1,0 +1,2110 @@
+import { Request, Response, NextFunction } from 'express';
+import { z } from 'zod';
+import {
+  dashboardModel,
+  CreateDashboardData,
+  UpdateDashboardData,
+  LayoutConfig,
+} from '../models/Dashboard';
+import { shareTokenModel } from '../models/ShareToken';
+import { userPermissionModel } from '../models/UserPermission';
+import { dashboardPersistenceService } from '../services/DashboardPersistenceService';
+import { webSocketService } from '../services/WebSocketService';
+import { logger } from '../utils/logger';
+
+// Extend user type for authentication
+interface AuthenticatedUser {
+  id: string;
+  email?: string;
+  isAdmin?: boolean;
+}
+
+// Request validation schemas
+const CreateDashboardSchema = z.object({
+  name: z.string().min(1).max(100),
+  description: z.string().max(500).optional(),
+  is_default: z.boolean().optional(),
+  is_public: z.boolean().optional(),
+  layout_config: z
+    .object({
+      columns: z.number().min(1).max(12).optional(),
+      rowHeight: z.number().min(50).optional(),
+      margin: z.array(z.number()).length(2).optional(),
+      containerPadding: z.array(z.number()).length(2).optional(),
+      breakpoints: z
+        .object({
+          lg: z.number().optional(),
+          md: z.number().optional(),
+          sm: z.number().optional(),
+          xs: z.number().optional(),
+          xxs: z.number().optional(),
+        })
+        .optional(),
+    })
+    .optional(),
+});
+
+const UpdateDashboardSchema = z.object({
+  name: z.string().min(1).max(100).optional(),
+  description: z.string().max(500).optional(),
+  is_default: z.boolean().optional(),
+  is_public: z.boolean().optional(),
+  layout_config: z
+    .object({
+      columns: z.number().min(1).max(12).optional(),
+      rowHeight: z.number().min(50).optional(),
+      margin: z.array(z.number()).length(2).optional(),
+      containerPadding: z.array(z.number()).length(2).optional(),
+      breakpoints: z
+        .object({
+          lg: z.number().optional(),
+          md: z.number().optional(),
+          sm: z.number().optional(),
+          xs: z.number().optional(),
+          xxs: z.number().optional(),
+        })
+        .optional(),
+    })
+    .optional(),
+});
+
+const QueryParamsSchema = z.object({
+  page: z
+    .string()
+    .transform(val => parseInt(val, 10))
+    .pipe(z.number().min(1))
+    .optional(),
+  limit: z
+    .string()
+    .transform(val => parseInt(val, 10))
+    .pipe(z.number().min(1).max(100))
+    .optional(),
+  search: z.string().optional(),
+  include_public: z
+    .string()
+    .transform(val => val === 'true')
+    .optional(),
+});
+
+/**
+ * Dashboard Controller
+ * Handles CRUD operations for dashboards
+ */
+export class DashboardController {
+  /**
+   * Get all dashboards for the authenticated user
+   */
+  static async getDashboards(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
+    try {
+      const userId = req.user?.id || 'default-user';
+      const queryValidation = QueryParamsSchema.safeParse(req.query);
+
+      if (!queryValidation.success) {
+        res.status(400).json({
+          success: false,
+          error: 'Invalid query parameters',
+          details: queryValidation.error.issues,
+          timestamp: new Date().toISOString(),
+        });
+        return;
+      }
+
+      const { search, include_public = false } = queryValidation.data;
+
+      let dashboards;
+
+      if (search) {
+        // Search dashboards (no caching for search results)
+        dashboards = await dashboardModel.searchDashboards(
+          search,
+          userId,
+          include_public,
+          20
+        );
+      } else {
+        // Get user's dashboards with caching
+        dashboards = await dashboardPersistenceService.getUserDashboards(
+          userId, 
+          include_public
+        );
+      }
+
+      // Get default dashboards if requested
+      const defaultDashboards = include_public
+        ? await dashboardPersistenceService.getDefaultDashboards()
+        : [];
+
+      // Combine and deduplicate
+      const allDashboards = [...defaultDashboards, ...dashboards];
+      const uniqueDashboards = allDashboards.filter(
+        (dashboard, index, self) =>
+          index === self.findIndex(d => d.id === dashboard.id)
+      );
+
+      logger.info('Dashboards retrieved successfully', {
+        userId,
+        count: uniqueDashboards.length,
+        search,
+        includePublic: include_public,
+      });
+
+      res.json({
+        success: true,
+        data: uniqueDashboards,
+        meta: {
+          total: uniqueDashboards.length,
+          user_dashboards: dashboards.length,
+          default_dashboards: defaultDashboards.length,
+        },
+        timestamp: new Date().toISOString(),
+      });
+    } catch (error) {
+      logger.error('Error retrieving dashboards', {
+        error: error instanceof Error ? error.message : 'Unknown error',
+        userId: req.user?.id,
+      });
+      next(error);
+    }
+  }
+
+  /**
+   * Get a specific dashboard by ID
+   */
+  static async getDashboard(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
+    try {
+      const { id } = req.params;
+      const userId = req.user?.id || 'default-user';
+
+      if (!id) {
+        res.status(400).json({
+          success: false,
+          error: 'Dashboard ID is required',
+          timestamp: new Date().toISOString(),
+        });
+        return;
+      }
+
+      const dashboard = await dashboardModel.getDashboardWithWidgets(id);
+
+      if (!dashboard) {
+        res.status(404).json({
+          success: false,
+          error: 'Dashboard not found',
+          timestamp: new Date().toISOString(),
+        });
+        return;
+      }
+
+      // Check access permissions
+      if (
+        dashboard.owner_id !== userId &&
+        !dashboard.is_public &&
+        !dashboard.is_default
+      ) {
+        res.status(403).json({
+          success: false,
+          error: 'Access denied to this dashboard',
+          timestamp: new Date().toISOString(),
+        });
+        return;
+      }
+
+      // Get dashboard statistics
+      const stats = await dashboardModel.getDashboardStats(id);
+
+      logger.info('Dashboard retrieved successfully', {
+        dashboardId: id,
+        userId,
+        widgetCount: dashboard.widgets.length,
+      });
+
+      res.json({
+        success: true,
+        data: {
+          ...dashboard,
+          stats,
+        },
+        timestamp: new Date().toISOString(),
+      });
+    } catch (error) {
+      logger.error('Error retrieving dashboard', {
+        error: error instanceof Error ? error.message : 'Unknown error',
+        dashboardId: req.params.id,
+        userId: req.user?.id,
+      });
+      next(error);
+    }
+  }
+
+  /**
+   * Create a new dashboard
+   */
+  static async createDashboard(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
+    try {
+      const userId = req.user?.id || 'default-user';
+      const userAuth = req.user as AuthenticatedUser;
+      const validation = CreateDashboardSchema.safeParse(req.body);
+
+      if (!validation.success) {
+        res.status(400).json({
+          success: false,
+          error: 'Invalid dashboard data',
+          details: validation.error.issues,
+          timestamp: new Date().toISOString(),
+        });
+        return;
+      }
+
+      const dashboardData = validation.data;
+
+      // Only allow system admins to create default dashboards
+      if (dashboardData.is_default && !userAuth?.isAdmin) {
+        res.status(403).json({
+          success: false,
+          error: 'Only administrators can create default dashboards',
+          timestamp: new Date().toISOString(),
+        });
+        return;
+      }
+
+      const createData: CreateDashboardData = {
+        name: dashboardData.name,
+        owner_id: userId,
+      };
+
+      if (dashboardData.description) {
+        createData.description = dashboardData.description;
+      }
+      if (dashboardData.is_default !== undefined) {
+        createData.is_default = dashboardData.is_default;
+      }
+      if (dashboardData.is_public !== undefined) {
+        createData.is_public = dashboardData.is_public;
+      }
+      if (dashboardData.layout_config) {
+        createData.layout_config =
+          dashboardData.layout_config as Partial<LayoutConfig>;
+      }
+
+      const dashboard = await dashboardPersistenceService.createDashboard(createData);
+
+      // Broadcast dashboard creation to connected users
+      webSocketService.broadcastDashboardChange(dashboard.id, {
+        type: 'dashboard_created',
+        dashboardId: dashboard.id,
+        userId,
+        data: dashboard,
+        timestamp: Date.now(),
+      });
+
+      logger.info('Dashboard created successfully', {
+        dashboardId: dashboard.id,
+        name: dashboard.name,
+        userId,
+        isDefault: dashboard.is_default,
+        isPublic: dashboard.is_public,
+      });
+
+      res.status(201).json({
+        success: true,
+        data: dashboard,
+        message: 'Dashboard created successfully',
+        timestamp: new Date().toISOString(),
+      });
+    } catch (error) {
+      logger.error('Error creating dashboard', {
+        error: error instanceof Error ? error.message : 'Unknown error',
+        userId: req.user?.id,
+        dashboardData: req.body,
+      });
+      next(error);
+    }
+  }
+
+  /**
+   * Update an existing dashboard
+   */
+  static async updateDashboard(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
+    try {
+      const { id } = req.params;
+      const userId = req.user?.id || 'default-user';
+      const userAuth = req.user as AuthenticatedUser;
+      const validation = UpdateDashboardSchema.safeParse(req.body);
+
+      if (!validation.success) {
+        res.status(400).json({
+          success: false,
+          error: 'Invalid dashboard data',
+          details: validation.error.issues,
+          timestamp: new Date().toISOString(),
+        });
+        return;
+      }
+
+      if (!id) {
+        res.status(400).json({
+          success: false,
+          error: 'Dashboard ID is required',
+          timestamp: new Date().toISOString(),
+        });
+        return;
+      }
+
+      // Check if dashboard exists and user has permission
+      const existingDashboard = await dashboardModel.findById(id);
+
+      if (!existingDashboard) {
+        res.status(404).json({
+          success: false,
+          error: 'Dashboard not found',
+          timestamp: new Date().toISOString(),
+        });
+        return;
+      }
+
+      if (existingDashboard.owner_id !== userId && !userAuth?.isAdmin) {
+        res.status(403).json({
+          success: false,
+          error: 'Access denied to modify this dashboard',
+          timestamp: new Date().toISOString(),
+        });
+        return;
+      }
+
+      const updateData = validation.data;
+
+      // Only allow system admins to modify default status
+      if (updateData.is_default !== undefined && !userAuth?.isAdmin) {
+        res.status(403).json({
+          success: false,
+          error: 'Only administrators can modify default dashboard status',
+          timestamp: new Date().toISOString(),
+        });
+        return;
+      }
+
+      // Get client version for conflict detection
+      const clientVersion = req.headers['x-client-version'] as string;
+
+      // Handle setting as default (only one default per user)
+      if (updateData.is_default === true) {
+        await dashboardModel.setAsDefault(id, userId);
+      } else {
+        const updatePayload: UpdateDashboardData = {};
+
+        if (updateData.name) {
+          updatePayload.name = updateData.name;
+        }
+        if (updateData.description !== undefined) {
+          updatePayload.description = updateData.description;
+        }
+        if (updateData.is_default !== undefined) {
+          updatePayload.is_default = updateData.is_default;
+        }
+        if (updateData.is_public !== undefined) {
+          updatePayload.is_public = updateData.is_public;
+        }
+        if (updateData.layout_config) {
+          // Get the current dashboard to merge layout config
+          const currentDashboard = await dashboardPersistenceService.getDashboard(id);
+          if (currentDashboard) {
+            // Merge layout config with proper type filtering
+            const mergedConfig = { ...currentDashboard.layout_config };
+
+            // Only update defined values
+            if (updateData.layout_config.columns !== undefined) {
+              mergedConfig.columns = updateData.layout_config.columns;
+            }
+            if (updateData.layout_config.rowHeight !== undefined) {
+              mergedConfig.rowHeight = updateData.layout_config.rowHeight;
+            }
+            if (updateData.layout_config.margin !== undefined) {
+              mergedConfig.margin = updateData.layout_config.margin;
+            }
+            if (updateData.layout_config.containerPadding !== undefined) {
+              mergedConfig.containerPadding =
+                updateData.layout_config.containerPadding;
+            }
+            if (updateData.layout_config.breakpoints !== undefined) {
+              const updatedBreakpoints = { ...mergedConfig.breakpoints };
+              if (updateData.layout_config.breakpoints.lg !== undefined) {
+                updatedBreakpoints.lg = updateData.layout_config.breakpoints.lg;
+              }
+              if (updateData.layout_config.breakpoints.md !== undefined) {
+                updatedBreakpoints.md = updateData.layout_config.breakpoints.md;
+              }
+              if (updateData.layout_config.breakpoints.sm !== undefined) {
+                updatedBreakpoints.sm = updateData.layout_config.breakpoints.sm;
+              }
+              if (updateData.layout_config.breakpoints.xs !== undefined) {
+                updatedBreakpoints.xs = updateData.layout_config.breakpoints.xs;
+              }
+              if (updateData.layout_config.breakpoints.xxs !== undefined) {
+                updatedBreakpoints.xxs =
+                  updateData.layout_config.breakpoints.xxs;
+              }
+              mergedConfig.breakpoints = updatedBreakpoints;
+            }
+
+            updatePayload.layout_config = mergedConfig;
+          }
+        }
+
+        // Use persistence service for update with conflict detection
+        await dashboardPersistenceService.updateDashboard(
+          id, 
+          updatePayload, 
+          clientVersion
+        );
+      }
+
+      const updatedDashboard = await dashboardModel.findById(id);
+
+      // Broadcast dashboard update to connected users
+      webSocketService.broadcastDashboardChange(id, {
+        type: 'dashboard_updated',
+        dashboardId: id,
+        userId,
+        data: updatedDashboard,
+        timestamp: Date.now(),
+      });
+
+      logger.info('Dashboard updated successfully', {
+        dashboardId: id,
+        userId,
+        changes: Object.keys(updateData),
+      });
+
+      res.json({
+        success: true,
+        data: updatedDashboard,
+        message: 'Dashboard updated successfully',
+        timestamp: new Date().toISOString(),
+      });
+    } catch (error) {
+      logger.error('Error updating dashboard', {
+        error: error instanceof Error ? error.message : 'Unknown error',
+        dashboardId: req.params.id,
+        userId: req.user?.id,
+      });
+      next(error);
+    }
+  }
+
+  /**
+   * Delete a dashboard
+   */
+  static async deleteDashboard(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
+    try {
+      const { id } = req.params;
+      const userId = req.user?.id || 'default-user';
+      const userAuth = req.user as AuthenticatedUser;
+
+      if (!id) {
+        res.status(400).json({
+          success: false,
+          error: 'Dashboard ID is required',
+          timestamp: new Date().toISOString(),
+        });
+        return;
+      }
+
+      // Check if dashboard exists and user has permission
+      const existingDashboard = await dashboardModel.findById(id);
+
+      if (!existingDashboard) {
+        res.status(404).json({
+          success: false,
+          error: 'Dashboard not found',
+          timestamp: new Date().toISOString(),
+        });
+        return;
+      }
+
+      if (existingDashboard.owner_id !== userId && !userAuth?.isAdmin) {
+        res.status(403).json({
+          success: false,
+          error: 'Access denied to delete this dashboard',
+          timestamp: new Date().toISOString(),
+        });
+        return;
+      }
+
+      // Prevent deletion of default dashboards by non-admins
+      if (existingDashboard.is_default && !userAuth?.isAdmin) {
+        res.status(403).json({
+          success: false,
+          error: 'Only administrators can delete default dashboards',
+          timestamp: new Date().toISOString(),
+        });
+        return;
+      }
+
+      await dashboardPersistenceService.deleteDashboard(id);
+
+      // Broadcast dashboard deletion to connected users
+      webSocketService.broadcastDashboardChange(id, {
+        type: 'dashboard_deleted',
+        dashboardId: id,
+        userId,
+        data: { id, name: existingDashboard.name },
+        timestamp: Date.now(),
+      });
+
+      logger.info('Dashboard deleted successfully', {
+        dashboardId: id,
+        userId,
+        dashboardName: existingDashboard.name,
+      });
+
+      res.json({
+        success: true,
+        message: 'Dashboard deleted successfully',
+        timestamp: new Date().toISOString(),
+      });
+    } catch (error) {
+      logger.error('Error deleting dashboard', {
+        error: error instanceof Error ? error.message : 'Unknown error',
+        dashboardId: req.params.id,
+        userId: req.user?.id,
+      });
+      next(error);
+    }
+  }
+
+  /**
+   * Clone a dashboard
+   */
+  static async cloneDashboard(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
+    try {
+      const { id } = req.params;
+      const userId = req.user?.id || 'default-user';
+      const { name } = req.body;
+
+      if (!id) {
+        res.status(400).json({
+          success: false,
+          error: 'Dashboard ID is required',
+          timestamp: new Date().toISOString(),
+        });
+        return;
+      }
+
+      // Check if source dashboard exists and is accessible
+      const sourceDashboard = await dashboardModel.findById(id);
+
+      if (!sourceDashboard) {
+        res.status(404).json({
+          success: false,
+          error: 'Source dashboard not found',
+          timestamp: new Date().toISOString(),
+        });
+        return;
+      }
+
+      if (
+        sourceDashboard.owner_id !== userId &&
+        !sourceDashboard.is_public &&
+        !sourceDashboard.is_default
+      ) {
+        res.status(403).json({
+          success: false,
+          error: 'Access denied to clone this dashboard',
+          timestamp: new Date().toISOString(),
+        });
+        return;
+      }
+
+      const clonedDashboard = await dashboardModel.cloneDashboard(
+        id,
+        userId,
+        name
+      );
+
+      if (!clonedDashboard) {
+        res.status(500).json({
+          success: false,
+          error: 'Failed to clone dashboard',
+          timestamp: new Date().toISOString(),
+        });
+        return;
+      }
+
+      logger.info('Dashboard cloned successfully', {
+        sourceDashboardId: id,
+        clonedDashboardId: clonedDashboard.id,
+        userId,
+        newName: clonedDashboard.name,
+      });
+
+      res.status(201).json({
+        success: true,
+        data: clonedDashboard,
+        message: 'Dashboard cloned successfully',
+        timestamp: new Date().toISOString(),
+      });
+    } catch (error) {
+      logger.error('Error cloning dashboard', {
+        error: error instanceof Error ? error.message : 'Unknown error',
+        sourceDashboardId: req.params.id,
+        userId: req.user?.id,
+      });
+      next(error);
+    }
+  }
+
+  /**
+   * Get default dashboards
+   */
+  static async getDefaultDashboards(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
+    try {
+      const defaultDashboards = await dashboardPersistenceService.getDefaultDashboards();
+
+      logger.info('Default dashboards retrieved successfully', {
+        count: defaultDashboards.length,
+      });
+
+      res.json({
+        success: true,
+        data: defaultDashboards,
+        meta: {
+          total: defaultDashboards.length,
+        },
+        timestamp: new Date().toISOString(),
+      });
+    } catch (error) {
+      logger.error('Error retrieving default dashboards', {
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
+      next(error);
+    }
+  }
+
+  /**
+   * Get public dashboards
+   */
+  static async getPublicDashboards(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
+    try {
+      const queryValidation = QueryParamsSchema.safeParse(req.query);
+
+      if (!queryValidation.success) {
+        res.status(400).json({
+          success: false,
+          error: 'Invalid query parameters',
+          details: queryValidation.error.issues,
+          timestamp: new Date().toISOString(),
+        });
+        return;
+      }
+
+      const { page = 1, limit = 20 } = queryValidation.data;
+      const offset = (page - 1) * limit;
+
+      const publicDashboards = await dashboardModel.findPublicDashboards(
+        limit,
+        offset
+      );
+
+      logger.info('Public dashboards retrieved successfully', {
+        count: publicDashboards.length,
+        page,
+        limit,
+      });
+
+      res.json({
+        success: true,
+        data: publicDashboards,
+        meta: {
+          page,
+          limit,
+          total: publicDashboards.length,
+        },
+        timestamp: new Date().toISOString(),
+      });
+    } catch (error) {
+      logger.error('Error retrieving public dashboards', {
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
+      next(error);
+    }
+  }
+
+  /**
+   * Create share token for dashboard
+   * @route POST /api/dashboards/:id/share
+   */
+  static async createShareToken(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
+    try {
+      const { id: dashboardId } = req.params;
+      const userId = req.user?.id || 'default-user';
+
+      // Validate request body
+      const shareTokenSchema = z.object({
+        permissions: z.enum(['view', 'edit']).default('view'),
+        expiresAt: z.string().datetime().optional(),
+        maxAccessCount: z.number().positive().optional(),
+      });
+
+      const validation = shareTokenSchema.safeParse(req.body);
+      if (!validation.success) {
+        res.status(400).json({
+          success: false,
+          error: 'Invalid request data',
+          details: validation.error.errors,
+          timestamp: new Date().toISOString(),
+        });
+        return;
+      }
+
+      const { permissions, expiresAt, maxAccessCount } = validation.data;
+
+      // Check if dashboard exists and user has permission
+      const dashboard = await dashboardModel.findById(dashboardId);
+      if (!dashboard) {
+        res.status(404).json({
+          success: false,
+          error: 'Dashboard not found',
+          timestamp: new Date().toISOString(),
+        });
+        return;
+      }
+
+      // Check if user owns dashboard or has admin permission
+      const hasPermission = dashboard.owner_id === userId ||
+        await userPermissionModel.hasPermission(dashboardId, userId, 'admin');
+
+      if (!hasPermission) {
+        res.status(403).json({
+          success: false,
+          error: 'Insufficient permissions to share dashboard',
+          timestamp: new Date().toISOString(),
+        });
+        return;
+      }
+
+      // Create share token
+      const shareToken = await shareTokenModel.createShareToken({
+        dashboard_id: dashboardId,
+        created_by: userId,
+        permissions,
+        expires_at: expiresAt ? new Date(expiresAt) : null,
+        max_access_count: maxAccessCount || null,
+      });
+
+      logger.info('Share token created successfully', {
+        dashboardId,
+        tokenId: shareToken.id,
+        createdBy: userId,
+        permissions,
+      });
+
+      res.status(201).json({
+        success: true,
+        data: {
+          id: shareToken.id,
+          token: shareToken.token,
+          permissions: shareToken.permissions,
+          expiresAt: shareToken.expires_at,
+          maxAccessCount: shareToken.max_access_count,
+          shareUrl: `${req.protocol}://${req.get('host')}/shared/${shareToken.token}`,
+        },
+        timestamp: new Date().toISOString(),
+      });
+    } catch (error) {
+      logger.error('Error creating share token', {
+        dashboardId: req.params.id,
+        userId: req.user?.id,
+        error: error instanceof Error ? error.mess',
+  }
+}r);
+    }
+ro    next(er
+        });',
+ror ernknown'U: or.message rror ? errof Eor instanceror: err er,
+       eq.user?.idd: r userId,
+       s.id: req.paramdIdashboar      
+  code', {d rating ember genero'Ererror(     logger.
+ r) {tch (erro  } ca });
+       tring(),
+().toISOS Datestamp: newtime   },
+               },
+c,
+        rd.is_publi: dashboaic  isPubl        .name,
+  rdme: dashboa        na.id,
+    ashboard d id:           d: {
+oarhb        das    },
+  ue',
+      s === 'trntrolshowCowControls: sho        ue',
+    == 'trhowHeader =wHeader: s      sho  
+       theme,         ght,
+    hei    ,
+          width      
+: {ons     opti   Code,
+    script
+        edCode, emb
+         Url,ed         emba: {
+    dat
+     ess: true, succ({
+       es.json;
+
+      r })me,
+       the,
+      ight  he   width,
+       ,
+    Ider    usd,
+    ardIdashbo        , {
+cessfully' suctedera genEmbed codenfo('er.i    logg>`;
+
+  pt();
+</scriipt);
+  })rentScrdocument.curme, tBefore(ifrade.inserpt.parentNorint.currentSc
+    documeoard';DashbMarketPulse d.name} - boar = '${dashtitlee.;
+    iframency = trueTranspare.allow  ifram= '0';
+  frameBorder 
+    iframe.eight}';t = '${hheighiframe.th}';
+     '${widdth =me.wi
+    ifraembedUrl}';rc = '${e.sfram   i);
+ ent('iframe'ateElemre.ccument= dor iframe 
+    vanction() {(fu
+  ipt>Code = `<scr script   const;
+
+   e>`</ifram">
+ DashboardseetPul- Mark} rd.name="${dashboa"
+  title"truesparency=anallowtr"0" 
+  eborder= 
+  framht}""${heigeight= h
+ th}" id width="${w}" 
+ Urlmbedc="${eme 
+  sr `<ifraedCode = embonst     c;
+      
+ s}`howControlontrols=${sr}&showCowHeadeader=${shheme}&showHed}?theme=${t{dashboardIl}/embed/$seUr`${baUrl = edconst emb     
+ ')}`;q.get('hostre${rotocol}://{req.pl = `$baseUronst     ccode
+  ed URL and e emberat// Gen}
+
+           rn;
+      retu
+          });g(),
+ ISOStrine().to: new Dat timestamp
+         embed it',ission to perme avt hnond you do ot public aboard is nDashr: 'erro        false,
+   cess:      suc    {
+.json(403)res.status(       on) {
+ rmissi(!hasPe   if 
+
+   d, 'view');dId, userIshboarssion(daasPermissionModel.hrmiawait userPe        erId ||
+ us==d =r_i.ownedashboard     
+   ublic ||hboard.is_pon = dassirmisasPest hcon
+      ssioner has permic or usard is publi if dashboheck   // C  }
+
+ 
+      turn;  re      
+        });tring(),
+ate().toISOSmp: new Dtaes       timnd',
+   rd not foushboaor: 'Da        err: false,
+  ss       succe   4).json({
+es.status(40
+        r) {oarddashb (!
+      ifId);ashboardfindById(ddModel.ait dashboar= awshboard  da  constission
+     permr user hasblic od is pu exists anrdk if dashboa // Chec;
+
+     n.data = validatioontrols }wCHeader, shotheme, showeight,  width, h const {     }
+
+   eturn;
+   
+        r   });ng(),
+     ISOStri).to Date(tamp: new    timesrs,
+      rrorror.eion.evalidatls:  detai         ters',
+ry parame quevalidIn error: '        se,
+ cess: fal  suc  ({
+      00).jsontus(4s.sta  re{
+      on.success) alidatiif (!v
+      query);se(req.hema.safeParqueryScidation =   const val});
+
+    
+      lse'),fafault('nal().dering().optio z.stowControls:        sh('true'),
+).default).optional(ing(der: z.str showHea,
+       ault('auto')).defonal(pti, 'auto']).o 'dark'um(['light', theme: z.en
+       600'),efault('nal().dg().optiot: z.strineigh       h'),
+ 00ult('8l().defa).optionastring(idth: z.{
+        wbject(= z.oerySchema  const quters
+      parameryquese    // Parr';
+
+   default-use| 'q.user?.id | ret userId =
+      conseq.params; = rdId } dashboar id:     const {
+ ry {
+    tise<void> {romtion
+  ): PextFunc  next: Nponse,
+  : Res
+    resquest,eq: Re(
+    rbedCodesync getEmstatic a
+  d
+   *//:id/embedashboardsGET /api/@route board
+   *  for dasht embed code**
+   * Ge
+  }
+
+  /r);
+    }xt(erro  ne);
+          }n error',
+nowUnk : 'ssage? error.me Error tanceofr: error ins        erro,
+kenparams.toq. token: re     oard', {
+  hared dashbing sss acce'Error.error(ogger    lor) {
+  ch (errcat });
+    } ),
+     ISOString(ate().to Dewp: ntimestam,
+        
+        }       },res_at,
+   n.expiareTokeiresAt: sh    exp       _count,
+ cessken.max_acreTossCount: shacce    maxA        
+ + 1,ountn.access_cshareTokesCount: acces            ssions,
+ermiken.pns: shareToermissio   p       nfo: {
+  hareI     s      },
+   ,
+      _atoard.updatedt: dashb   updated_a     ed_at,
+    atard.creat: dashbod_    create    c,
+    publiis_ dashboard.public:         is_fig,
+   t_conard.layou dashboconfig: layout_  
+         idgets,rd.woahbdas  widgets:           scription,
+hboard.den: dastio descrip      
+     rd.name,hboa das name:     id,
+      ashboard.   id: d{
+         hboard:      das {
+     ata:      ds: true,
+     successon({
+       res.j
+
+    ); 1,
+      }cess_count +eToken.acsCount: shar      acces  en.id,
+Id: shareTok    tokenrd.id,
+    boa dashoardId:   dashb{
+     lly', fucessssed sucoard accehared dashbfo('Sinogger.   l}
+
+      
+   rn;retu  );
+       },
+       tring()OS Date().toISp: new   timestam   und',
+    rd not fo: 'Dashboa       errorlse,
+   ess: fa       succson({
+   04).jus(4es.stat      r {
+  board)  if (!dash
+    ard_id);ashbooken.d(shareTgetsthWidhboardWitDasModel.ge dashboarditoard = awa dashb     const
+ boardsh   // Get da  }
+
+   rn;
+       retu
+            });ring(),
+ te().toISOStmp: new Dasta   time       oken',
+d share txpirevalid or eor: 'In       err,
+   falseuccess:     s({
+      .jsonstatus(404)    res.ken) {
+    (!shareTof n);
+      iss(tokecerementAcdateAndInclil.vaareTokenMode await shen = shareTok   constoken
+   or tcess count fement acnd incrate a  // Valid
+
+    req.params; token } =  {nst     co  try {
+   void> {
+omise<
+  ): PrnFunctioext next: N
+   e,esponss: R
+    reest,  req: Requoard(
+  Dashbharedsync accessSstatic a   */
+  ed/:token
+ET /api/shar * @route Gen
+  are tokoard via shccess dashb A   *
+  /**
+  }
+  }
+(error);
+  
+      next });  
+   wn error',Unkno 'ssage :r.meror ? erroceof Erinstanerror      error: .id,
+   r?.used: req   userIId,
+     rams.userparId: req.Userget    ta
+    arams.id,req.pId: ashboard
+        dsion', {isng user permokirror rev'Eror(ger.er     logor) {
+ errch (
+    } cat   });,
+   ing()oISOStr.tew Date()stamp: ntime    ' },
+    uccessfully revoked srmissione: 'User pe{ messag   data: true,
+      success:       json({
+ s.  re     });
+
+
+     d, userIrevokedBy:
+        tUserId,       targehboardId,
+  das     ully', {
+  ed successfn revokr permissioUseogger.info('   l}
+
+            return;
+});
+     ),
+        g(inOStrte().toIS new Damp:  timesta',
+         foundnotrmission User pe  error: ',
+        : false   success    {
+   404).json(status(   res.d) {
+     kerevo     if (!Id);
+ Userarget thboardId,on(dasvokePermissisionModel.ret userPermiswai = avoked re   const  sion
+ user permis // Revoke   }
+
+        
+ ;   return           });
+),
+  g(toISOStrinew Date().mp: n   timesta  ss',
+     e user acceevoko rons termissiient pfficInsu   error: '      : false,
+ ess    succ
+      3).json({(40tatusres.s      sion) {
+  !hasPermis     if (dmin');
+
+ d, 'a, userIrdIdhboaasssion(d.hasPermiModelrmissionuserPe await |
+       Id |= userner_id ==board.ow = dashissiont hasPermns    cormission
+  has admin peoard or owns dashber  us if// Check    }
+
+  rn;
+           retu          });
+(),
+ toISOStringw Date().: nestamp    time     found',
+ oard not : 'Dashb      error
+    ss: false,ce      suc
+    on({us(404).js    res.stat  rd) {
+  (!dashboa      if Id);
+hboardindById(dasdModel.fhboart dasboard = awaiconst dashn
+      permissios and user haexists d oar if dashb   // Check;
+
+   lt-user'|| 'defauq.user?.id erId = reconst us   ams;
+   eq.par } = rtargetUserId, userId: shboardId daonst { id: {
+      c  try  d> {
+e<voi: Promision
+  ): NextFuncte,
+    nextspons   res: Re
+ st,Reque
+    req: ission(vokeUserPermync reas static */
+ d
+   serIs/:ussionmi/:id/perdsshboarpi/da/aELETE * @route D  d
+  dashboarsion for permisoke userev   * R}
+
+  /**
+      }
+);
+ next(error});
+     
+      wn error',e : 'Unknoessag.mror errror ?eof Er instancro: er    error.id,
+     req.user?serId:
+        urams.id,eq.pad: rboardIash        d {
+ermissions', puserieving retrrror('Error     logger.e{
+  rror) atch (e c  });
+    },
+    oISOString()te().tDa: new mpimesta   t     },
+,
+        Statspermission   stats: 
+       ,))          }
+active,.is_missionertive: pAc   is       t,
+  _axpirespermission.eiresAt:     exp,
+        _attedann.grt: permissioedAnt gra           nted_by,
+on.grassiy: permirantedB g
+           on,ermission.pn: permissi permissio           user_id,
+on.Id: permissi    user
+        ssion.id,: permi        id  => ({
+  ission ap(permns.missioions: permermiss   p       ata: {
+      d  : true,
+  success({
+        res.json
+
+          });.length,
+issions: permmissionCount perd,
+        userI,
+       dashboardId        , {
+ly'sfulcessuceved ssions retriser permiger.info('U     logardId);
+
+ ats(dashbomissionSterl.getPonModerPermissi= await usenStats t permissio    cons);
+  dashboardIdoard(hbdByDasel.finssionModmiwait userPer ans = permissio   const
+   ermissionsser p u/ Get  /    
+
+
+      }return;
+              });ng(),
+  oISOStriDate().t new mp:timesta  
+        issions', permw usero viermissions tficient peror: 'Insuf  er      lse,
+  ess: facc         su).json({
+ atus(403st      res.{
+  on) asPermissi if (!h
+
+     admin'); userId, 'ardId,(dashboissionsPermhaionModel.ermissait userP   aw|
+     rId |== used.owner_id =boarsion = dashhasPermis    const sion
+  isn permhas admiashboard or  owns d if user  // Check  }
+
+  rn;
+        retu
+            });),
+  g(SOStrin Date().toIestamp: newim t        t found',
+ Dashboard no error: '         : false,
+   success{
+       son().js.status(404     re {
+   shboard) if (!da     Id);
+hboardById(dasrdModel.find dashboad = await dashboar   constssion
+   r has permiists and usehboard exheck if das    // Cser';
+
+   'default-ud ||?.i = req.useruserIdonst   c  s;
+   req.paramd } =ashboardInst { id: d
+      cory { {
+    t<void> Promisen
+  ):tFunctio  next: Nexonse,
+   res: Respuest,
+     req: Reqs(
+  sionrmisrPesync getUsetatic a
+  sns
+   */ssio/permiboards/:id/dashET /api  * @route Goard
+ r dashb fomissionsperr    * Get use
+  /**
+
+  }
+r);
+    }t(erronex  
+         });,
+ nown error' : 'Unkr.messageror ? errostanceof Eror: error in    err    ?.id,
+ser: req.uIder   usid,
+     ams..par: reqrdIdoaashb
+        dion', { permissing usernt('Error grar.error   logge{
+   or) err catch ( });
+    },
+     ISOString()Date().toew mp: nesta   tim   },
+     ,
+     pires_atsion.exserPermisesAt: u   expir
+       at,.granted_sionerPermis: usedAt  grant     ,
+   ted_bygranssion.rPermiedBy: use      grant
+    ermission,ermission.p: userPioniss    perm_id,
+      ission.userd: userPerm userI   id,
+      rmission.d: userPe          i {
+  data:,
+      ess: truecc      su
+  .json({(201)tusta      res.s
+
+   });serId,
+   ntedBy: u   gra   on,
+  si      permis
+  erId,    targetUsd,
+    boardIash{
+        dfully', uccess granted sissionser perm('Ulogger.info);
+
+       }    l,
+ ) : nulpiresAt(ext ? new Date: expiresAats_   expireId,
+     ser_by: u     granted  mission,
+     perrId,
+    User_id: target     useoardId,
+   id: dashbshboard_da  ({
+      Permission.grantonModelermissiuserPit ssion = awaserPermit ucons     
+ nsiormis user pent Gra//
+      }
+;
+         return;
+          })
+   ,tring()toISOSnew Date().mestamp: ti      s',
+    t user accesns to grannt permissio 'Insufficie      error:,
+    seess: falucc      s  ({
+  .jsonatus(403)s.st    re{
+    on) hasPermissi  if (!);
+
+     'admin'serId,dId, uion(dashboarssPermihasssionModel.rPermiwait use
+        a= userId ||r_id ==ownerd.oashbsion = dasPermis   const haission
+   min permor has adoard ns dashber owCheck if us     // 
+  }
+
+     n;      retur });
+        ing(),
+ oISOStr.tte()amp: new Da      timest
+    ound', not frdr: 'Dashboarro         es: false,
+   succes       
+ ).json({tus(404    res.sta
+    board) { if (!dash  );
+   rdIdoayId(dashbindBdModel.fboarawait dashrd = onst dashboa
+      cmission has pernd user astsrd exi if dashboa    // Check
+  data;
+tion.idaesAt } = valn, expir, permissiogetUserIdrId: tart { use
+      cons
+      }
+return;            });
+ng(),
+    ri.toISOState()ew Dp: n    timestam    s,
+  or.errorrration.etails: valid de,
+         data'st equenvalid r   error: 'I   
+    e,s: fals    succes
+      .json({s(400)atu res.st
+       s) {on.succesidatival      if (!body);
+e(req.rsema.safePaonSch= permissialidation     const v
+
+  ,
+      });tional()().op().datetime: z.stringresAt       expi
+ admin']),dit', ', 'ew'ieenum(['vmission: z.    per),
+    min(1.string(). userId: z{
+       = z.object(ema ermissionSch  const pody
+    uest beqValidate r    // 
+  ';
+efault-userd || 'd?.iserd = req.uconst userIs;
+      = req.paramrdId } dashboad: const { i{
+      y  trvoid> {
+   se<  ): Promion
+nctixt: NextFu
+    ne Response, res:quest,
+   Reeq:   r
+  ermission(UserPc grantstatic asyns
+   */
+  iond/permissards/:i/api/dashboute POST   * @roshboard
+ for damission er perGrant us**
+   * 
+  /
+  }
+or);
+    }err  next(  });
+    ',
+    nknown error: 'Ussage  ? error.me Errorstanceoferror in error:        .user?.id,
+serId: req uId,
+       .token req.paramsenId:       tokarams.id,
+ eq.pardId: r      dashbo  
+ken', {e tong sharevokir rerror('Erro   logger.) {
+    (errorch
+    } cat      });ring(),
+e().toISOSt: new Datmestamp        ti,
+ly' }sfulked succesoken revoe: 'Share t{ messag  data:     
+  e,success: tru      son({
+        res.j);
+
+    }serId,
+  revokedBy: u          tokenId,
+
+      ,oardId dashb      
+ lly', { successfun revokedtokeinfo('Share     logger.
+
+     }return;
+               });
+ 
+   ,g()SOStrinDate().toIamp: new  timest
+         found', token not hare  error: 'S      alse,
+  ccess: f       su.json({
+   404)res.status(
+         {vokedToken) (!re
+      ifnId);keen(tovateTokdel.deactiareTokenMon = await shkedTokerevo    const re token
+   Revoke sha//     }
+
+    eturn;
+      r      });
+ 
+      (),StringoISOate().tamp: new Dst       time  oken',
+ are tvoke shsions to rermisufficient pe: 'Insor   err,
+       lses: faes   succ{
+       .json(03)s(4 res.statu
+       on) {hasPermissi    if (!  ');
+
+adminId, 'd, user(dashboardIssionhasPermil.issionModeuserPerm  await 
+       ||=== userId.owner_id rdn = dashboarmissiosPehat    cons
+   ssionin permidmrd or has awns dashboa user ok if// Chec    }
+
+   turn;
+     
+        re });       (),
+ringSt.toISOw Date(): neestamp  tim    ',
+    ot foundboard nasherror: 'D          : false,
+ccess     su     ).json({
+us(404.stat  res      ) {
+shboard (!da
+      ifdId);(dashboarindByIdModel.fhboardast dwaird = aboa const dash
+     ionermissd user has pxists anrd edashboa/ Check if      /';
+
+ erult-us| 'defar?.id |= req.uset userId ns     co.params;
+ } = reqnId oardId, toke id: dashbt {   cons try {
+   oid> {
+    Promise<vction
+  ):tFun next: Nexe,
+   Responses: 
+    ruest,eq: Reqn(
+    rreTokehac revokeSstatic asyn  nId
+   */
+toke/share/:ards/:idapi/dashboute DELETE /  * @roken
+ are to * Revoke sh
+  /**
+   }
+  }
+;
+   ext(error)    n    });
+   error',
+  nownUnke : 'ror.messagereof Error ? nstancor: error i  err
+      id,er?..us req    userId:    ms.id,
+req.para: ardId   dashbo     kens', {
+re toieving shaor retror('Err logger.err
+     rror) {} catch (e});
+          ),
+oISOString( Date().ttamp: new  times },
+      ts,
+       tats: tokenSsta          
+      })),en}`,
+    token.tok/shared/${')}st{req.get('hootocol}://$q.prrerl: `${reU  sha          _at,
+edcreatken.reatedAt: to  c
+          s_active,en.iActive: tok          ist,
+  ccess_coununt: token.aessCo  acc
+          ess_count,ax_accken.mCount: to   maxAccess    ,
+     atexpires_esAt: token.   expir         sions,
+isermoken.pissions: t     perm  oken,
+     token.t   token: ,
+         d: token.id i   {
+         ((token =>ens.mapeTokens: shar     tok    {
+   data: ,
+      cess: true suc
+       .json({ res
+
+        });length,
+   s.shareTokennCount:      tokerId,
+         useoardId,
+  ashb    dly', {
+    uccessfulrieved s tokens retrer.info('Sha  logge
+
+    ardId);ts(dashboetTokenSta.gdelokenMo shareTawaitnStats = kest to
+      conardId);(dashboDashboardndBy.fiTokenModelhare sns = awaitreTokeonst sha
+      c tokenset share  // G  }
+
+    eturn;
+            r    });
+
+    OString(),Date().toISestamp: new tim      
+    e tokens',w sharsions to viepermisufficient error: 'Ins          alse,
+ess: f     succ     03).json({
+.status(4        res{
+ermission) hasP
+      if (!
+n');erId, 'admiardId, ushbossion(dasl.hasPermisionModerPermiswait use      arId ||
+  == use.owner_id = = dashboardPermission hasst con
+      permissioninor has admoard shbr owns dase if u    // Check  
+
+   }n;
+   tur       re   });
+ ),
+     tring(SOS().toIew Datemestamp: n    ti    
+  ot found',ashboard n 'Dr:ro        er
+  se,cess: fal     suc     04).json({
+us(4   res.stat
+     rd) { (!dashboa;
+      ifId)hboarddById(dasodel.finhboardMt daswai = ahboard const dassion
+      permisr hasand usests d exioarashbheck if d/ C;
+
+      /t-user'd || 'defaul.user?.ieqd = ronst userI     c.params;
+  reqId } =boardt { id: dashcons       try {
+  > {
+ omise<void  ): PrtFunction
+   next: Nexnse,
+ spores: Rest,
+    ue  req: Reqkens(
+  eToSharsync get static a
+   */id/share
+ boards/:api/dashroute GET /* @shboard
+   ens for dahare tok s  * Get
+  /**
+  }
+
+  });
+   t(error
+      nex); }      errorknownage : 'Un
+  /**
+   * Create share token for dashboard
+   * @route POST /api/dashboards/:id/share
+   */
+  static async createShareToken(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
+    try {
+      const { id: dashboardId } = req.params;
+      const userId = req.user?.id || 'default-user';
+
+      // Validate request body
+      const shareTokenSchema = z.object({
+        permissions: z.enum(['view', 'edit']).default('view'),
+        expiresAt: z.string().datetime().optional(),
+        maxAccessCount: z.number().positive().optional(),
+      });
+
+      const validation = shareTokenSchema.safeParse(req.body);
+      if (!validation.success) {
+        res.status(400).json({
+          success: false,
+          error: 'Invalid request data',
+          details: validation.error.errors,
+          timestamp: new Date().toISOString(),
+        });
+        return;
+      }
+
+      const { permissions, expiresAt, maxAccessCount } = validation.data;
+
+      // Check if dashboard exists and user has permission
+      const dashboard = await dashboardModel.findById(dashboardId);
+      if (!dashboard) {
+        res.status(404).json({
+          success: false,
+          error: 'Dashboard not found',
+          timestamp: new Date().toISOString(),
+        });
+        return;
+      }
+
+      // Check if user owns dashboard or has admin permission
+      const hasPermission = dashboard.owner_id === userId ||
+        await userPermissionModel.hasPermission(dashboardId, userId, 'admin');
+
+      if (!hasPermission) {
+        res.status(403).json({
+          success: false,
+          error: 'Insufficient permissions to share dashboard',
+          timestamp: new Date().toISOString(),
+        });
+        return;
+      }
+
+      // Create share token
+      const shareToken = await shareTokenModel.createShareToken({
+        dashboard_id: dashboardId,
+        created_by: userId,
+        permissions,
+        expires_at: expiresAt ? new Date(expiresAt) : null,
+        max_access_count: maxAccessCount || null,
+      });
+
+      logger.info('Share token created successfully', {
+        dashboardId,
+        tokenId: shareToken.id,
+        createdBy: userId,
+        permissions,
+      });
+
+      res.status(201).json({
+        success: true,
+        data: {
+          id: shareToken.id,
+          token: shareToken.token,
+          permissions: shareToken.permissions,
+          expiresAt: shareToken.expires_at,
+          maxAccessCount: shareToken.max_access_count,
+          shareUrl: `${req.protocol}://${req.get('host')}/shared/${shareToken.token}`,
+        },
+        timestamp: new Date().toISOString(),
+      });
+    } catch (error) {
+      logger.error('Error creating share token', {
+        dashboardId: req.params.id,
+        userId: req.user?.id,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
+      next(error);
+    }
+  }
+
+  /**
+   * Get share tokens for dashboard
+   * @route GET /api/dashboards/:id/share
+   */
+  static async getShareTokens(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
+    try {
+      const { id: dashboardId } = req.params;
+      const userId = req.user?.id || 'default-user';
+
+      // Check if dashboard exists and user has permission
+      const dashboard = await dashboardModel.findById(dashboardId);
+      if (!dashboard) {
+        res.status(404).json({
+          success: false,
+          error: 'Dashboard not found',
+          timestamp: new Date().toISOString(),
+        });
+        return;
+      }
+
+      // Check if user owns dashboard or has admin permission
+      const hasPermission = dashboard.owner_id === userId ||
+        await userPermissionModel.hasPermission(dashboardId, userId, 'admin');
+
+      if (!hasPermission) {
+        res.status(403).json({
+          success: false,
+          error: 'Insufficient permissions to view share tokens',
+          timestamp: new Date().toISOString(),
+        });
+        return;
+      }
+
+      // Get share tokens
+      const shareTokens = await shareTokenModel.findByDashboard(dashboardId);
+      const tokenStats = await shareTokenModel.getTokenStats(dashboardId);
+
+      logger.info('Share tokens retrieved successfully', {
+        dashboardId,
+        userId,
+        tokenCount: shareTokens.length,
+      });
+
+      res.json({
+        success: true,
+        data: {
+          tokens: shareTokens.map(token => ({
+            id: token.id,
+            token: token.token,
+            permissions: token.permissions,
+            expiresAt: token.expires_at,
+            maxAccessCount: token.max_access_count,
+            accessCount: token.access_count,
+            isActive: token.is_active,
+            createdAt: token.created_at,
+            shareUrl: `${req.protocol}://${req.get('host')}/shared/${token.token}`,
+          })),
+          stats: tokenStats,
+        },
+        timestamp: new Date().toISOString(),
+      });
+    } catch (error) {
+      logger.error('Error retrieving share tokens', {
+        dashboardId: req.params.id,
+        userId: req.user?.id,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
+      next(error);
+    }
+  }
+
+  /**
+   * Revoke share token
+   * @route DELETE /api/dashboards/:id/share/:tokenId
+   */
+  static async revokeShareToken(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
+    try {
+      const { id: dashboardId, tokenId } = req.params;
+      const userId = req.user?.id || 'default-user';
+
+      // Check if dashboard exists and user has permission
+      const dashboard = await dashboardModel.findById(dashboardId);
+      if (!dashboard) {
+        res.status(404).json({
+          success: false,
+          error: 'Dashboard not found',
+          timestamp: new Date().toISOString(),
+        });
+        return;
+      }
+
+      // Check if user owns dashboard or has admin permission
+      const hasPermission = dashboard.owner_id === userId ||
+        await userPermissionModel.hasPermission(dashboardId, userId, 'admin');
+
+      if (!hasPermission) {
+        res.status(403).json({
+          success: false,
+          error: 'Insufficient permissions to revoke share token',
+          timestamp: new Date().toISOString(),
+        });
+        return;
+      }
+
+      // Revoke share token
+      const revokedToken = await shareTokenModel.deactivateToken(tokenId);
+      if (!revokedToken) {
+        res.status(404).json({
+          success: false,
+          error: 'Share token not found',
+          timestamp: new Date().toISOString(),
+        });
+        return;
+      }
+
+      logger.info('Share token revoked successfully', {
+        dashboardId,
+        tokenId,
+        revokedBy: userId,
+      });
+
+      res.json({
+        success: true,
+        data: { message: 'Share token revoked successfully' },
+        timestamp: new Date().toISOString(),
+      });
+    } catch (error) {
+      logger.error('Error revoking share token', {
+        dashboardId: req.params.id,
+        tokenId: req.params.tokenId,
+        userId: req.user?.id,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
+      next(error);
+    }
+  }
+
+  /**
+   * Grant user permission for dashboard
+   * @route POST /api/dashboards/:id/permissions
+   */
+  static async grantUserPermission(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
+    try {
+      const { id: dashboardId } = req.params;
+      const userId = req.user?.id || 'default-user';
+
+      // Validate request body
+      const permissionSchema = z.object({
+        userId: z.string().min(1),
+        permission: z.enum(['view', 'edit', 'admin']),
+        expiresAt: z.string().datetime().optional(),
+      });
+
+      const validation = permissionSchema.safeParse(req.body);
+      if (!validation.success) {
+        res.status(400).json({
+          success: false,
+          error: 'Invalid request data',
+          details: validation.error.errors,
+          timestamp: new Date().toISOString(),
+        });
+        return;
+      }
+
+      const { userId: targetUserId, permission, expiresAt } = validation.data;
+
+      // Check if dashboard exists and user has permission
+      const dashboard = await dashboardModel.findById(dashboardId);
+      if (!dashboard) {
+        res.status(404).json({
+          success: false,
+          error: 'Dashboard not found',
+          timestamp: new Date().toISOString(),
+        });
+        return;
+      }
+
+      // Check if user owns dashboard or has admin permission
+      const hasPermission = dashboard.owner_id === userId ||
+        await userPermissionModel.hasPermission(dashboardId, userId, 'admin');
+
+      if (!hasPermission) {
+        res.status(403).json({
+          success: false,
+          error: 'Insufficient permissions to grant user access',
+          timestamp: new Date().toISOString(),
+        });
+        return;
+      }
+
+      // Grant user permission
+      const userPermission = await userPermissionModel.grantPermission({
+        dashboard_id: dashboardId,
+        user_id: targetUserId,
+        permission,
+        granted_by: userId,
+        expires_at: expiresAt ? new Date(expiresAt) : null,
+      });
+
+      logger.info('User permission granted successfully', {
+        dashboardId,
+        targetUserId,
+        permission,
+        grantedBy: userId,
+      });
+
+      res.status(201).json({
+        success: true,
+        data: {
+          id: userPermission.id,
+          userId: userPermission.user_id,
+          permission: userPermission.permission,
+          grantedBy: userPermission.granted_by,
+          grantedAt: userPermission.granted_at,
+          expiresAt: userPermission.expires_at,
+        },
+        timestamp: new Date().toISOString(),
+      });
+    } catch (error) {
+      logger.error('Error granting user permission', {
+        dashboardId: req.params.id,
+        userId: req.user?.id,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
+      next(error);
+    }
+  }
+
+  /**
+   * Get user permissions for dashboard
+   * @route GET /api/dashboards/:id/permissions
+   */
+  static async getUserPermissions(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
+    try {
+      const { id: dashboardId } = req.params;
+      const userId = req.user?.id || 'default-user';
+
+      // Check if dashboard exists and user has permission
+      const dashboard = await dashboardModel.findById(dashboardId);
+      if (!dashboard) {
+        res.status(404).json({
+          success: false,
+          error: 'Dashboard not found',
+          timestamp: new Date().toISOString(),
+        });
+        return;
+      }
+
+      // Check if user owns dashboard or has admin permission
+      const hasPermission = dashboard.owner_id === userId ||
+        await userPermissionModel.hasPermission(dashboardId, userId, 'admin');
+
+      if (!hasPermission) {
+        res.status(403).json({
+          success: false,
+          error: 'Insufficient permissions to view user permissions',
+          timestamp: new Date().toISOString(),
+        });
+        return;
+      }
+
+      // Get user permissions
+      const permissions = await userPermissionModel.findByDashboard(dashboardId);
+      const permissionStats = await userPermissionModel.getPermissionStats(dashboardId);
+
+      logger.info('User permissions retrieved successfully', {
+        dashboardId,
+        userId,
+        permissionCount: permissions.length,
+      });
+
+      res.json({
+        success: true,
+        data: {
+          permissions: permissions.map(permission => ({
+            id: permission.id,
+            userId: permission.user_id,
+            permission: permission.permission,
+            grantedBy: permission.granted_by,
+            grantedAt: permission.granted_at,
+            expiresAt: permission.expires_at,
+            isActive: permission.is_active,
+          })),
+          stats: permissionStats,
+        },
+        timestamp: new Date().toISOString(),
+      });
+    } catch (error) {
+      logger.error('Error retrieving user permissions', {
+        dashboardId: req.params.id,
+        userId: req.user?.id,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
+      next(error);
+    }
+  }
+
+  /**
+   * Revoke user permission for dashboard
+   * @route DELETE /api/dashboards/:id/permissions/:userId
+   */
+  static async revokeUserPermission(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
+    try {
+      const { id: dashboardId, userId: targetUserId } = req.params;
+      const userId = req.user?.id || 'default-user';
+
+      // Check if dashboard exists and user has permission
+      const dashboard = await dashboardModel.findById(dashboardId);
+      if (!dashboard) {
+        res.status(404).json({
+          success: false,
+          error: 'Dashboard not found',
+          timestamp: new Date().toISOString(),
+        });
+        return;
+      }
+
+      // Check if user owns dashboard or has admin permission
+      const hasPermission = dashboard.owner_id === userId ||
+        await userPermissionModel.hasPermission(dashboardId, userId, 'admin');
+
+      if (!hasPermission) {
+        res.status(403).json({
+          success: false,
+          error: 'Insufficient permissions to revoke user access',
+          timestamp: new Date().toISOString(),
+        });
+        return;
+      }
+
+      // Revoke user permission
+      const revoked = await userPermissionModel.revokePermission(dashboardId, targetUserId);
+      if (!revoked) {
+        res.status(404).json({
+          success: false,
+          error: 'User permission not found',
+          timestamp: new Date().toISOString(),
+        });
+        return;
+      }
+
+      logger.info('User permission revoked successfully', {
+        dashboardId,
+        targetUserId,
+        revokedBy: userId,
+      });
+
+      res.json({
+        success: true,
+        data: { message: 'User permission revoked successfully' },
+        timestamp: new Date().toISOString(),
+      });
+    } catch (error) {
+      logger.error('Error revoking user permission', {
+        dashboardId: req.params.id,
+        targetUserId: req.params.userId,
+        userId: req.user?.id,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
+      next(error);
+    }
+  }
+
+  /**
+   * Access dashboard via share token
+   * @route GET /api/shared/:token
+   */
+  static async accessSharedDashboard(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
+    try {
+      const { token } = req.params;
+
+      // Validate and increment access count for token
+      const shareToken = await shareTokenModel.validateAndIncrementAccess(token);
+      if (!shareToken) {
+        res.status(404).json({
+          success: false,
+          error: 'Invalid or expired share token',
+          timestamp: new Date().toISOString(),
+        });
+        return;
+      }
+
+      // Get dashboard
+      const dashboard = await dashboardModel.getDashboardWithWidgets(shareToken.dashboard_id);
+      if (!dashboard) {
+        res.status(404).json({
+          success: false,
+          error: 'Dashboard not found',
+          timestamp: new Date().toISOString(),
+        });
+        return;
+      }
+
+      logger.info('Shared dashboard accessed successfully', {
+        dashboardId: dashboard.id,
+        tokenId: shareToken.id,
+        accessCount: shareToken.access_count + 1,
+      });
+
+      res.json({
+        success: true,
+        data: {
+          dashboard: {
+            id: dashboard.id,
+            name: dashboard.name,
+            description: dashboard.description,
+            widgets: dashboard.widgets,
+            layout_config: dashboard.layout_config,
+            is_public: dashboard.is_public,
+            created_at: dashboard.created_at,
+            updated_at: dashboard.updated_at,
+          },
+          shareInfo: {
+            permissions: shareToken.permissions,
+            accessCount: shareToken.access_count + 1,
+            maxAccessCount: shareToken.max_access_count,
+            expiresAt: shareToken.expires_at,
+          },
+        },
+        timestamp: new Date().toISOString(),
+      });
+    } catch (error) {
+      logger.error('Error accessing shared dashboard', {
+        token: req.params.token,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
+      next(error);
+    }
+  }
+
+  /**
+   * Get embed code for dashboard
+   * @route GET /api/dashboards/:id/embed
+   */
+  static async getEmbedCode(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
+    try {
+      const { id: dashboardId } = req.params;
+      const userId = req.user?.id || 'default-user';
+
+      // Parse query parameters
+      const querySchema = z.object({
+        width: z.string().optional().default('800'),
+        height: z.string().optional().default('600'),
+        theme: z.enum(['light', 'dark', 'auto']).optional().default('auto'),
+        showHeader: z.string().optional().default('true'),
+        showControls: z.string().optional().default('false'),
+      });
+
+      const validation = querySchema.safeParse(req.query);
+      if (!validation.success) {
+        res.status(400).json({
+          success: false,
+          error: 'Invalid query parameters',
+          details: validation.error.errors,
+          timestamp: new Date().toISOString(),
+        });
+        return;
+      }
+
+      const { width, height, theme, showHeader, showControls } = validation.data;
+
+      // Check if dashboard exists and is public or user has permission
+      const dashboard = await dashboardModel.findById(dashboardId);
+      if (!dashboard) {
+        res.status(404).json({
+          success: false,
+          error: 'Dashboard not found',
+          timestamp: new Date().toISOString(),
+        });
+        return;
+      }
+
+      // Check if dashboard is public or user has permission
+      const hasPermission = dashboard.is_public ||
+        dashboard.owner_id === userId ||
+        await userPermissionModel.hasPermission(dashboardId, userId, 'view');
+
+      if (!hasPermission) {
+        res.status(403).json({
+          success: false,
+          error: 'Dashboard is not public and you do not have permission to embed it',
+          timestamp: new Date().toISOString(),
+        });
+        return;
+      }
+
+      // Generate embed URL and code
+      const baseUrl = `${req.protocol}://${req.get('host')}`;
+      const embedUrl = `${baseUrl}/embed/${dashboardId}?theme=${theme}&showHeader=${showHeader}&showControls=${showControls}`;
+      
+      const embedCode = `<iframe 
+  src="${embedUrl}" 
+  width="${width}" 
+  height="${height}" 
+  frameborder="0" 
+  allowtransparency="true"
+  title="${dashboard.name} - MarketPulse Dashboard">
+</iframe>`;
+
+      const scriptCode = `<script>
+  (function() {
+    var iframe = document.createElement('iframe');
+    iframe.src = '${embedUrl}';
+    iframe.width = '${width}';
+    iframe.height = '${height}';
+    iframe.frameBorder = '0';
+    iframe.allowTransparency = true;
+    iframe.title = '${dashboard.name} - MarketPulse Dashboard';
+    document.currentScript.parentNode.insertBefore(iframe, document.currentScript);
+  })();
+</script>`;
+
+      logger.info('Embed code generated successfully', {
+        dashboardId,
+        userId,
+        width,
+        height,
+        theme,
+      });
+
+      res.json({
+        success: true,
+        data: {
+          embedUrl,
+          embedCode,
+          scriptCode,
+          options: {
+            width,
+            height,
+            theme,
+            showHeader: showHeader === 'true',
+            showControls: showControls === 'true',
+          },
+          dashboard: {
+            id: dashboard.id,
+            name: dashboard.name,
+            isPublic: dashboard.is_public,
+          },
+        },
+        timestamp: new Date().toISOString(),
+      });
+    } catch (error) {
+      logger.error('Error generating embed code', {
+        dashboardId: req.params.id,
+        userId: req.user?.id,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
+      next(error);
+    }
+  }}

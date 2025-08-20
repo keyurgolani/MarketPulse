@@ -250,14 +250,61 @@ npm run build
 # 6. Mark complete only when zero errors
 ```
 
+## Enhanced Development Guidelines Implementation
+
+### Task-Level Context Management
+
+- **Context Files**: Each task now has dedicated context files in `.kiro/specs/market-pulse/context/`
+- **Resume Capability**: Tasks can be resumed from last checkpoint using context files
+- **Continuous Updates**: Context files updated after every significant step
+- **Checkpoint System**: Load existing context at task start, create if not exists
+
+### Test-Driven Development Framework
+
+- **test-results.md**: Central tracking for all test categories and execution
+- **Systematic Execution**: Tests run one by one with results and issues logged
+- **Issue Tracking**: Each test identifies issues, fixes them, marks as resolved
+- **Completion Criteria**: Tests marked done only when fully passing
+- **TDD Workflow**: Write tests BEFORE implementing components
+
+### Code Quality Standards (Zero Tolerance)
+
+- **No `any` Types**: Strict TypeScript with specific types only
+- **Single Responsibility**: Break large files into focused modules
+- **Duplicate Elimination**: Remove duplicate implementations, create single source of truth
+- **Unused Code Removal**: Clean up all unused imports and components
+- **Linting Standards**: Zero warnings across entire codebase
+
+### Enhanced Validation Requirements
+
+- **Production Readiness**: `./scripts/deploy.sh production` must run successfully
+- **Browser Console**: Zero errors in production environment
+- **Feature Validation**: All features work with proper error handling
+- **Integration Consistency**: Backend-frontend integration verified
+- **Regression Prevention**: No functionality regression allowed
+
+### Advanced Feature Requirements
+
+- **Dynamic Y-Axis**: Charts show dynamic min/max bounds for better visibility
+- **API Key Management**: Multiple keys per source with automatic fallback
+- **Real-time Updates**: WebSocket integration with offline handling
+- **Comprehensive Testing**: Unit, API, frontend, UI element tests
+
+### Safety and Error Handling
+
+- **Command Timeouts**: All potentially hanging commands have timeouts
+- **Root Cause Analysis**: Thorough issue analysis, no workaround solutions
+- **Error Recovery**: Proper error handling and recovery mechanisms
+- **Documentation**: All changes and deviations documented
+
 ## Next Steps for Development
 
-1. **Complete current testing cycle** - Finish all 11 test categories
-2. Backend server setup (Task 2)
-3. Database configuration with SQLite
-4. External API integration setup
-5. Real-time data aggregation service
-6. Frontend component development
+1. **Execute test-results.md systematically** - Complete all test categories with zero errors
+2. **Implement Task 2**: Dashboard System with context management
+3. **Apply TDD methodology**: Write tests before implementing components
+4. **Code quality enforcement**: Zero lint warnings, no `any` types
+5. **Production deployment validation**: Ensure clean deployment pipeline
+6. **Feature enhancement**: Dynamic charts, API key rotation, real-time updates
 
 ## Performance Benchmarks
 

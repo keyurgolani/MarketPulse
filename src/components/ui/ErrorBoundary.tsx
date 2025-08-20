@@ -29,10 +29,13 @@ export class ErrorBoundary extends Component<Props, State> {
       errorInfo,
     });
 
-    // Log error to console in development
-    if (process.env.NODE_ENV === 'development') {
-      console.error('ErrorBoundary caught an error:', error, errorInfo);
-    }
+    // Log detailed error information to console
+    console.error('ErrorBoundary caught an error:');
+    console.error('Error message:', error.message);
+    console.error('Error stack:', error.stack);
+    console.error('Component stack:', errorInfo.componentStack);
+    console.error('Full error object:', error);
+    console.error('Full errorInfo object:', errorInfo);
 
     // In production, you might want to log to an error reporting service
     // Example: logErrorToService(error, errorInfo);

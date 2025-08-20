@@ -33,6 +33,11 @@ export class ApiClient {
       retryDelay: 1000,
       ...config,
     };
+
+    // Debug logging (development only)
+    if (import.meta.env.DEV) {
+      console.log('API Client initialized with baseURL:', this.config.baseURL);
+    }
   }
 
   /**
@@ -49,11 +54,22 @@ export class ApiClient {
     } = config;
 
     // Build URL with query parameters
-    const fullUrl = new URL(url, this.config.baseURL);
+    // Properly construct URL by joining base URL and path
+    const baseUrl = this.config.baseURL.endsWith('/')
+      ? this.config.baseURL.slice(0, -1)
+      : this.config.baseURL;
+    const path = url.startsWith('/') ? url : `/${url}`;
+    const fullUrl = new URL(`${baseUrl}${path}`);
+
     if (params) {
       Object.entries(params).forEach(([key, value]) => {
         fullUrl.searchParams.append(key, String(value));
       });
+    }
+
+    // Debug logging (development only)
+    if (import.meta.env.DEV && import.meta.env.VITE_DEBUG_API) {
+      console.log(`API Request: ${method} ${fullUrl.toString()}`);
     }
 
     // Setup request options
@@ -215,7 +231,9 @@ export class ApiError extends Error {
 /**
  * Default API client instance
  */
-export const apiClient = new ApiClient();
+export const apiClient = new ApiClient({
+  baseURL: 'http://localhost:3001/api',
+});
 
 /**
  * Health check endpoint

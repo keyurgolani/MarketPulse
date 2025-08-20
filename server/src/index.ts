@@ -1,4 +1,5 @@
 import express from 'express';
+import { createServer } from 'http';
 import cors from 'cors';
 import helmet from 'helmet';
 import compression from 'compression';
@@ -20,10 +21,13 @@ import { loggingRoutes } from './routes/logging';
 import { dashboardRoutes } from './routes/dashboards';
 import { assetRoutes } from './routes/assets';
 import { newsRoutes } from './routes/news';
+import { sharedRoutes } from './routes/shared';
 import { cacheService } from './services/CacheService';
 import { databaseManager } from './config/database';
+import { webSocketService } from './services/WebSocketService';
 
 const app = express();
+const httpServer = createServer(app);
 
 // Middleware
 app.use(helmet());
@@ -58,6 +62,7 @@ app.use('/api/logs', loggingRoutes);
 app.use('/api/dashboards', dashboardRoutes);
 app.use('/api/assets', assetRoutes);
 app.use('/api/news', newsRoutes);
+app.use('/api/shared', sharedRoutes);
 
 // Health check endpoint
 app.get('/health', (req, res) => {
@@ -94,10 +99,15 @@ async function startServer(): Promise<void> {
     await cacheService.initialize();
     logger.info('Cache service initialized successfully');
 
+    // Initialize WebSocket service
+    webSocketService.initialize(httpServer);
+    logger.info('WebSocket service initialized successfully');
+
     // Start server
-    app.listen(PORT, () => {
+    httpServer.listen(PORT, () => {
       logger.info(`MarketPulse server running on port ${PORT}`);
       logger.info(`Environment: ${config.nodeEnv}`);
+      logger.info('WebSocket server ready for connections');
     });
   } catch (error) {
     logger.error('Failed to start server:', error);
@@ -108,6 +118,7 @@ async function startServer(): Promise<void> {
 // Handle graceful shutdown
 process.on('SIGTERM', async () => {
   logger.info('SIGTERM received, shutting down gracefully');
+  webSocketService.destroy();
   await cacheService.destroy();
   await databaseManager.disconnect();
   process.exit(0);
@@ -115,12 +126,16 @@ process.on('SIGTERM', async () => {
 
 process.on('SIGINT', async () => {
   logger.info('SIGINT received, shutting down gracefully');
+  webSocketService.destroy();
   await cacheService.destroy();
   await databaseManager.disconnect();
   process.exit(0);
 });
 
-// Start the server
-startServer();
+// Only start the server if this file is run directly (not imported)
+if (require.main === module) {
+  startServer();
+}
 
 export default app;
+export { startServer };

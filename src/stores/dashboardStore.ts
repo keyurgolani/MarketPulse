@@ -1,6 +1,6 @@
 /**
  * Dashboard Store
- * Manages dashboard state, active dashboard, and dashboard operations
+ * Manages dashboard state, active dashboard, and dashboard operations with offline support
  */
 
 import { create } from 'zustand';
@@ -11,6 +11,16 @@ import type {
   DashboardSearchFilters,
 } from '@/types/dashboard';
 import { dashboardService } from '@/services/dashboardService';
+import {
+  offlineDashboardService,
+  type OfflineDashboard,
+  type SyncResult,
+} from '@/services/offlineDashboardService';
+import {
+  localStorageService,
+  type SyncStatus,
+} from '@/services/localStorageService';
+import { logger } from '@/utils/logger';
 
 export interface DashboardState {
   // Dashboard data
@@ -30,6 +40,13 @@ export interface DashboardState {
   templates: DashboardTemplate[];
   searchFilters: DashboardSearchFilters;
   searchResults: Dashboard[];
+
+  // Offline and sync state
+  isOnline: boolean;
+  syncStatus: SyncStatus | null;
+  isSyncing: boolean;
+  lastSyncResult: SyncResult | null;
+  conflictedDashboards: string[];
 
   // Actions - Dashboard Management
   setActiveDashboard: (dashboardId: string | null) => void;
@@ -62,6 +79,22 @@ export interface DashboardState {
     name: string
   ) => Promise<Dashboard | null>;
 
+  // Actions - Offline and Sync
+  setOnlineStatus: (isOnline: boolean) => void;
+  syncOfflineChanges: () => Promise<SyncResult>;
+  getSyncStatus: () => Promise<void>;
+  resolveConflict: (
+    dashboardId: string,
+    strategy: 'local' | 'server' | 'merge'
+  ) => Promise<void>;
+  clearOfflineData: () => Promise<void>;
+
+  // Actions - Real-time Sync
+  refreshDashboards: () => Promise<void>;
+  handleRemoteChange: (dashboardId: string, data: unknown) => void;
+  handleRemoteDelete: (dashboardId: string) => void;
+  handleRemoteCreate: () => Promise<void>;
+
   // Utility actions
   refreshDashboard: (id: string) => Promise<void>;
   resetStore: () => void;
@@ -80,6 +113,11 @@ const initialState = {
   templates: [],
   searchFilters: {},
   searchResults: [],
+  isOnline: navigator.onLine,
+  syncStatus: null,
+  isSyncing: false,
+  lastSyncResult: null,
+  conflictedDashboards: [],
 };
 
 export const useDashboardStore = create<DashboardState>()(
@@ -106,15 +144,34 @@ export const useDashboardStore = create<DashboardState>()(
           set({ isLoading: true, error: null });
 
           try {
-            const response = await dashboardService.getDashboards();
-            if (response.success && response.data) {
-              set({
-                dashboards: response.data,
-                isLoading: false,
-              });
-            } else {
-              throw new Error(response.error || 'Failed to load dashboards');
-            }
+            const dashboards = await offlineDashboardService.getDashboards();
+
+            // Identify conflicted dashboards
+            const conflicted = dashboards
+              .filter((d): d is OfflineDashboard => {
+                const offlineD = d as OfflineDashboard;
+                return (
+                  offlineD.conflictInfo !== undefined &&
+                  offlineD.conflictInfo.hasConflict
+                );
+              })
+              .map(d => d.id);
+
+            set({
+              dashboards,
+              conflictedDashboards: conflicted,
+              isLoading: false,
+            });
+
+            // Update sync status
+            get().getSyncStatus();
+
+            logger.info('Dashboards loaded', {
+              count: dashboards.length,
+              offline: dashboards.filter(d => (d as OfflineDashboard).isOffline)
+                .length,
+              conflicts: conflicted.length,
+            });
           } catch (error) {
             const errorMessage =
               error instanceof Error
@@ -124,6 +181,7 @@ export const useDashboardStore = create<DashboardState>()(
               error: errorMessage,
               isLoading: false,
             });
+            logger.error('Failed to load dashboards', { error: errorMessage });
           }
         },
 
@@ -160,17 +218,26 @@ export const useDashboardStore = create<DashboardState>()(
           set({ isCreating: true, error: null });
 
           try {
-            const response =
-              await dashboardService.createDashboard(dashboardData);
-            if (response.success && response.data) {
-              const newDashboard = response.data;
+            const newDashboard =
+              await offlineDashboardService.createDashboard(dashboardData);
+
+            if (newDashboard) {
               set(state => ({
                 dashboards: [...state.dashboards, newDashboard],
                 isCreating: false,
               }));
+
+              // Update sync status
+              get().getSyncStatus();
+
+              logger.info('Dashboard created', {
+                id: newDashboard.id,
+                offline: (newDashboard as OfflineDashboard).isOffline,
+              });
+
               return newDashboard;
             } else {
-              throw new Error(response.error || 'Failed to create dashboard');
+              throw new Error('Failed to create dashboard');
             }
           } catch (error) {
             const errorMessage =
@@ -181,6 +248,7 @@ export const useDashboardStore = create<DashboardState>()(
               error: errorMessage,
               isCreating: false,
             });
+            logger.error('Failed to create dashboard', { error: errorMessage });
             return null;
           }
         },
@@ -192,12 +260,10 @@ export const useDashboardStore = create<DashboardState>()(
           set({ isEditing: true, error: null });
 
           try {
-            const response = await dashboardService.updateDashboard(
-              id,
-              updates
-            );
-            if (response.success && response.data) {
-              const updatedDashboard = response.data;
+            const updatedDashboard =
+              await offlineDashboardService.updateDashboard(id, updates);
+
+            if (updatedDashboard) {
               set(state => ({
                 dashboards: state.dashboards.map(d =>
                   d.id === id ? updatedDashboard : d
@@ -208,9 +274,18 @@ export const useDashboardStore = create<DashboardState>()(
                     : state.activeDashboard,
                 isEditing: false,
               }));
+
+              // Update sync status
+              get().getSyncStatus();
+
+              logger.info('Dashboard updated', {
+                id,
+                offline: (updatedDashboard as OfflineDashboard).isOffline,
+              });
+
               return updatedDashboard;
             } else {
-              throw new Error(response.error || 'Failed to update dashboard');
+              throw new Error('Failed to update dashboard');
             }
           } catch (error) {
             const errorMessage =
@@ -221,6 +296,10 @@ export const useDashboardStore = create<DashboardState>()(
               error: errorMessage,
               isEditing: false,
             });
+            logger.error('Failed to update dashboard', {
+              id,
+              error: errorMessage,
+            });
             return null;
           }
         },
@@ -229,8 +308,9 @@ export const useDashboardStore = create<DashboardState>()(
           set({ isLoading: true, error: null });
 
           try {
-            const response = await dashboardService.deleteDashboard(id);
-            if (response.success) {
+            const success = await offlineDashboardService.deleteDashboard(id);
+
+            if (success) {
               set(state => ({
                 dashboards: state.dashboards.filter(d => d.id !== id),
                 activeDashboard:
@@ -239,11 +319,19 @@ export const useDashboardStore = create<DashboardState>()(
                   state.activeDashboardId === id
                     ? null
                     : state.activeDashboardId,
+                conflictedDashboards: state.conflictedDashboards.filter(
+                  cId => cId !== id
+                ),
                 isLoading: false,
               }));
+
+              // Update sync status
+              get().getSyncStatus();
+
+              logger.info('Dashboard deleted', { id });
               return true;
             } else {
-              throw new Error(response.error || 'Failed to delete dashboard');
+              throw new Error('Failed to delete dashboard');
             }
           } catch (error) {
             const errorMessage =
@@ -253,6 +341,10 @@ export const useDashboardStore = create<DashboardState>()(
             set({
               error: errorMessage,
               isLoading: false,
+            });
+            logger.error('Failed to delete dashboard', {
+              id,
+              error: errorMessage,
             });
             return false;
           }
@@ -375,33 +467,252 @@ export const useDashboardStore = create<DashboardState>()(
 
         // Template Actions
         loadTemplates: async (): Promise<void> => {
-          // TODO: Implement template loading from API
-          // For now, return empty array
-          set({ templates: [] });
+          set({ isLoading: true, error: null });
+
+          try {
+            const response = await dashboardService.getTemplates();
+            if (response.success && response.data) {
+              set({
+                templates: response.data,
+                isLoading: false,
+              });
+            } else {
+              throw new Error(response.error || 'Failed to load templates');
+            }
+          } catch (error) {
+            const errorMessage =
+              error instanceof Error
+                ? error.message
+                : 'Failed to load templates';
+            set({
+              error: errorMessage,
+              isLoading: false,
+            });
+          }
         },
 
-        createFromTemplate: async (): Promise<Dashboard | null> => {
-          // TODO: Implement template-based dashboard creation
-          // For now, return null
-          set({ error: 'Template creation not yet implemented' });
-          return null;
+        createFromTemplate: async (
+          templateId: string,
+          name: string
+        ): Promise<Dashboard | null> => {
+          set({ isCreating: true, error: null });
+
+          try {
+            const response = await dashboardService.createFromTemplate(
+              templateId,
+              name
+            );
+            if (response.success && response.data) {
+              const newDashboard = response.data;
+              set(state => ({
+                dashboards: [...state.dashboards, newDashboard],
+                isCreating: false,
+              }));
+              return newDashboard;
+            } else {
+              throw new Error(
+                response.error || 'Failed to create dashboard from template'
+              );
+            }
+          } catch (error) {
+            const errorMessage =
+              error instanceof Error
+                ? error.message
+                : 'Failed to create dashboard from template';
+            set({
+              error: errorMessage,
+              isCreating: false,
+            });
+            return null;
+          }
+        },
+
+        // Offline and Sync Actions
+        setOnlineStatus: (isOnline: boolean): void => {
+          set({ isOnline });
+
+          if (isOnline) {
+            // Auto-sync when coming back online
+            get().syncOfflineChanges();
+          }
+
+          logger.info('Online status changed', { isOnline });
+        },
+
+        syncOfflineChanges: async (): Promise<SyncResult> => {
+          const { isSyncing } = get();
+
+          if (isSyncing) {
+            logger.info('Sync already in progress');
+            return {
+              success: false,
+              synced: 0,
+              conflicts: 0,
+              errors: ['Sync already in progress'],
+            };
+          }
+
+          set({ isSyncing: true, error: null });
+
+          try {
+            const result = await offlineDashboardService.syncOfflineChanges();
+
+            set({
+              isSyncing: false,
+              lastSyncResult: result,
+            });
+
+            if (result.success) {
+              // Reload dashboards after successful sync
+              await get().loadDashboards();
+              logger.info('Sync completed successfully', {
+                synced: result.synced,
+                conflicts: result.conflicts,
+                success: result.success,
+              });
+            } else {
+              logger.warn('Sync completed with errors', {
+                synced: result.synced,
+                conflicts: result.conflicts,
+                errors: result.errors,
+              });
+            }
+
+            return result;
+          } catch (error) {
+            const errorMessage =
+              error instanceof Error ? error.message : 'Sync failed';
+            const result: SyncResult = {
+              success: false,
+              synced: 0,
+              conflicts: 0,
+              errors: [errorMessage],
+            };
+
+            set({
+              isSyncing: false,
+              lastSyncResult: result,
+              error: errorMessage,
+            });
+
+            logger.error('Sync failed', { error: errorMessage });
+            return result;
+          }
+        },
+
+        getSyncStatus: async (): Promise<void> => {
+          try {
+            // Add safety check to prevent localStorage access during SSR
+            if (typeof window === 'undefined' || !window.localStorage) {
+              return;
+            }
+
+            const syncStatus = await offlineDashboardService.getSyncStatus();
+            set({ syncStatus });
+          } catch (error) {
+            logger.error('Failed to get sync status', {
+              error: error instanceof Error ? error.message : 'Unknown error',
+            });
+          }
+        },
+
+        resolveConflict: async (
+          dashboardId: string,
+          strategy: 'local' | 'server' | 'merge'
+        ): Promise<void> => {
+          try {
+            set({ isLoading: true, error: null });
+
+            // Get current dashboard data
+            const dashboard =
+              await offlineDashboardService.getDashboard(dashboardId);
+            if (!dashboard) {
+              throw new Error('Dashboard not found');
+            }
+
+            // For now, we'll implement a simple resolution by re-fetching
+            // In a full implementation, this would use the conflict resolution logic
+            if (strategy === 'server') {
+              // Force refresh from server
+              const response = await dashboardService.getDashboard(dashboardId);
+              if (response.success && response.data) {
+                await localStorageService.set(
+                  `dashboard_${dashboardId}`,
+                  response.data,
+                  Date.now()
+                );
+              }
+            }
+
+            // Remove from conflicts list
+            set(state => ({
+              conflictedDashboards: state.conflictedDashboards.filter(
+                id => id !== dashboardId
+              ),
+              isLoading: false,
+            }));
+
+            // Reload dashboards
+            await get().loadDashboards();
+
+            logger.info('Conflict resolved', { dashboardId, strategy });
+          } catch (error) {
+            const errorMessage =
+              error instanceof Error
+                ? error.message
+                : 'Failed to resolve conflict';
+            set({
+              error: errorMessage,
+              isLoading: false,
+            });
+            logger.error('Failed to resolve conflict', {
+              dashboardId,
+              strategy,
+              error: errorMessage,
+            });
+          }
+        },
+
+        clearOfflineData: async (): Promise<void> => {
+          try {
+            await offlineDashboardService.clearOfflineData();
+
+            // Reset relevant state
+            set({
+              syncStatus: null,
+              lastSyncResult: null,
+              conflictedDashboards: [],
+            });
+
+            logger.info('Offline data cleared');
+          } catch (error) {
+            const errorMessage =
+              error instanceof Error
+                ? error.message
+                : 'Failed to clear offline data';
+            set({ error: errorMessage });
+            logger.error('Failed to clear offline data', {
+              error: errorMessage,
+            });
+          }
         },
 
         // Utility Actions
         refreshDashboard: async (id: string): Promise<void> => {
           try {
-            const response = await dashboardService.getDashboard(id);
-            if (response.success && response.data) {
-              const refreshedDashboard = response.data;
+            const dashboard = await offlineDashboardService.getDashboard(id);
+            if (dashboard) {
               set(state => ({
                 dashboards: state.dashboards.map(d =>
-                  d.id === id ? refreshedDashboard : d
+                  d.id === id ? dashboard : d
                 ),
                 activeDashboard:
                   state.activeDashboardId === id
-                    ? refreshedDashboard
+                    ? dashboard
                     : state.activeDashboard,
               }));
+
+              logger.info('Dashboard refreshed', { id });
             }
           } catch (error) {
             const errorMessage =
@@ -409,7 +720,59 @@ export const useDashboardStore = create<DashboardState>()(
                 ? error.message
                 : 'Failed to refresh dashboard';
             set({ error: errorMessage });
+            logger.error('Failed to refresh dashboard', {
+              id,
+              error: errorMessage,
+            });
           }
+        },
+
+        // Real-time Sync Actions
+        refreshDashboards: async (): Promise<void> => {
+          await get().loadDashboards();
+        },
+
+        handleRemoteChange: (dashboardId: string, data: unknown): void => {
+          if (data && typeof data === 'object') {
+            const updatedDashboard = data as Dashboard;
+
+            set(state => ({
+              dashboards: state.dashboards.map(d =>
+                d.id === dashboardId ? updatedDashboard : d
+              ),
+              activeDashboard:
+                state.activeDashboardId === dashboardId
+                  ? updatedDashboard
+                  : state.activeDashboard,
+            }));
+
+            logger.info('Applied remote dashboard change', { dashboardId });
+          }
+        },
+
+        handleRemoteDelete: (dashboardId: string): void => {
+          set(state => ({
+            dashboards: state.dashboards.filter(d => d.id !== dashboardId),
+            activeDashboard:
+              state.activeDashboardId === dashboardId
+                ? null
+                : state.activeDashboard,
+            activeDashboardId:
+              state.activeDashboardId === dashboardId
+                ? null
+                : state.activeDashboardId,
+            conflictedDashboards: state.conflictedDashboards.filter(
+              cId => cId !== dashboardId
+            ),
+          }));
+
+          logger.info('Applied remote dashboard deletion', { dashboardId });
+        },
+
+        handleRemoteCreate: async (): Promise<void> => {
+          // Refresh the entire dashboard list to include new dashboards
+          await get().loadDashboards();
+          logger.info('Refreshed dashboards after remote creation');
         },
 
         resetStore: (): void => {
@@ -422,6 +785,8 @@ export const useDashboardStore = create<DashboardState>()(
           activeDashboardId: state.activeDashboardId,
           editMode: state.editMode,
           searchFilters: state.searchFilters,
+          isOnline: state.isOnline,
+          lastSyncResult: state.lastSyncResult,
         }),
       }
     ),
@@ -454,4 +819,24 @@ export const useDashboardError = (): string | null => {
 
 export const useEditMode = (): boolean => {
   return useDashboardStore(state => state.editMode);
+};
+
+export const useOnlineStatus = (): boolean => {
+  return useDashboardStore(state => state.isOnline);
+};
+
+export const useSyncStatus = (): SyncStatus | null => {
+  return useDashboardStore(state => state.syncStatus);
+};
+
+export const useIsSyncing = (): boolean => {
+  return useDashboardStore(state => state.isSyncing);
+};
+
+export const useConflictedDashboards = (): string[] => {
+  return useDashboardStore(state => state.conflictedDashboards);
+};
+
+export const useLastSyncResult = (): SyncResult | null => {
+  return useDashboardStore(state => state.lastSyncResult);
 };

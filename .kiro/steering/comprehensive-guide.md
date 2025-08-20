@@ -398,4 +398,199 @@ npm run db:migrate             # Database migrations
 - Fix all errors and warnings during linting
 - Maintain clean, organized codebase
 
-**These guidelines are mandatory and apply to every interaction with the agent. Follow them systematically to ensure high-quality, maintainable, and production-ready code.**
+## Advanced Development Guidelines
+
+### Task-Level Context Management (Mandatory)
+
+#### Context File Requirements
+
+- **Create/update** `<task_name>.md` for each task in `.kiro/specs/market-pulse/context/`
+- **Record**: objective, context gathered so far, changes made for that task
+- **Load existing context** at task start and resume from checkpoint
+- **Update continuously** during task execution after every step
+
+#### Task Structure Requirements
+
+- Each task must have **implementation and validation checkboxes**
+- **Implementation and validation sections** for each task
+- **Clear exit criteria** for tasks and sub-steps
+- Only mark done when **both implementation and validation complete**
+
+#### Task Execution Rules
+
+- Begin with **thorough code analysis** to identify exact fix locations
+- **Define crisp exit criteria** before starting
+- Run **lint, build, deploy checks** after every change
+- **Verify backend-frontend integration** consistency
+- Use **browser console logs and puppeteer** for validation
+- **Iterate until zero errors** remain
+
+### Test-Driven Development (Mandatory)
+
+#### TDD Workflow
+
+- Write **comprehensive tests BEFORE** implementing components
+- **Create/update test files** before writing component code
+- Write component code to **satisfy tests and requirements**
+- **Do NOT modify tests** to match failing code
+- **Ensure all tests pass** before proceeding
+
+#### Test Categories and Execution
+
+- Use **`test-results.md`** to track all test types and execution
+- Execute tests **systematically**, logging results and issues
+- **Fix issues one by one**, updating test results
+- Mark tests done **only when fully passing**
+- **Re-run tests after fixes** to verify resolution
+
+### Enhanced Code Quality Standards
+
+#### TypeScript Strict Requirements (Zero Tolerance)
+
+- **NEVER use `any` type** anywhere in non-test code
+- **Always identify and use correct specific types**
+- Use **`unknown` instead of `any`** when type is truly unknown
+- **Explicit return types** for all public functions
+- **Strict null checks** and proper error handling
+
+#### Code Organization and Modularity
+
+- **Break large files** into single-responsibility modules
+- **Eliminate duplicate implementations**
+- **Remove unused code** and imports
+- **Make code more readable** and maintainable
+- **Follow single source of truth** principle
+
+#### File Enhancement Policy (Strict)
+
+- **Improve existing files** instead of creating alternatives
+- **Never create files** with names like `enhanced*`, `*v2`, `*-new`
+- **Refactor in place** rather than duplicating
+- **Maintain single source of truth** for each feature
+
+### Advanced Validation Requirements
+
+#### Comprehensive Validation (Mandatory)
+
+- Application must **load cleanly in production** environment
+- **All features must work** with proper error handling
+- **Browser console must show zero errors**
+- **All tests must pass** for implemented functionality
+- **No regression** in existing functionality
+
+#### Linting and Standards (Zero Tolerance)
+
+- **Resolve ALL lint warnings** across entire codebase
+- **Apply linting to complete repository**
+- **Enforce highest code quality standards**
+- **Do not accept barely-meeting quality bar** results
+
+#### Production Readiness Validation
+
+- Run **`./scripts/deploy.sh production`** successfully
+- **Validate all application aspects** end-to-end
+- **Ensure UI shows correct components**
+- **Verify all features available** to users
+- **Confirm operational condition**
+
+### Enhanced Feature Requirements
+
+#### Dynamic UI Enhancements
+
+- **Update asset charts** to show dynamic min/max Y-axis bounds for better visibility
+- **Implement smooth animations** and transitions
+- **Add micro-interactions** and feedback
+
+#### API Key Management
+
+- **Allow configuration of multiple API keys** per external source
+- **On rate-limit, automatically fall back** to the next key in the list
+- **Implement runtime API key rotation**
+
+#### Comprehensive Test Suite
+
+- **Build unit, backend API, front-end, and UI element tests** (curl/wget + browser API)
+- **Bucket tests by feature** (core, asset graph, news, dashboard, etc.)
+- **Run the full suite** after each change
+
+### Safety and Error Handling (Critical)
+
+#### Command Safety
+
+- **Add timeouts** to commands that may hang
+- **Never bypass contingent authorization**
+- **Use proper error handling** and recovery
+- **Document failed commands** and alternatives in project context
+
+#### Root Cause Analysis
+
+- **Do not create sample, simple, or workaround versions**
+- **Analyze issues thoroughly** to identify all causes
+- **Resolve issues at root** with minimal side effects
+- **Ensure no functionality regression**
+
+### Documentation and Traceability (Mandatory)
+
+#### Design Documentation
+
+- **Document any changes** that differ from design
+- **Update design document** with current application state
+- **Maintain up-to-date snapshot** of architecture
+- **Track deviations and decisions** made during implementation
+
+#### Project Context Maintenance
+
+- **Record failed commands** and working alternatives
+- **Track temporary/debug/test files** and purposes
+- **Document reusable validation scripts**
+- **Maintain known issues** and solutions
+
+### Implementation Guidelines (Critical)
+
+#### Functional First Approach
+
+- **Focus on making things work functionally first**
+- **Over-engineer for sophistication** after functionality complete
+- **Prioritize working features** over perfect architecture initially
+- **Refine and optimize** once core functionality proven
+
+#### Modular Architecture
+
+- **Create tightly coupled models** for compile-time error catching
+- **Ensure code correctness** can be verified at build time
+- **Avoid runtime failures** through strong typing
+- **Implement proper validation** at boundaries
+
+#### Clean-up and Maintenance
+
+- **Remove, clean up, and refactor** unused components
+- **Ensure linting applied** to whole codebase
+- **Fix all errors and warnings** during linting
+- **Maintain clean, organized** codebase
+
+### Task Execution Workflow (Mandatory Steps)
+
+#### Before Starting Any Task
+
+1. **Check if task context file exists** - load and resume from checkpoint
+2. **Perform comprehensive code analysis** - identify exact locations needing fixes
+3. **Define clear exit criteria** - for task and each sub-step
+4. **Run initial validation** - ensure starting state is clean
+
+#### During Task Execution
+
+1. **Update context file** after every significant step
+2. **Run tests continuously** - after each change
+3. **Validate integration** - backend-frontend consistency
+4. **Check browser console** - ensure no errors
+5. **Iterate until clean** - zero errors policy
+
+#### After Task Completion
+
+1. **Run full test suite** - all categories
+2. **Execute production deployment** - `./scripts/deploy.sh production`
+3. **Validate end-to-end** - all features working
+4. **Update documentation** - design and context files
+5. **Clean working directory** - commit all changes
+
+**These enhanced guidelines are mandatory and apply to every interaction with the agent. Follow them systematically to ensure high-quality, maintainable, and production-ready code.**
