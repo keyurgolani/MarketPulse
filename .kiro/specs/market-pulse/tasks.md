@@ -90,9 +90,9 @@ The frontend currently has only a basic placeholder App.tsx. All UI components, 
 **Validation Status:** ✅ Completed
 
 - [x] ### Task 4: Data Visualization and Charts
-  **Details:** [uber-tasks/task-4-data-visualization.md](./uber-tasks/task-4-data-visualization.md)
-  **Context:** [context/task-4-context.md](./context/task-4-context.md)
-  **Requirements:** 9.1, 9.2, 9.3, 9.4
+  **Details:** [task-4-data-visualization.md](./task-4-data-visualization.md)
+  **Context:** [context/4-context.md](./context/4-context.md)
+  **Requirements:** 3.1, 9.1, 9.2, 9.3, 8.1
 
 **Implementation Status:** ✅ Completed
 **Validation Status:** ✅ Completed
