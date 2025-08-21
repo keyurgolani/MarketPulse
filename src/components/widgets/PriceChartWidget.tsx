@@ -1,13 +1,21 @@
 /**
  * Price Chart Widget Component
- * Displays interactive price charts with technical indicators
+ * Displays interactive price charts with technical indicators and dynamic Y-axis bounds
  */
 
 import React, { useEffect, useState, useCallback } from 'react';
 import { marketDataService } from '@/services/marketDataService';
 import { Loading } from '@/components/ui/Loading';
+import { LineChart } from '@/components/charts/LineChart';
+import { CandlestickChart } from '@/components/charts/CandlestickChart';
+import { VolumeChart } from '@/components/charts/VolumeChart';
 import type { Widget, TimeFrame } from '@/types/widget';
 import type { Asset, HistoricalData } from '@/types/market';
+import type { TechnicalIndicatorType } from '@/utils/technicalIndicators';
+import {
+  calculateIndicator,
+  getIndicatorConfig,
+} from '@/utils/technicalIndicators';
 import { formatPrice, formatPercentage } from '@/types/market';
 
 export interface PriceChartWidgetProps {
@@ -50,6 +58,21 @@ export const PriceChartWidget: React.FC<PriceChartWidgetProps> = ({
   const showVolume = customSettings.showVolume ?? true;
   const showIndicators = customSettings.showIndicators ?? false;
   const height = (customSettings.height as number) || 400;
+  const indicators =
+    (config.indicators as string[])?.filter(
+      (ind): ind is TechnicalIndicatorType =>
+        [
+          'SMA_10',
+          'SMA_20',
+          'SMA_50',
+          'EMA_12',
+          'EMA_26',
+          'RSI',
+          'MACD',
+          'BOLLINGER',
+        ].includes(ind)
+    ) || [];
+  const dynamicBounds = (customSettings.dynamicBounds as boolean) ?? true;
 
   // Load asset and historical data
   const loadData = useCallback(async (): Promise<void> => {
@@ -226,35 +249,130 @@ export const PriceChartWidget: React.FC<PriceChartWidgetProps> = ({
         </div>
       )}
 
-      {/* Chart area - placeholder for now */}
-      <div
-        className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-b-lg flex items-center justify-center"
-        style={{ height: `${height}px` }}
-      >
-        <div className="text-center text-gray-500 dark:text-gray-400">
-          <div className="text-lg mb-2">📈</div>
-          <div className="text-sm font-medium">Chart Placeholder</div>
-          <div className="text-xs mt-1">
-            {chartType.charAt(0).toUpperCase() + chartType.slice(1)} chart for{' '}
-            {symbol}
-          </div>
-          <div className="text-xs mt-1">
-            Timeframe: {timeframe.toUpperCase()}
-          </div>
-          {historicalData && (
-            <div className="text-xs mt-1">
-              {historicalData.data.length} data points loaded
+      {/* Chart area */}
+      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-b-lg">
+        {historicalData && historicalData.data.length > 0 ? (
+          <div className="p-4">
+            {/* Main price chart */}
+            <div className="mb-4">
+              {chartType === 'candlestick' ? (
+                <CandlestickChart
+                  data={historicalData.data}
+                  height={height}
+                  currency={asset?.currency}
+                  theme={
+                    document.documentElement.classList.contains('dark')
+                      ? 'dark'
+                      : 'light'
+                  }
+                  dynamicBounds={dynamicBounds}
+                />
+              ) : (
+                <LineChart
+                  data={historicalData.data}
+                  height={height}
+                  currency={asset?.currency}
+                  theme={
+                    document.documentElement.classList.contains('dark')
+                      ? 'dark'
+                      : 'light'
+                  }
+                  dynamicBounds={dynamicBounds}
+                  fill={chartType === 'area'}
+                />
+              )}
             </div>
-          )}
-        </div>
+
+            {/* Technical indicators overlay */}
+            {showIndicators && indicators.length > 0 && (
+              <div className="mb-4 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                <div className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Technical Indicators
+                </div>
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 text-xs">
+                  {indicators.map(indicator => {
+                    const config = getIndicatorConfig(indicator);
+                    const indicatorData = calculateIndicator(
+                      historicalData.data,
+                      indicator
+                    );
+                    const latestValue = indicatorData[indicatorData.length - 1];
+
+                    let displayValue = 'N/A';
+                    if (latestValue) {
+                      if (
+                        'value' in latestValue &&
+                        latestValue.value !== null
+                      ) {
+                        displayValue = latestValue.value.toFixed(2);
+                      } else if (
+                        'macd' in latestValue &&
+                        latestValue.macd !== null
+                      ) {
+                        displayValue = latestValue.macd.toFixed(3);
+                      } else if (
+                        'middle' in latestValue &&
+                        latestValue.middle !== null
+                      ) {
+                        displayValue = latestValue.middle.toFixed(2);
+                      }
+                    }
+
+                    return (
+                      <div
+                        key={indicator}
+                        className="flex items-center space-x-2 p-2 bg-white dark:bg-gray-600 rounded"
+                      >
+                        <div
+                          className="w-3 h-3 rounded-full"
+                          style={{ backgroundColor: config.color }}
+                        />
+                        <div>
+                          <div className="font-medium">{config.name}</div>
+                          <div className="text-gray-600 dark:text-gray-400">
+                            {displayValue}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
+        ) : (
+          <div
+            className="flex items-center justify-center"
+            style={{ height: `${height}px` }}
+          >
+            <div className="text-center text-gray-500 dark:text-gray-400">
+              <div className="text-lg mb-2">📈</div>
+              <div className="text-sm font-medium">No chart data available</div>
+              <div className="text-xs mt-1">
+                {symbol
+                  ? `No data for ${symbol}`
+                  : 'Select an asset to view chart'}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Volume chart */}
-      {showVolume && (
-        <div className="mt-2 h-16 bg-gray-100 dark:bg-gray-700 rounded flex items-center justify-center">
-          <span className="text-xs text-gray-500 dark:text-gray-400">
-            Volume Chart
-          </span>
+      {showVolume && historicalData && historicalData.data.length > 0 && (
+        <div className="mt-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded p-2">
+          <div className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Volume
+          </div>
+          <VolumeChart
+            data={historicalData.data}
+            height={80}
+            theme={
+              document.documentElement.classList.contains('dark')
+                ? 'dark'
+                : 'light'
+            }
+          />
         </div>
       )}
 

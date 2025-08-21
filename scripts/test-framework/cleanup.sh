@@ -182,6 +182,10 @@ cleanup_test_artifacts() {
     rm -rf data/test-*.db 2>/dev/null || true
     rm -rf server/data/test-*.db 2>/dev/null || true
     
+    # Clean up test runner temporary files
+    rm -f /tmp/test_runner_pid_* 2>/dev/null || true
+    rm -f /tmp/test_progress_chars_* 2>/dev/null || true
+    
     echo "✅ Test artifacts cleaned up"
 }
 

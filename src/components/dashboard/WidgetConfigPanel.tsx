@@ -120,6 +120,22 @@ const WIDGET_CONFIG_SCHEMAS: Record<WidgetType, ConfigField[]> = {
       label: 'Show Technical Indicators',
       type: 'boolean',
     },
+    {
+      key: 'indicators',
+      label: 'Technical Indicators',
+      type: 'multiselect',
+      options: [
+        { value: 'SMA_10', label: 'SMA (10)' },
+        { value: 'SMA_20', label: 'SMA (20)' },
+        { value: 'SMA_50', label: 'SMA (50)' },
+        { value: 'EMA_12', label: 'EMA (12)' },
+        { value: 'EMA_26', label: 'EMA (26)' },
+        { value: 'RSI', label: 'RSI (14)' },
+        { value: 'MACD', label: 'MACD' },
+        { value: 'BOLLINGER', label: 'Bollinger Bands' },
+      ],
+    },
+    { key: 'dynamicBounds', label: 'Dynamic Y-Axis', type: 'boolean' },
   ],
   'news-feed': [
     {
@@ -162,6 +178,30 @@ const WIDGET_CONFIG_SCHEMAS: Record<WidgetType, ConfigField[]> = {
     { key: 'showPreMarket', label: 'Show Pre-Market', type: 'boolean' },
     { key: 'showAfterHours', label: 'Show After Hours', type: 'boolean' },
     { key: 'showHeatmap', label: 'Show Heatmap', type: 'boolean' },
+  ],
+  heatmap: [
+    {
+      key: 'viewMode',
+      label: 'View Mode',
+      type: 'select',
+      options: [
+        { value: 'sectors', label: 'Sectors' },
+        { value: 'stocks', label: 'Individual Stocks' },
+        { value: 'etfs', label: 'ETFs' },
+      ],
+    },
+    {
+      key: 'colorScheme',
+      label: 'Color Scheme',
+      type: 'select',
+      options: [
+        { value: 'red-green', label: 'Red/Green' },
+        { value: 'blue-orange', label: 'Blue/Orange' },
+        { value: 'monochrome', label: 'Monochrome' },
+      ],
+    },
+    { key: 'showLabels', label: 'Show Labels', type: 'boolean' },
+    { key: 'showPercentages', label: 'Show Percentages', type: 'boolean' },
   ],
   watchlist: [
     {
@@ -238,39 +278,6 @@ const WIDGET_CONFIG_SCHEMAS: Record<WidgetType, ConfigField[]> = {
       step: 1,
     },
     { key: 'showPast', label: 'Show Past Events', type: 'boolean' },
-  ],
-  heatmap: [
-    {
-      key: 'type',
-      label: 'Heatmap Type',
-      type: 'select',
-      options: [
-        { value: 'sector', label: 'Sector Performance' },
-        { value: 'market', label: 'Market Overview' },
-        { value: 'crypto', label: 'Cryptocurrency' },
-        { value: 'forex', label: 'Forex' },
-      ],
-    },
-    {
-      key: 'timeframe',
-      label: 'Timeframe',
-      type: 'select',
-      options: [
-        { value: '1D', label: '1 Day' },
-        { value: '1W', label: '1 Week' },
-        { value: '1M', label: '1 Month' },
-        { value: '3M', label: '3 Months' },
-      ],
-    },
-    { key: 'showLabels', label: 'Show Labels', type: 'boolean' },
-    {
-      key: 'colorIntensity',
-      label: 'Color Intensity',
-      type: 'number',
-      min: 0.5,
-      max: 2,
-      step: 0.1,
-    },
   ],
   screener: [
     {

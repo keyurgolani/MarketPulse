@@ -54,6 +54,10 @@ run_test() {
     # Simple progress indication (no rolling logs unless verbose)
     local dots_count=0
     local show_progress=false
+    local progress_chars_written=0
+    
+    # Initialize progress tracking file
+    echo "0" > "/tmp/test_progress_chars_$$"
     
     # Only show progress in verbose mode or for long-running tests
     if [ "$VERBOSE" = true ] || [ "$QUIET" != true ]; then
@@ -72,10 +76,23 @@ run_test() {
             if [ $dots_count -lt 3 ]; then
                 echo -ne "${COLOR_DIM}.${COLOR_RESET}"
                 dots_count=$((dots_count + 1))
+                progress_chars_written=$((progress_chars_written + 1))
+                # Update the tracking file
+                echo "$progress_chars_written" > "/tmp/test_progress_chars_$$"
             else
-                # Reset dots
-                echo -ne "\033[4D${COLOR_DIM}   ${COLOR_RESET}\033[3D"
+                # Clear the dots we wrote and reset
+                if [ $progress_chars_written -gt 0 ]; then
+                    # Move cursor back by the number of characters we wrote
+                    printf "\033[%dD" "$progress_chars_written"
+                    # Clear those characters with spaces
+                    printf "%*s" "$progress_chars_written" ""
+                    # Move cursor back again to the start position
+                    printf "\033[%dD" "$progress_chars_written"
+                fi
                 dots_count=0
+                progress_chars_written=0
+                # Update the tracking file
+                echo "$progress_chars_written" > "/tmp/test_progress_chars_$$"
             fi
         fi
         
@@ -89,9 +106,10 @@ run_test() {
     local end_time=$(date +%s)
     local duration=$((end_time - start_time))
     
-    # Clean up wrapper script and PID file
+    # Clean up wrapper script, PID file, and progress tracking file
     rm -f "$wrapper_script"
     rm -f "/tmp/test_runner_pid_$$"
+    rm -f "/tmp/test_progress_chars_$$"
     cd "$original_dir"
     
     # Handle test result
@@ -111,8 +129,22 @@ handle_test_success() {
     
     # Clear the progress dots and show success on same line (docker-compose style)
     if [ "$QUIET" != true ]; then
-        # Clear the "... ..." part and replace with success
-        echo -e "\033[7D${COLOR_GREEN}✅ PASSED${COLOR_RESET} ${COLOR_DIM}(${duration}s)${COLOR_RESET}"
+        # Get the number of progress characters written
+        local progress_chars=0
+        if [ -f "/tmp/test_progress_chars_$$" ]; then
+            progress_chars=$(cat "/tmp/test_progress_chars_$$" 2>/dev/null || echo "0")
+            rm -f "/tmp/test_progress_chars_$$"
+        fi
+        
+        # Clear the progress characters and the "... " part (4 chars: " ... ")
+        local total_chars_to_clear=$((progress_chars + 4))
+        if [ $total_chars_to_clear -gt 0 ]; then
+            printf "\033[%dD" "$total_chars_to_clear"
+            printf "%*s" "$total_chars_to_clear" ""
+            printf "\033[%dD" "$total_chars_to_clear"
+        fi
+        
+        echo -e "${COLOR_GREEN}✅ PASSED${COLOR_RESET} ${COLOR_DIM}(${duration}s)${COLOR_RESET}"
     else
         echo -e "${COLOR_GREEN}✅ $test_name PASSED (${duration}s)${COLOR_RESET}"
     fi
@@ -128,10 +160,24 @@ handle_test_failure() {
     local exit_code=$3
     local log_file=$4
     
+    # Get the number of progress characters written
+    local progress_chars=0
+    if [ -f "/tmp/test_progress_chars_$$" ]; then
+        progress_chars=$(cat "/tmp/test_progress_chars_$$" 2>/dev/null || echo "0")
+        rm -f "/tmp/test_progress_chars_$$"
+    fi
+    
     # Check if we were interrupted or timed out
     if [ $exit_code -eq 130 ] || [ $exit_code -eq 124 ]; then
         if [ "$QUIET" != true ]; then
-            echo -e "\033[7D${COLOR_YELLOW}🛑 INTERRUPTED${COLOR_RESET} ${COLOR_DIM}(${duration}s)${COLOR_RESET}"
+            # Clear the progress characters and the "... " part (4 chars: " ... ")
+            local total_chars_to_clear=$((progress_chars + 4))
+            if [ $total_chars_to_clear -gt 0 ]; then
+                printf "\033[%dD" "$total_chars_to_clear"
+                printf "%*s" "$total_chars_to_clear" ""
+                printf "\033[%dD" "$total_chars_to_clear"
+            fi
+            echo -e "${COLOR_YELLOW}🛑 INTERRUPTED${COLOR_RESET} ${COLOR_DIM}(${duration}s)${COLOR_RESET}"
         else
             echo -e "${COLOR_YELLOW}🛑 $test_name INTERRUPTED (${duration}s)${COLOR_RESET}"
         fi
@@ -141,8 +187,14 @@ handle_test_failure() {
     
     # Show failure with full error details (docker-compose style)
     if [ "$QUIET" != true ]; then
-        # Clear the progress dots and show failure on same line
-        echo -e "\033[7D${COLOR_RED}❌ FAILED${COLOR_RESET} ${COLOR_DIM}(${duration}s)${COLOR_RESET}"
+        # Clear the progress characters and the "... " part (4 chars: " ... ")
+        local total_chars_to_clear=$((progress_chars + 4))
+        if [ $total_chars_to_clear -gt 0 ]; then
+            printf "\033[%dD" "$total_chars_to_clear"
+            printf "%*s" "$total_chars_to_clear" ""
+            printf "\033[%dD" "$total_chars_to_clear"
+        fi
+        echo -e "${COLOR_RED}❌ FAILED${COLOR_RESET} ${COLOR_DIM}(${duration}s)${COLOR_RESET}"
         echo ""
         echo -e "${COLOR_RED}Error details:${COLOR_RESET}"
         echo "┌─────────────────────────────────────────────────────────────────────────────────"

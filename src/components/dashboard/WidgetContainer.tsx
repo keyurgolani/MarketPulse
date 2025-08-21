@@ -14,6 +14,7 @@ import { PriceChartWidget } from '@/components/widgets/PriceChartWidget';
 import { WatchlistWidget } from '@/components/widgets/WatchlistWidget';
 import { NewsFeedWidget } from '@/components/widgets/NewsFeedWidget';
 import { MarketSummaryWidget } from '@/components/widgets/MarketSummaryWidget';
+import { HeatmapWidget } from '@/components/widgets/HeatmapWidget';
 
 export interface WidgetContainerProps {
   /** Widget to render */
@@ -85,6 +86,8 @@ export const WidgetContainer: React.FC<WidgetContainerProps> = ({
         return <NewsFeedWidget {...commonProps} />;
       case 'market-summary':
         return <MarketSummaryWidget {...commonProps} />;
+      case 'heatmap':
+        return <HeatmapWidget {...commonProps} />;
       default:
         return (
           <div className="flex items-center justify-center h-32 text-gray-500 dark:text-gray-400">

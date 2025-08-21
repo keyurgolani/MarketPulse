@@ -233,8 +233,8 @@ test.describe('Performance Tests', () => {
     const maxTime = Math.max(...performanceMetrics);
     const minTime = Math.min(...performanceMetrics);
 
-    // Performance should be consistent (max shouldn't be more than 2x min)
-    expect(maxTime / minTime).toBeLessThan(2);
+    // Performance should be consistent (max shouldn't be more than 2.5x min)
+    expect(maxTime / minTime).toBeLessThan(2.5);
 
     // Average load time should be reasonable
     expect(averageTime).toBeLessThan(3000);

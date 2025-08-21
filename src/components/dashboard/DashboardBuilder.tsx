@@ -68,6 +68,11 @@ const AVAILABLE_WIDGET_TYPES: {
     description: 'Overview of market indices',
   },
   {
+    type: 'heatmap',
+    name: 'Market Heatmap',
+    description: 'Visual heatmap of market performance',
+  },
+  {
     type: 'watchlist',
     name: 'Watchlist',
     description: 'Personal watchlist of assets',
