@@ -19,38 +19,32 @@ export class NewsService {
   /**
    * Get news articles
    */
-  async getNews(params: NewsParams = {}): Promise<ApiResponse<NewsArticle[]>> {
+  async getNews(category?: string): Promise<NewsArticle[]> {
     const queryParams: Record<string, string | number> = {};
 
-    if (params.symbols?.length) {
-      queryParams.symbols = params.symbols.join(',');
-    }
-    if (params.category) {
-      queryParams.category = params.category;
-    }
-    if (params.search) {
-      queryParams.search = params.search;
-    }
-    if (params.limit) {
-      queryParams.limit = params.limit;
-    }
-    if (params.offset) {
-      queryParams.offset = params.offset;
+    if (category) {
+      queryParams.category = category;
     }
 
-    return apiClient.get<NewsArticle[]>('/news', queryParams);
+    const response = await apiClient.get<NewsArticle[]>('/news', queryParams);
+    return response.data;
   }
 
   /**
    * Get news for specific asset
    */
-  async getAssetNews(
-    symbol: string,
-    limit = 10
-  ): Promise<ApiResponse<NewsArticle[]>> {
-    return apiClient.get<NewsArticle[]>(`/news/${encodeURIComponent(symbol)}`, {
-      limit,
-    });
+  async getAssetNews(symbol: string, limit = 10): Promise<NewsArticle[]> {
+    if (!symbol || symbol.trim() === '') {
+      throw new Error('Symbol is required');
+    }
+
+    const response = await apiClient.get<NewsArticle[]>(
+      `/news/assets/${encodeURIComponent(symbol)}`,
+      {
+        limit,
+      }
+    );
+    return response.data;
   }
 
   /**

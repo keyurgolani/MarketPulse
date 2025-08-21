@@ -848,7 +848,16 @@ export function sanitizeString(input: string): string {
  * Validate email format
  */
 export function isValidEmail(email: string): boolean {
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  // More strict email validation that allows + character
+  const emailRegex =
+    /^[a-zA-Z0-9]([a-zA-Z0-9._+-]*[a-zA-Z0-9])?@[a-zA-Z0-9]([a-zA-Z0-9.-]*[a-zA-Z0-9])?\.[a-zA-Z]{2,}$/;
+
+  // Additional checks for edge cases
+  if (!email || email.length === 0) return false;
+  if (email.includes('..')) return false; // No consecutive dots
+  if (email.startsWith('.') || email.endsWith('.')) return false;
+  if (email.includes('@.') || email.includes('.@')) return false;
+
   return emailRegex.test(email);
 }
 

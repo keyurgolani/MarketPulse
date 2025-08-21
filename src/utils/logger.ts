@@ -39,6 +39,27 @@ class Logger {
   }
 
   /**
+   * Safely stringify data, handling circular references
+   */
+  private safeStringify(data: Record<string, unknown>): string {
+    const seen = new Set();
+    try {
+      return JSON.stringify(data, (_key, value) => {
+        if (typeof value === 'object' && value !== null) {
+          // Handle circular references by replacing with a placeholder
+          if (seen.has(value)) {
+            return '[Circular Reference]';
+          }
+          seen.add(value);
+        }
+        return value;
+      });
+    } catch {
+      return '[Unable to serialize data]';
+    }
+  }
+
+  /**
    * Format log entry for output
    */
   private formatLog(entry: LogEntry): string {
@@ -46,7 +67,7 @@ class Logger {
     let formatted = `[${timestamp}] ${level.toUpperCase()}: ${message}`;
 
     if (data && Object.keys(data).length > 0) {
-      formatted += ` | Data: ${JSON.stringify(data)}`;
+      formatted += ` | Data: ${this.safeStringify(data)}`;
     }
 
     return formatted;
@@ -78,21 +99,30 @@ class Logger {
       return;
     }
 
-    const formatted = this.formatLog(entry);
+    try {
+      const formatted = this.formatLog(entry);
 
-    switch (entry.level) {
-      case 'debug':
-        console.debug(formatted, entry.data);
-        break;
-      case 'info':
-        console.info(formatted, entry.data);
-        break;
-      case 'warn':
-        console.warn(formatted, entry.data);
-        break;
-      case 'error':
-        console.error(formatted, entry.data, entry.error);
-        break;
+      switch (entry.level) {
+        case 'debug':
+          console.debug(formatted, entry.data);
+          break;
+        case 'info':
+          console.info(formatted, entry.data);
+          break;
+        case 'warn':
+          console.warn(formatted, entry.data);
+          break;
+        case 'error':
+          console.error(formatted, entry.data, entry.error);
+          break;
+      }
+    } catch {
+      // Fallback logging if console methods fail
+      try {
+        console.log(`[LOGGER ERROR] Failed to log: ${entry.message}`);
+      } catch {
+        // If even console.log fails, silently ignore
+      }
     }
   }
 

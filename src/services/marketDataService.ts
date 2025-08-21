@@ -21,6 +21,30 @@ export interface HistoricalDataParams {
 
 export class MarketDataService {
   /**
+   * Get asset data by symbol
+   */
+  async getAssetData(symbol: string): Promise<Asset> {
+    const response = await apiClient.get<Asset>(
+      `/assets/${encodeURIComponent(symbol)}`
+    );
+    return response.data;
+  }
+
+  /**
+   * Get multiple assets data
+   */
+  async getMultipleAssets(symbols: string[]): Promise<Asset[]> {
+    if (!symbols || symbols.length === 0) {
+      return [];
+    }
+
+    const response = await apiClient.post<Asset[]>('/assets/batch', {
+      symbols,
+    });
+    return response.data;
+  }
+
+  /**
    * Get real-time asset data
    */
   async getAssets(
@@ -64,8 +88,16 @@ export class MarketDataService {
   /**
    * Search assets by query
    */
-  async searchAssets(query: string, limit = 10): Promise<ApiResponse<Asset[]>> {
-    return apiClient.get<Asset[]>('/assets/search', { q: query, limit });
+  async searchAssets(query: string, limit = 10): Promise<Asset[]> {
+    if (!query || query.trim() === '') {
+      return [];
+    }
+
+    const response = await apiClient.get<Asset[]>('/assets/search', {
+      q: query,
+      limit,
+    });
+    return response.data;
   }
 
   /**

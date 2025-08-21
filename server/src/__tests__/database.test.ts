@@ -12,7 +12,7 @@ describe('Database Integration', () => {
 
     // Run migrations to create tables
     const db = databaseManager.getDatabase();
-    const migrationManager = new MigrationManager(db, 'server/migrations');
+    const migrationManager = new MigrationManager(db, 'migrations');
     await migrationManager.runMigrations();
   });
 

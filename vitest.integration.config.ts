@@ -14,6 +14,7 @@ export default defineConfig({
       '**/node_modules/**',
       '**/dist/**',
       '**/server/**',
+      '**/tests/**', // Exclude all tests directory - they use Playwright
       '**/.{idea,git,cache,output,temp}/**',
     ],
     testTimeout: 30000, // Longer timeout for integration tests

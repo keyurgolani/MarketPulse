@@ -75,28 +75,58 @@ export class WebSocketService {
     this.io.on('connection', (socket: Socket) => {
       logger.info(`Client connected: ${socket.id}`);
 
-      // Handle user joining a dashboard room
+      // Handle user joining a dashboard room (support both event names)
       socket.on(
         'join_dashboard',
         (data: { dashboardId: string; userId: string }) => {
           this.handleJoinDashboard(socket, data);
         }
       );
+      socket.on(
+        'dashboard:join',
+        (data: { dashboardId: string; userId: string }) => {
+          this.handleJoinDashboard(socket, data);
+        }
+      );
 
-      // Handle user leaving a dashboard room
+      // Handle user leaving a dashboard room (support both event names)
       socket.on('leave_dashboard', (data: { dashboardId: string }) => {
         this.handleLeaveDashboard(socket, data);
       });
+      socket.on('dashboard:leave', (data: { dashboardId: string }) => {
+        this.handleLeaveDashboard(socket, data);
+      });
 
-      // Handle dashboard changes
+      // Handle dashboard changes (support both event names)
       socket.on('dashboard_change', (data: DashboardChangeEvent) => {
         this.handleDashboardChange(socket, data);
       });
+      socket.on('dashboard:change', (data: DashboardChangeEvent) => {
+        this.handleDashboardChange(socket, data);
+      });
 
-      // Handle user presence updates
+      // Handle user presence updates (support both event names)
       socket.on(
         'user_presence',
-        (data: { userId: string; dashboardId: string }) => {
+        (data: {
+          userId: string;
+          dashboardId?: string;
+          status?: string;
+          lastActivity?: number;
+          currentWidget?: string;
+        }) => {
+          this.handleUserPresence(socket, data);
+        }
+      );
+      socket.on(
+        'user:presence',
+        (data: {
+          userId: string;
+          dashboardId?: string;
+          status?: string;
+          lastActivity?: number;
+          currentWidget?: string;
+        }) => {
           this.handleUserPresence(socket, data);
         }
       );
@@ -153,6 +183,18 @@ export class WebSocketService {
     }
     this.dashboardRooms.get(dashboardId)!.add(socket.id);
 
+    // Emit join confirmation to the user (support both event names)
+    socket.emit('dashboard:joined', {
+      dashboardId,
+      userId,
+      timestamp: Date.now(),
+    });
+    socket.emit('user_joined', {
+      userId,
+      dashboardId,
+      timestamp: Date.now(),
+    });
+
     // Notify other users in the room about the new user
     socket.to(roomName).emit('user_joined', {
       userId,
@@ -188,6 +230,13 @@ export class WebSocketService {
         }
       }
 
+      // Emit leave confirmation to the user (support both event names)
+      socket.emit('dashboard:left', {
+        dashboardId,
+        userId: presence.userId,
+        timestamp: Date.now(),
+      });
+
       // Notify other users in the room
       socket.to(roomName).emit('user_left', {
         userId: presence.userId,
@@ -206,7 +255,12 @@ export class WebSocketService {
     const roomName = `dashboard:${data.dashboardId}`;
 
     // Broadcast the change to all other users in the room (excluding sender)
+    // Support both event names
     socket.to(roomName).emit('dashboard_changed', {
+      ...data,
+      timestamp: Date.now(),
+    });
+    socket.to(roomName).emit('dashboard:change', {
       ...data,
       timestamp: Date.now(),
     });
@@ -218,19 +272,37 @@ export class WebSocketService {
 
   private handleUserPresence(
     socket: Socket,
-    data: { userId: string; dashboardId: string }
+    data: {
+      userId: string;
+      dashboardId?: string;
+      status?: string;
+      lastActivity?: number;
+      currentWidget?: string;
+    }
   ): void {
     const presence = this.connectedUsers.get(socket.id);
     if (presence) {
       presence.lastSeen = Date.now();
 
-      // Broadcast presence update to room
-      const roomName = `dashboard:${data.dashboardId}`;
-      socket.to(roomName).emit('user_presence_updated', {
+      // Use dashboardId from data or from stored presence
+      const dashboardId = data.dashboardId || presence.dashboardId;
+      const roomName = `dashboard:${dashboardId}`;
+
+      // Broadcast presence update to room (support both event names)
+      const presenceData = {
         userId: data.userId,
-        dashboardId: data.dashboardId,
+        dashboardId,
         lastSeen: presence.lastSeen,
-      });
+        status: data.status,
+        lastActivity: data.lastActivity,
+        currentWidget: data.currentWidget,
+      };
+
+      socket.to(roomName).emit('user_presence_updated', presenceData);
+      socket.to(roomName).emit('user:presence', presenceData);
+
+      // Also emit back to sender for confirmation
+      socket.emit('user:presence', presenceData);
     }
   }
 

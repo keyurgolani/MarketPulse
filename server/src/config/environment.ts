@@ -6,8 +6,9 @@
 import dotenv from 'dotenv';
 import path from 'path';
 
-// Load environment variables from .env file
-dotenv.config({ path: path.join(__dirname, '../../.env') });
+// Load environment variables from appropriate .env file
+const envFile = process.env.NODE_ENV === 'test' ? '.env.test' : '.env';
+dotenv.config({ path: path.join(__dirname, '../../', envFile) });
 
 export interface Config {
   // Server Configuration
@@ -53,6 +54,12 @@ export interface Config {
   logging: {
     level: string;
     format: string;
+  };
+
+  // Test Configuration
+  test: {
+    useMockData: boolean;
+    disableExternalApis: boolean;
   };
 }
 
@@ -101,6 +108,11 @@ export const config: Config = {
   logging: {
     level: process.env.LOG_LEVEL || 'info',
     format: process.env.LOG_FORMAT || 'combined',
+  },
+
+  test: {
+    useMockData: process.env.USE_MOCK_DATA === 'true',
+    disableExternalApis: process.env.DISABLE_EXTERNAL_APIS === 'true',
   },
 };
 

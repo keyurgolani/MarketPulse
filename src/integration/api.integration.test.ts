@@ -71,7 +71,7 @@ describe('API Integration Tests', () => {
         q: 'apple',
         limit: 5,
       });
-      expect(result).toEqual(mockResponse);
+      expect(result).toEqual(mockResponse.data);
     });
   });
 
@@ -103,8 +103,10 @@ describe('API Integration Tests', () => {
 
       const result = await newsService.getAssetNews('AAPL', 10);
 
-      expect(apiClient.get).toHaveBeenCalledWith('/news/AAPL', { limit: 10 });
-      expect(result).toEqual(mockResponse);
+      expect(apiClient.get).toHaveBeenCalledWith('/news/assets/AAPL', {
+        limit: 10,
+      });
+      expect(result).toEqual(mockResponse.data);
     });
 
     it('should call searchNews with correct parameters', async () => {

@@ -593,4 +593,409 @@ npm run db:migrate             # Database migrations
 4. **Update documentation** - design and context files
 5. **Clean working directory** - commit all changes
 
+## Port Configuration and Service Endpoints
+
+### Default Ports
+
+- **Frontend (Vite Dev Server)**: `5173` (default)
+- **Backend (Express Server)**: `3001` (configurable via `PORT` env var)
+- **Redis Cache**: `6379` (configurable via `REDIS_PORT` env var)
+- **WebSocket**: Same as backend server port (`3001`)
+
+### Environment Configuration
+
+```bash
+# Frontend (.env)
+VITE_API_BASE_URL=http://localhost:3001/api
+
+# Backend (server/.env or environment variables)
+PORT=3001                           # Server port
+NODE_ENV=development               # Environment mode
+DATABASE_URL=sqlite:./data/marketpulse.db
+REDIS_HOST=localhost
+REDIS_PORT=6379
+CORS_ORIGINS=http://localhost:5173
+```
+
+### API Endpoints
+
+#### System Routes (`/api/system`)
+
+- `GET /api/system/health` - Health check endpoint
+- `GET /api/system/info` - System information
+- `GET /api/system/metrics` - System metrics
+
+#### Asset Routes (`/api/assets`)
+
+- `GET /api/assets` - Get assets (search, symbols, or popular)
+- `GET /api/assets/:symbol` - Get specific asset
+- `GET /api/assets/:symbol/price` - Get real-time price
+- `GET /api/assets/:symbol/history` - Get price history
+- `POST /api/assets/watchlist` - Get multiple assets for watchlist
+- `DELETE /api/assets/cache` - Clear all asset cache (admin)
+- `DELETE /api/assets/:symbol/cache` - Clear cache for specific symbol (admin)
+
+#### Dashboard Routes (`/api/dashboards`)
+
+- `GET /api/dashboards` - Get user's dashboards
+- `GET /api/dashboards/default` - Get default dashboards (public)
+- `GET /api/dashboards/public` - Get public dashboards (public)
+- `GET /api/dashboards/:id` - Get specific dashboard
+- `POST /api/dashboards` - Create new dashboard
+- `PUT /api/dashboards/:id` - Update dashboard
+- `DELETE /api/dashboards/:id` - Delete dashboard
+- `POST /api/dashboards/:id/clone` - Clone dashboard
+- `POST /api/dashboards/:id/share` - Create share token
+- `GET /api/dashboards/:id/share` - Get share tokens
+- `DELETE /api/dashboards/:id/share/:tokenId` - Revoke share token
+- `POST /api/dashboards/:id/permissions` - Grant user permission
+- `GET /api/dashboards/:id/permissions` - Get user permissions
+- `DELETE /api/dashboards/:id/permissions/:userId` - Revoke user permission
+- `GET /api/dashboards/:id/embed` - Get embed code
+
+#### News Routes (`/api/news`)
+
+- `GET /api/news` - Get aggregated news with filtering
+- `GET /api/news/trending` - Get trending news topics
+- `GET /api/news/analysis` - Get market analysis
+- `GET /api/news/:symbol` - Get news for specific symbol
+- `DELETE /api/news/cache` - Clear all news cache (admin)
+- `DELETE /api/news/:symbol/cache` - Clear cache for specific symbol (admin)
+
+#### Additional Routes
+
+- `GET /api/health` - Health check (alias)
+- `GET /api/cache/*` - Cache management endpoints
+- `GET /api/logs/*` - Logging endpoints
+- `GET /api/shared/*` - Shared resource endpoints
+
+### NPM Scripts Reference
+
+#### Root Package Scripts
+
+```bash
+# Development
+npm run dev                        # Start Vite frontend dev server
+npm run build                      # TypeScript compile + Vite build
+npm run preview                    # Preview production build
+
+# Code Quality
+npm run lint                       # ESLint with zero warnings policy
+npm run lint:fix                   # Auto-fix ESLint issues
+npm run format                     # Prettier formatting
+npm run format:check               # Check Prettier formatting
+npm run type-check                 # TypeScript validation (no emit)
+
+# Testing
+npm test                          # Run frontend + backend tests
+npm run test:frontend             # Frontend tests only (Vitest)
+npm run test:backend              # Backend tests only (Jest)
+npm run test:run                  # Run tests once (no watch)
+npm run test:coverage             # Coverage report
+npm run test:integration          # Integration tests
+npm run test:e2e                  # Playwright end-to-end tests
+npm run test:e2e:ui               # Playwright with UI
+npm run test:websocket            # WebSocket integration tests
+npm run test:accessibility        # Accessibility tests
+npm run test:performance          # Performance tests
+
+# Git Hooks
+npm run prepare                   # Setup Husky git hooks
+```
+
+#### Server Package Scripts
+
+```bash
+# Development (run from server/ directory)
+npm run dev                       # Nodemon with TypeScript
+npm run build                     # TypeScript compilation
+npm run start                     # Start compiled server
+
+# Testing
+npm test                         # Jest test suite
+npm run test:watch               # Jest in watch mode
+npm run test:coverage            # Jest with coverage
+npm run test:integration         # Integration tests only
+
+# Code Quality
+npm run lint                     # ESLint for server
+npm run lint:fix                 # Auto-fix server ESLint
+npm run type-check               # TypeScript validation
+
+# Database
+npm run migrate                  # Run database migrations
+npm run migrate:status           # Check migration status
+npm run migrate:validate         # Validate migrations
+```
+
+### Testing Scripts and Framework
+
+#### Comprehensive Test Suite Scripts
+
+**Main Test Scripts:**
+
+```bash
+# Comprehensive test suite (modular framework) - PRIMARY SCRIPT
+./scripts/test-all.sh             # Complete test suite with all phases
+./scripts/test-phase.sh           # Run individual test phases
+./scripts/test-single.sh          # Run individual tests for debugging
+
+# Specialized test scripts (also integrated into main suite)
+./scripts/test-accessibility.sh   # Accessibility validation with Playwright
+./scripts/test-performance.sh     # Performance benchmarks with Lighthouse
+./scripts/test-websocket-integration.sh  # WebSocket functionality tests
+./scripts/test-browser-console.sh # Browser console error validation
+```
+
+**The script name should be appropriate for the functionality it's used for:**
+
+- `./scripts/test-all.sh` - The primary comprehensive test suite (replaces legacy monolithic script)
+- Individual specialized scripts maintained for standalone use and npm script integration
+
+**Test Framework Architecture:**
+
+```bash
+scripts/test-framework/
+├── config.sh           # Configuration variables and settings
+├── utils.sh             # Common utility functions
+├── cleanup.sh           # Server and process cleanup
+├── test-runner.sh       # Core test execution logic
+├── server-manager.sh    # Backend/frontend server management
+├── test-phases.sh       # Test phase definitions
+└── README.md           # Framework documentation
+```
+
+**Test Suite Reorganization Summary:**
+
+- ✅ **Legacy script removed**: Monolithic `test-all.sh` (1221 lines) replaced
+- ✅ **Modular framework active**: New `test-all.sh` uses modular architecture (120 lines + framework)
+- ✅ **All test types preserved**: Unit, integration, E2E, accessibility, performance, WebSocket, security
+- ✅ **Enhanced functionality**: Individual phase execution, single test debugging, better error handling
+- ✅ **Specialized scripts maintained**: Available as npm scripts and standalone execution
+- ✅ **Documentation updated**: All references point to current framework structure
+
+#### Test Phase Organization
+
+The framework organizes tests into 8 comprehensive phases:
+
+1. **Dependencies and Setup** (`setup`)
+   - Frontend and backend dependency installation
+   - Environment preparation and validation
+
+2. **Code Quality and Compilation** (`quality`)
+   - TypeScript type checking (frontend and backend)
+   - ESLint validation with zero warnings policy
+   - Prettier code formatting checks
+
+3. **Unit Tests** (`unit-tests`)
+   - Frontend unit tests with Vitest
+   - Backend unit tests with Jest
+   - Coverage reporting for both
+
+4. **Integration Tests** (`integration-tests`)
+   - Frontend integration tests
+   - Backend API integration tests
+   - Cross-service integration validation
+
+5. **Build and Database** (`build-database`)
+   - Production builds (frontend and backend)
+   - Database migrations and validation
+   - Build artifact verification
+
+6. **End-to-End Tests** (`e2e-tests`)
+   - Playwright E2E tests on production build
+   - Accessibility tests (WCAG-AA compliance)
+   - Performance tests with Lighthouse
+   - Browser console error validation
+
+7. **Security and Final Checks** (`security-checks`)
+   - NPM security audits (frontend and backend)
+   - Package lock validation
+   - Configuration validation
+
+8. **Log Validation** (`log-validation`)
+   - Test execution log verification
+   - Error log analysis
+   - Test result compilation
+
+#### Test Script Usage Examples
+
+**Comprehensive Testing:**
+
+```bash
+# Run all tests with default settings
+./scripts/test-all.sh
+
+# Run with fail-fast mode (stop on first failure)
+./scripts/test-all.sh --fail-fast
+
+# Run in non-interactive mode (no user prompts)
+./scripts/test-all.sh --non-interactive
+
+# Show help and options
+./scripts/test-all.sh --help
+```
+
+**Phase-Specific Testing:**
+
+```bash
+# Run only setup phase
+./scripts/test-phase.sh setup
+
+# Run only unit tests
+./scripts/test-phase.sh unit-tests
+
+# Run E2E tests
+./scripts/test-phase.sh e2e-tests
+
+# List all available phases
+./scripts/test-phase.sh --list
+```
+
+**Individual Test Debugging:**
+
+```bash
+# Run a single test
+./scripts/test-single.sh "Frontend Build" "npm run build"
+
+# Run with category
+./scripts/test-single.sh "Backend Tests" "cd server && npm test" "Unit Tests"
+
+# Run with verbose output
+./scripts/test-single.sh --verbose "Type Check" "npm run type-check"
+```
+
+**Specialized Testing:**
+
+```bash
+# Accessibility testing (starts servers automatically)
+./scripts/test-accessibility.sh
+
+# Performance testing (starts servers automatically)
+./scripts/test-performance.sh
+
+# WebSocket integration testing
+./scripts/test-websocket-integration.sh
+
+# Browser console error checking
+./scripts/test-browser-console.sh
+
+# Note: All specialized tests are also integrated into the main test suite
+# Run ./scripts/test-all.sh to execute all tests including these
+```
+
+#### Test Framework Features
+
+**Interactive Mode:**
+
+- Prompts user on test failures with options to continue, stop, or view logs
+- Fail-fast mode available for immediate stopping on first failure
+- Non-interactive mode for CI/CD environments
+
+**Rolling Log Display:**
+
+- Real-time test output with rolling logs
+- Progress indicators for long-running tests
+- Contextual error information on failures
+
+**Server Management:**
+
+- Automatic backend and frontend server startup for E2E tests
+- Proper cleanup of processes and ports on exit or interruption
+- Health checks and timeout handling
+
+**Comprehensive Cleanup:**
+
+- Signal handling for graceful shutdown (Ctrl+C)
+- Automatic cleanup of servers, processes, and resources
+- Port cleanup to prevent conflicts
+
+**Test Result Tracking:**
+
+- Detailed results saved to `test-results.md`
+- Individual test logs in `logs/` directory
+- Coverage reports and error analysis
+- Execution time tracking
+
+#### Environment Variables for Testing
+
+```bash
+# Test behavior control
+FAIL_FAST=true           # Exit immediately on first test failure
+INTERACTIVE=false        # Run in non-interactive mode (no user prompts)
+NODE_ENV=test           # Set Node.js environment to test
+VITEST=true             # Enable Vitest-specific configurations
+
+# Server configuration
+BACKEND_PORT=3001       # Backend server port
+FRONTEND_PORT=4173      # Frontend preview server port
+PLAYWRIGHT_BASE_URL=http://localhost:4173  # Playwright test URL
+
+# Timeout settings
+SERVER_START_TIMEOUT=90     # Server startup timeout (seconds)
+TEST_COMMAND_TIMEOUT=300    # Individual test timeout (seconds)
+USER_INPUT_TIMEOUT=30       # User input timeout (seconds)
+```
+
+#### Deployment Scripts (`./scripts/`)
+
+```bash
+./scripts/deploy.sh development   # Development deployment
+./scripts/deploy.sh staging       # Staging deployment
+./scripts/deploy.sh production    # Production deployment with validation
+```
+
+### Development Workflow Commands
+
+#### Quick Start
+
+```bash
+# Terminal 1: Backend
+cd server && npm run dev
+
+# Terminal 2: Frontend
+npm run dev
+
+# Terminal 3: Tests (optional)
+npm run test:watch
+```
+
+#### Full Development Cycle
+
+```bash
+npm install                       # Install all dependencies
+npm run type-check               # Validate TypeScript
+npm run lint                     # Check code quality
+npm test                         # Run test suite
+npm run build                    # Build for production
+./scripts/deploy.sh production   # Deploy with validation
+```
+
+#### Testing Workflow
+
+```bash
+npm run test:frontend            # Unit tests
+npm run test:backend             # API tests
+npm run test:integration         # Integration tests
+npm run test:e2e                 # End-to-end tests
+npm run test:accessibility       # WCAG compliance
+npm run test:performance         # Performance benchmarks
+```
+
+### Service URLs in Development
+
+- **Frontend**: http://localhost:5173
+- **Backend API**: http://localhost:3001/api
+- **Health Check**: http://localhost:3001/health
+- **WebSocket**: ws://localhost:3001
+- **Playwright Tests**: http://localhost:5173 (configurable via `PLAYWRIGHT_BASE_URL`)
+
+### Production Configuration
+
+- Frontend build output: `dist/` directory
+- Backend compiled output: `server/dist/` directory
+- Database: SQLite file at `./data/marketpulse.db`
+- Cache: Redis (with memory fallback)
+- Logs: Winston structured logging
+
 **These enhanced guidelines are mandatory and apply to every interaction with the agent. Follow them systematically to ensure high-quality, maintainable, and production-ready code.**

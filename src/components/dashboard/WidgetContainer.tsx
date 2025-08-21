@@ -7,6 +7,14 @@ import React, { useCallback } from 'react';
 import type { Widget } from '@/types/widget';
 import type { Dashboard } from '@/types/dashboard';
 
+// Import widget components
+import { AssetListWidget } from '@/components/widgets/AssetListWidget';
+import { AssetGridWidget } from '@/components/widgets/AssetGridWidget';
+import { PriceChartWidget } from '@/components/widgets/PriceChartWidget';
+import { WatchlistWidget } from '@/components/widgets/WatchlistWidget';
+import { NewsFeedWidget } from '@/components/widgets/NewsFeedWidget';
+import { MarketSummaryWidget } from '@/components/widgets/MarketSummaryWidget';
+
 export interface WidgetContainerProps {
   /** Widget to render */
   widget: Widget;
@@ -27,6 +35,8 @@ export interface WidgetContainerProps {
   }) => void;
   /** Callback when widget is resized */
   onResize?: (size: { w: number; h: number }) => void;
+  /** Callback when widget needs update */
+  onWidgetUpdate?: (updates: Partial<Widget>) => void;
   /** Optional inline styles */
   style?: React.CSSProperties;
   /** Optional className */
@@ -37,6 +47,7 @@ export const WidgetContainer: React.FC<WidgetContainerProps> = ({
   widget,
   editable = false,
   resizable = false,
+  onWidgetUpdate,
   style,
   className = '',
 }) => {
@@ -51,6 +62,40 @@ export const WidgetContainer: React.FC<WidgetContainerProps> = ({
     // TODO: Implement widget configuration
     console.log('Configure widget:', widget.id);
   }, [widget.id]);
+
+  // Render the appropriate widget component
+  const renderWidgetContent = useCallback(() => {
+    const commonProps = {
+      widget,
+      isEditing: editable,
+      onUpdate: onWidgetUpdate,
+      className: 'w-full h-full',
+    };
+
+    switch (widget.type) {
+      case 'asset-list':
+        return <AssetListWidget {...commonProps} />;
+      case 'asset-grid':
+        return <AssetGridWidget {...commonProps} />;
+      case 'price-chart':
+        return <PriceChartWidget {...commonProps} />;
+      case 'watchlist':
+        return <WatchlistWidget {...commonProps} />;
+      case 'news-feed':
+        return <NewsFeedWidget {...commonProps} />;
+      case 'market-summary':
+        return <MarketSummaryWidget {...commonProps} />;
+      default:
+        return (
+          <div className="flex items-center justify-center h-32 text-gray-500 dark:text-gray-400">
+            <div className="text-center">
+              <div className="text-sm">Unknown Widget Type</div>
+              <div className="text-xs">{widget.type}</div>
+            </div>
+          </div>
+        );
+    }
+  }, [widget, editable, onWidgetUpdate]);
 
   return (
     <div
@@ -120,97 +165,7 @@ export const WidgetContainer: React.FC<WidgetContainerProps> = ({
       </div>
 
       {/* Widget Content */}
-      <div className="widget-content p-4">
-        {/* Placeholder content based on widget type */}
-        {widget.type === 'asset-list' && (
-          <div className="space-y-2">
-            <div className="text-sm text-gray-600 dark:text-gray-400">
-              Asset List Widget
-            </div>
-            <div className="space-y-1">
-              <div className="flex justify-between text-sm">
-                <span>AAPL</span>
-                <span className="text-green-600">$150.25 (+2.5%)</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span>GOOGL</span>
-                <span className="text-red-600">$2,750.80 (-1.2%)</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span>MSFT</span>
-                <span className="text-green-600">$305.15 (+0.8%)</span>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {widget.type === 'price-chart' && (
-          <div className="space-y-2">
-            <div className="text-sm text-gray-600 dark:text-gray-400">
-              Chart Widget
-            </div>
-            <div className="h-32 bg-gray-100 dark:bg-gray-700 rounded flex items-center justify-center">
-              <span className="text-gray-500 dark:text-gray-400">
-                Chart Placeholder
-              </span>
-            </div>
-          </div>
-        )}
-
-        {widget.type === 'news-feed' && (
-          <div className="space-y-2">
-            <div className="text-sm text-gray-600 dark:text-gray-400">
-              News Widget
-            </div>
-            <div className="space-y-2">
-              <div className="text-sm">
-                <div className="font-medium">Market Update</div>
-                <div className="text-gray-600 dark:text-gray-400 text-xs">
-                  2 hours ago
-                </div>
-              </div>
-              <div className="text-sm">
-                <div className="font-medium">Tech Stocks Rally</div>
-                <div className="text-gray-600 dark:text-gray-400 text-xs">
-                  4 hours ago
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {widget.type === 'market-summary' && (
-          <div className="space-y-2">
-            <div className="text-sm text-gray-600 dark:text-gray-400">
-              Market Summary
-            </div>
-            <div className="grid grid-cols-2 gap-2 text-sm">
-              <div>
-                <div className="text-gray-600 dark:text-gray-400">S&P 500</div>
-                <div className="font-medium text-green-600">
-                  4,185.47 (+0.5%)
-                </div>
-              </div>
-              <div>
-                <div className="text-gray-600 dark:text-gray-400">NASDAQ</div>
-                <div className="font-medium text-red-600">
-                  12,843.81 (-0.3%)
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Default content for unknown widget types */}
-        {!['asset-list', 'price-chart', 'news-feed', 'market-summary'].includes(
-          widget.type
-        ) && (
-          <div className="text-center text-gray-500 dark:text-gray-400">
-            <div className="text-sm">Unknown Widget Type</div>
-            <div className="text-xs">{widget.type}</div>
-          </div>
-        )}
-      </div>
+      <div className="widget-content">{renderWidgetContent()}</div>
 
       {/* Resize handle (only show in edit mode) */}
       {editable && resizable && (

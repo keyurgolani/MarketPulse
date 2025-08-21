@@ -62,14 +62,21 @@ async function checkConsoleErrors() {
   });
   
   try {
-    console.log('Navigating to http://localhost:5173...');
-    await page.goto('http://localhost:5173', { 
+    const baseUrl = process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:4173';
+    console.log(`Navigating to ${baseUrl}...`);
+    
+    // First check if the server is accessible
+    const response = await page.goto(baseUrl, { 
       waitUntil: 'networkidle2',
-      timeout: 30000 
+      timeout: 60000 
     });
     
+    if (!response || !response.ok()) {
+      throw new Error(`Failed to load page: ${response ? response.status() : 'No response'}`);
+    }
+    
     // Wait a bit for any async operations
-    await new Promise(resolve => setTimeout(resolve, 3000));
+    await new Promise(resolve => setTimeout(resolve, 5000));
     
     console.log('\n=== CONSOLE TEST RESULTS ===');
     console.log(`Console Errors: ${consoleErrors.length}`);

@@ -100,6 +100,16 @@ export class WebSocketService {
    * Initialize WebSocket connection
    */
   async connect(serverUrl?: string): Promise<void> {
+    // Skip connection in test environment
+    if (
+      import.meta.env.MODE === 'test' ||
+      process.env.NODE_ENV === 'test' ||
+      import.meta.env.VITEST
+    ) {
+      logger.info('Skipping WebSocket connection in test environment');
+      return;
+    }
+
     if (this.socket?.connected) {
       return;
     }

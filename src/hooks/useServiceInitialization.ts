@@ -8,6 +8,7 @@ import { webSocketService } from '@/services/webSocketService';
 import { useDashboardStore } from '@/stores/dashboardStore';
 import { useOfflineSync } from '@/hooks/useOfflineSync';
 import { useDashboardSync } from '@/hooks/useDashboardSync';
+import { initializeWidgetSystem } from '@/components/widgets/WidgetSystem';
 import { logger } from '@/utils/logger';
 
 export interface ServiceInitializationOptions {
@@ -38,6 +39,11 @@ export interface ServiceStatus {
     hasConflicts: boolean;
     connectedUsers: string[];
   };
+  widgetSystem: {
+    initialized: boolean;
+    registeredWidgets: number;
+    error?: string;
+  };
 }
 
 export function useServiceInitialization(
@@ -59,6 +65,14 @@ export function useServiceInitialization(
   const { activeDashboard } = useDashboardStore();
   const initializationRef = useRef(false);
   const webSocketErrorRef = useRef<string | undefined>(undefined);
+  const widgetSystemRef = useRef<{
+    initialized: boolean;
+    registeredWidgets: number;
+    error?: string;
+  }>({
+    initialized: false,
+    registeredWidgets: 0,
+  });
 
   // Initialize offline sync with delay to avoid SSR issues
   const offlineSync = useOfflineSync({
@@ -119,6 +133,35 @@ export function useServiceInitialization(
   }, [enableWebSocket, webSocketUrl, autoConnect]);
 
   /**
+   * Initialize widget system
+   */
+  const initializeWidgets = useCallback(async () => {
+    try {
+      logger.info('Initializing widget system');
+      initializeWidgetSystem();
+
+      // Update widget system status
+      widgetSystemRef.current = {
+        initialized: true,
+        registeredWidgets: 6, // We have 6 widget types
+      };
+
+      logger.info('Widget system initialized successfully');
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
+      widgetSystemRef.current = {
+        initialized: false,
+        registeredWidgets: 0,
+        error: errorMessage,
+      };
+      logger.error('Failed to initialize widget system:', {
+        error: errorMessage,
+      });
+    }
+  }, []);
+
+  /**
    * Initialize all services
    */
   const initializeServices = useCallback(async () => {
@@ -134,6 +177,9 @@ export function useServiceInitialization(
     });
 
     try {
+      // Initialize widget system first
+      await initializeWidgets();
+
       // Initialize WebSocket service
       await initializeWebSocket();
 
@@ -154,6 +200,7 @@ export function useServiceInitialization(
     enableOfflineSync,
     enableDashboardSync,
     initializeWebSocket,
+    initializeWidgets,
     offlineSync,
   ]);
 
@@ -274,6 +321,11 @@ export function useServiceInitialization(
       isSyncing: dashboardSync.isSyncing,
       hasConflicts: dashboardSync.hasConflicts,
       connectedUsers: dashboardSync.connectedUsers,
+    },
+    widgetSystem: {
+      initialized: widgetSystemRef.current.initialized,
+      registeredWidgets: widgetSystemRef.current.registeredWidgets,
+      error: widgetSystemRef.current.error,
     },
   };
 

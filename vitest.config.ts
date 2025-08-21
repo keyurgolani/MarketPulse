@@ -9,11 +9,37 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: './src/setupTests.ts',
     css: true,
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'json', 'html'],
+      exclude: [
+        'node_modules/',
+        'dist/',
+        'server/',
+        'tests/',
+        '**/*.config.*',
+        '**/*.test.*',
+        '**/*.spec.*',
+        '**/setupTests.ts',
+        '**/main.tsx',
+        '**/debug-api.ts',
+        '**/__tests__/**',
+        '**/__mocks__/**',
+      ],
+      thresholds: {
+        global: {
+          branches: 80,
+          functions: 80,
+          lines: 80,
+          statements: 80,
+        },
+      },
+    },
     exclude: [
       '**/node_modules/**',
       '**/dist/**',
       '**/server/**', // Exclude backend tests - they use Jest
-      '**/tests/e2e/**', // Exclude E2E tests - they use Playwright
+      '**/tests/**', // Exclude all tests directory - they use Playwright
       '**/.{idea,git,cache,output,temp}/**',
       '**/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tsup,build}.config.*',
     ],

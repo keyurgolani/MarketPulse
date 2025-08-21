@@ -138,7 +138,10 @@ const ServiceStatusIndicator: React.FC<ServiceStatusIndicatorProps> = ({
   }
 
   return (
-    <div className="fixed top-4 right-4 z-50 max-w-sm">
+    <aside
+      className="fixed top-4 right-4 z-50 max-w-sm"
+      aria-label="Service status indicator"
+    >
       <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg p-4">
         <div className="flex items-center justify-between mb-2">
           <h3 className="text-sm font-medium text-gray-900 dark:text-white">
@@ -171,7 +174,7 @@ const ServiceStatusIndicator: React.FC<ServiceStatusIndicatorProps> = ({
           </div>
         )}
 
-        <div className="space-y-2 text-xs">
+        <div className="space-y-2 text-xs" role="status" aria-live="polite">
           {/* WebSocket Status */}
           <div className="flex items-center justify-between">
             <span className="text-gray-600 dark:text-gray-400">WebSocket:</span>
@@ -261,7 +264,7 @@ const ServiceStatusIndicator: React.FC<ServiceStatusIndicatorProps> = ({
           )}
         </div>
       </div>
-    </div>
+    </aside>
   );
 };
 

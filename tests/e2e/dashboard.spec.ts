@@ -44,6 +44,6 @@ test.describe('Dashboard E2E Tests', () => {
     // Test basic navigation functionality
     // This is a placeholder - actual navigation tests would depend on the UI
     const currentUrl = page.url();
-    expect(currentUrl).toContain('localhost:5173');
+    expect(currentUrl).toContain('/dashboard');
   });
 });

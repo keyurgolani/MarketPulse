@@ -3,19 +3,24 @@
   "version": "1.0.0",
   "description": "MarketPulse backend server with Express.js, TypeScript, and SQLite",
   "main": "dist/index.js",
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  },
   "scripts": {
-    "dev": "nodemon -r tsconfig-paths/register src/index.ts",
-    "build": "tsc && tsc-alias",
+    "dev": "./node_modules/.bin/nodemon -r tsconfig-paths/register src/index.ts",
+    "build": "./node_modules/.bin/tsc && ./node_modules/.bin/tsc-alias",
     "start": "node dist/index.js",
-    "test": "jest",
-    "test:watch": "jest --watch",
-    "test:integration": "jest --testPathPatterns=integration",
-    "lint": "eslint src/**/*.ts",
-    "lint:fix": "eslint src/**/*.ts --fix",
-    "type-check": "tsc --noEmit",
-    "migrate": "ts-node --project tsconfig.scripts.json scripts/migrate.ts",
-    "migrate:status": "ts-node --project tsconfig.scripts.json scripts/migrate.ts status",
-    "migrate:validate": "ts-node --project tsconfig.scripts.json scripts/migrate.ts validate"
+    "test": "./node_modules/.bin/jest",
+    "test:watch": "./node_modules/.bin/jest --watch",
+    "test:coverage": "./node_modules/.bin/jest --coverage",
+    "test:integration": "./node_modules/.bin/jest --testPathPatterns=integration",
+    "lint": "./node_modules/.bin/eslint src/**/*.ts",
+    "lint:fix": "./node_modules/.bin/eslint src/**/*.ts --fix",
+    "type-check": "./node_modules/.bin/tsc --noEmit",
+    "migrate": "./node_modules/.bin/ts-node --project tsconfig.scripts.json scripts/migrate.ts",
+    "migrate:status": "./node_modules/.bin/ts-node --project tsconfig.scripts.json scripts/migrate.ts status",
+    "migrate:validate": "./node_modules/.bin/ts-node --project tsconfig.scripts.json scripts/migrate.ts validate"
   },
   "keywords": [
     "financial",
@@ -74,6 +79,9 @@
     "ts-node": "^10.9.2",
     "tsc-alias": "^1.8.16",
     "tsconfig-paths": "^4.2.0",
-    "typescript": "^5.9.2"
+    "typescript": "^5.9.2",
+    "eslint": "^9.33.0",
+    "@typescript-eslint/eslint-plugin": "^8.39.1",
+    "@typescript-eslint/parser": "^8.39.1"
   }
 }

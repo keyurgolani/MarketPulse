@@ -19,13 +19,13 @@
     "context7": {
       "command": "npx",
       "args": ["-y", "@upstash/context7-mcp"],
-      "disabled": false,
+      "disabled": true,
       "autoApprove": []
     },
     "sequential-thinking": {
       "command": "npx",
       "args": ["-y", "@modelcontextprotocol/server-sequential-thinking"],
-      "disabled": false,
+      "disabled": true,
       "autoApprove": ["sequentialthinking"]
     },
     "git": {
@@ -38,13 +38,13 @@
       "command": "npx",
       "args": ["-y", "@tokenizin/mcp-npx-fetch"],
       "env": {},
-      "disabled": false,
+      "disabled": true,
       "autoApprove": []
     },
     "spec-driven": {
       "command": "npx",
       "args": ["-y", "mcp-server-spec-driven-development@latest"],
-      "disabled": false,
+      "disabled": true,
       "autoApprove": []
     },
     "shadcn-ui": {
@@ -54,7 +54,7 @@
         "--github-api-key",
         "ghp_your_token_here"
       ],
-      "disabled": false,
+      "disabled": true,
       "autoApprove": []
     }
   }

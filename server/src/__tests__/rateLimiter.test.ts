@@ -87,8 +87,14 @@ describe('Rate Limiter Middleware', () => {
       // Test general endpoint
       const generalResponse = await request(app).get('/test').expect(200);
 
+      // Small delay to prevent connection issues
+      await new Promise(resolve => setTimeout(resolve, 10));
+
       // Test API endpoint (should have higher limit)
       const apiResponse = await request(app).get('/api/test').expect(200);
+
+      // Small delay to prevent connection issues
+      await new Promise(resolve => setTimeout(resolve, 10));
 
       // Test strict endpoint (should have lower limit)
       const strictResponse = await request(app).get('/logs/test').expect(200);
