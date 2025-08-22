@@ -4,6 +4,8 @@
  */
 
 import type { ApiResponse } from '@/types/api';
+import { cacheService } from './cacheService';
+import { performanceService } from './performanceService';
 
 export interface ApiClientConfig {
   baseURL: string;
@@ -41,7 +43,7 @@ export class ApiClient {
   }
 
   /**
-   * Make HTTP request with error handling and retries
+   * Make HTTP request with error handling, caching, and retries
    */
   async request<T>(config: RequestConfig): Promise<ApiResponse<T>> {
     const {
@@ -54,7 +56,6 @@ export class ApiClient {
     } = config;
 
     // Build URL with query parameters
-    // Properly construct URL by joining base URL and path
     const baseUrl = this.config.baseURL.endsWith('/')
       ? this.config.baseURL.slice(0, -1)
       : this.config.baseURL;
@@ -67,30 +68,101 @@ export class ApiClient {
       });
     }
 
+    const cacheKey = `api_${method}_${fullUrl.toString()}`;
+    const startTime = performance.now();
+
     // Debug logging (development only)
     if (import.meta.env.DEV && import.meta.env.VITE_DEBUG_API) {
       console.log(`API Request: ${method} ${fullUrl.toString()}`);
     }
 
-    // Setup request options
+    // For GET requests, try cache first and use request deduplication
+    if (method === 'GET') {
+      try {
+        const result = await cacheService.deduplicate(
+          cacheKey,
+          () =>
+            this.performRequest<T>(fullUrl.toString(), {
+              method,
+              headers: {
+                'Content-Type': 'application/json',
+                ...(localStorage.getItem('auth_token') && {
+                  Authorization: `Bearer ${localStorage.getItem('auth_token')}`,
+                }),
+                ...headers,
+              },
+              signal: AbortSignal.timeout(timeout),
+            }),
+          5 * 60 * 1000 // 5 minutes cache TTL
+        );
+
+        const responseTime = performance.now() - startTime;
+        performanceService.recordApiResponseTime(
+          fullUrl.toString(),
+          responseTime
+        );
+
+        return result;
+      } catch (error) {
+        const responseTime = performance.now() - startTime;
+        performanceService.recordApiResponseTime(
+          fullUrl.toString(),
+          responseTime
+        );
+        throw error;
+      }
+    }
+
+    // For non-GET requests, perform request directly
     const requestOptions: RequestInit = {
       method,
       headers: {
         'Content-Type': 'application/json',
+        ...(localStorage.getItem('auth_token') && {
+          Authorization: `Bearer ${localStorage.getItem('auth_token')}`,
+        }),
         ...headers,
       },
       signal: AbortSignal.timeout(timeout),
     };
 
-    if (data && method !== 'GET') {
+    if (data) {
       requestOptions.body = JSON.stringify(data);
     }
 
-    // Implement retry logic
+    try {
+      const result = await this.performRequest<T>(
+        fullUrl.toString(),
+        requestOptions
+      );
+      const responseTime = performance.now() - startTime;
+      performanceService.recordApiResponseTime(
+        fullUrl.toString(),
+        responseTime
+      );
+      return result;
+    } catch (error) {
+      const responseTime = performance.now() - startTime;
+      performanceService.recordApiResponseTime(
+        fullUrl.toString(),
+        responseTime
+      );
+      throw error;
+    }
+  }
+
+  /**
+   * Perform the actual HTTP request with retry logic
+   */
+  private async performRequest<T>(
+    url: string,
+    options: RequestInit
+  ): Promise<ApiResponse<T>> {
     let lastError: Error | null = null;
+
     for (let attempt = 0; attempt <= this.config.retries; attempt++) {
       try {
-        const response = await fetch(fullUrl.toString(), requestOptions);
+        const response = await fetch(url, options);
 
         if (!response.ok) {
           const errorData = await this.parseErrorResponse(response);

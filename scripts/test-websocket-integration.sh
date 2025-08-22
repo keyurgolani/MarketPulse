@@ -24,27 +24,27 @@ echo ""
 
 # Function to cleanup servers
 cleanup_servers() {
-    echo -e "${YELLOW}🧹 Cleaning up servers...${NC}"
+    echo -e "${YELLOW}🧹 Cleaning up WebSocket test servers...${NC}"
     
+    # Only stop servers that this script started
     if [ ! -z "$BACKEND_PID" ] && kill -0 "$BACKEND_PID" 2>/dev/null; then
-        echo "Stopping backend server (PID: $BACKEND_PID)..."
+        echo "Stopping backend server started by this script (PID: $BACKEND_PID)..."
         kill -TERM "$BACKEND_PID" 2>/dev/null || true
         sleep 2
         kill -KILL "$BACKEND_PID" 2>/dev/null || true
     fi
     
     if [ ! -z "$FRONTEND_PID" ] && kill -0 "$FRONTEND_PID" 2>/dev/null; then
-        echo "Stopping frontend server (PID: $FRONTEND_PID)..."
+        echo "Stopping frontend server started by this script (PID: $FRONTEND_PID)..."
         kill -TERM "$FRONTEND_PID" 2>/dev/null || true
         sleep 2
         kill -KILL "$FRONTEND_PID" 2>/dev/null || true
     fi
     
-    # Kill any remaining processes on ports
-    lsof -ti:3001 | xargs kill -KILL 2>/dev/null || true
-    lsof -ti:4173 | xargs kill -KILL 2>/dev/null || true
+    # Don't kill processes on ports if we didn't start them
+    # This prevents conflicts with the test framework's servers
     
-    echo -e "${GREEN}✅ Cleanup completed${NC}"
+    echo -e "${GREEN}✅ WebSocket test cleanup completed${NC}"
 }
 
 # Set up signal handlers
@@ -176,9 +176,13 @@ main() {
     echo "Frontend URL: $FRONTEND_URL"
     echo ""
     
-    # Check if servers are already running
+    # Check if servers are already running (from test framework)
+    local backend_already_running=false
+    local frontend_already_running=false
+    
     if curl -s -f "$BACKEND_URL/api/health" > /dev/null 2>&1; then
-        echo -e "${GREEN}✅ Backend server already running${NC}"
+        echo -e "${GREEN}✅ Backend server already running (using existing)${NC}"
+        backend_already_running=true
     else
         echo -e "${YELLOW}🚀 Starting backend server...${NC}"
         cd server
@@ -194,7 +198,8 @@ main() {
     fi
     
     if curl -s -f "$FRONTEND_URL" > /dev/null 2>&1; then
-        echo -e "${GREEN}✅ Frontend server already running${NC}"
+        echo -e "${GREEN}✅ Frontend server already running (using existing)${NC}"
+        frontend_already_running=true
     else
         echo -e "${YELLOW}🚀 Starting frontend server...${NC}"
         npm run build > logs/websocket-frontend-build.log 2>&1
@@ -240,6 +245,17 @@ main() {
     echo -e "${GREEN}✅ Node.js WebSocket client working${NC}"
     echo -e "${GREEN}✅ Playwright WebSocket tests passing${NC}"
     echo -e "${GREEN}✅ WebSocket integration fully functional${NC}"
+    
+    # Only cleanup servers we started
+    if [ "$backend_already_running" = false ] || [ "$frontend_already_running" = false ]; then
+        echo -e "${YELLOW}🧹 Cleaning up servers started by this script...${NC}"
+        # The trap will handle cleanup
+    else
+        echo -e "${BLUE}ℹ️ Leaving existing servers running${NC}"
+        # Clear PIDs so trap doesn't try to kill servers we didn't start
+        BACKEND_PID=""
+        FRONTEND_PID=""
+    fi
     
     return 0
 }

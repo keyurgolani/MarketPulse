@@ -22,9 +22,20 @@ export {
   UserService,
 } from './dashboardService';
 
+export { authService, AuthService } from './authService';
+
 // News Service
 export { newsService, NewsService } from './newsService';
 export type { NewsParams } from './newsService';
+
+// Performance Services
+export { cacheService } from './cacheService';
+export { performanceService } from './performanceService';
+export type { CacheEntry, CacheConfig, CacheStats } from './cacheService';
+export type {
+  PerformanceMetrics,
+  PerformanceReport,
+} from './performanceService';
 
 // Service utilities
 import { ApiError } from './apiClient';

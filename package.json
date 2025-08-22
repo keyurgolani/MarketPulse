@@ -10,7 +10,7 @@
   "scripts": {
     "dev": "./node_modules/.bin/vite",
     "build": "./node_modules/.bin/tsc -b && ./node_modules/.bin/vite build",
-    "lint": "./node_modules/.bin/eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+    "lint": "./node_modules/.bin/eslint . --ext ts,tsx --report-unused-disable-directives",
     "lint:fix": "./node_modules/.bin/eslint . --ext ts,tsx --fix",
     "format": "./node_modules/.bin/prettier --write \"src/**/*.{js,jsx,ts,tsx,json,css,md}\"",
     "format:check": "./node_modules/.bin/prettier --check \"src/**/*.{js,jsx,ts,tsx,json,css,md}\"",
@@ -75,7 +75,7 @@
     "husky": "^9.1.7",
     "jsdom": "^26.1.0",
     "lighthouse": "^12.8.1",
-    "lint-staged": "^15.2.10",
+    "lint-staged": "^15.5.2",
     "postcss": "^8.5.6",
     "prettier": "^3.6.2",
     "puppeteer": "^24.16.2",

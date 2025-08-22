@@ -31,9 +31,9 @@ start_backend_server() {
     echo -e "${COLOR_DIM}  │ Running database migrations...${COLOR_RESET}"
     npm run migrate > "../$LOGS_DIR/backend-migrate.log" 2>&1 || true
     
-    # Start server in production mode
-    echo -e "${COLOR_DIM}  │ Starting server in production mode...${COLOR_RESET}"
-    PORT="$BACKEND_PORT" NODE_ENV=production npm start > "../$LOGS_DIR/backend-server.log" 2>&1 &
+    # Start server in test mode for integration tests
+    echo -e "${COLOR_DIM}  │ Starting server in test mode...${COLOR_RESET}"
+    PORT="$BACKEND_PORT" NODE_ENV=test npm start > "../$LOGS_DIR/backend-server.log" 2>&1 &
     local backend_pid=$!
     set_backend_pid "$backend_pid"
     cd ..
