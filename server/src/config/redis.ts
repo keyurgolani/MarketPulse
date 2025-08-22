@@ -27,13 +27,29 @@ class RedisManagerImpl implements RedisManager {
   public isConnected = false;
 
   async connect(): Promise<Redis | null> {
+    // Check if Redis is disabled (e.g., in test environment)
+    if (process.env.DISABLE_REDIS === 'true') {
+      if (config.nodeEnv !== 'test') {
+        logger.info('Redis disabled by configuration, using memory cache only');
+      }
+      this.client = null;
+      this.isConnected = false;
+      return null;
+    }
+
     try {
       const redisConfig: Record<string, unknown> = {
         host: config.redis.host,
         port: config.redis.port,
         db: config.redis.db,
-        maxRetriesPerRequest: 3,
+        maxRetriesPerRequest: 0,
+        retryDelayOnFailover: 100,
+        enableReadyCheck: false,
         lazyConnect: true,
+        connectTimeout: 2000,
+        commandTimeout: 2000,
+        autoResubscribe: false,
+        autoResendUnfulfilledCommands: false,
       };
 
       if (config.redis.password) {
@@ -49,18 +65,36 @@ class RedisManagerImpl implements RedisManager {
 
       this.client.on('error', error => {
         this.isConnected = false;
-        logger.error('Redis connection error:', error);
+        // Only log Redis errors in development, not in test environment
+        if (config.nodeEnv !== 'test') {
+          logger.error('Redis connection error:', error);
+        }
       });
 
       this.client.on('close', () => {
         this.isConnected = false;
-        logger.warn('Redis connection closed');
+        if (config.nodeEnv !== 'test') {
+          logger.warn('Redis connection closed');
+        }
       });
 
-      await this.client.connect();
+      // Try to connect with timeout
+      const connectPromise = this.client.connect();
+      const timeoutPromise = new Promise<never>((_, reject) => {
+        setTimeout(() => reject(new Error('Redis connection timeout')), 2000);
+      });
+
+      await Promise.race([connectPromise, timeoutPromise]);
+
+      // If we get here, connection was successful
       return this.client;
     } catch (error) {
-      logger.error('Failed to connect to Redis:', error);
+      if (config.nodeEnv !== 'test') {
+        logger.warn(
+          'Redis unavailable, will use memory cache fallback:',
+          error
+        );
+      }
       this.client = null;
       this.isConnected = false;
       return null;
@@ -83,7 +117,9 @@ class RedisManagerImpl implements RedisManager {
     try {
       return await this.client.get(key);
     } catch (error) {
-      logger.error('Redis GET error:', error);
+      if (config.nodeEnv !== 'test') {
+        logger.error('Redis GET error:', error);
+      }
       return null;
     }
   }
@@ -100,7 +136,9 @@ class RedisManagerImpl implements RedisManager {
         await this.client.set(key, value);
       }
     } catch (error) {
-      logger.error('Redis SET error:', error);
+      if (config.nodeEnv !== 'test') {
+        logger.error('Redis SET error:', error);
+      }
     }
   }
 
@@ -112,7 +150,9 @@ class RedisManagerImpl implements RedisManager {
     try {
       await this.client.del(key);
     } catch (error) {
-      logger.error('Redis DEL error:', error);
+      if (config.nodeEnv !== 'test') {
+        logger.error('Redis DEL error:', error);
+      }
     }
   }
 
@@ -125,7 +165,9 @@ class RedisManagerImpl implements RedisManager {
       const result = await this.client.exists(key);
       return result === 1;
     } catch (error) {
-      logger.error('Redis EXISTS error:', error);
+      if (config.nodeEnv !== 'test') {
+        logger.error('Redis EXISTS error:', error);
+      }
       return false;
     }
   }
@@ -147,7 +189,9 @@ class RedisManagerImpl implements RedisManager {
       const info = await this.client.info();
       return { info };
     } catch (error) {
-      logger.error('Redis INFO error:', error);
+      if (config.nodeEnv !== 'test') {
+        logger.error('Redis INFO error:', error);
+      }
       return {};
     }
   }

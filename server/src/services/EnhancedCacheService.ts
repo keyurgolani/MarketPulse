@@ -208,7 +208,7 @@ export class EnhancedCacheService {
     // Remove from rate limited set after duration
     setTimeout(() => {
       this.rateLimitedKeys.delete(key);
-    }, duration * 1000);
+    }, duration * 1000).unref(); // Don't keep the process alive
 
     logger.warn('Key marked as rate limited', { key, duration });
   }
@@ -316,7 +316,7 @@ export class EnhancedCacheService {
           error: error instanceof Error ? error.message : 'Unknown error',
         });
       }
-    }, cacheConfig.backgroundRefresh.interval);
+    }, cacheConfig.backgroundRefresh.interval).unref(); // Don't keep the process alive
 
     logger.info('Background refresh started', {
       interval: cacheConfig.backgroundRefresh.interval,
@@ -484,7 +484,12 @@ export class EnhancedCacheService {
     this.warmingTasks.clear();
 
     // Stop API cache service warming
-    this.apiCacheService.stopAllWarming();
+    if (
+      this.apiCacheService &&
+      typeof this.apiCacheService.stopAllWarming === 'function'
+    ) {
+      this.apiCacheService.stopAllWarming();
+    }
 
     logger.info('Enhanced cache service destroyed');
   }

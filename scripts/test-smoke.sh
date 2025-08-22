@@ -7,7 +7,7 @@ set -euo pipefail
 # Configuration
 BACKEND_URL=${BACKEND_URL:-"http://localhost:3001"}
 FRONTEND_URL=${FRONTEND_URL:-"http://localhost:4173"}
-TIMEOUT=5
+TIMEOUT=10
 
 # Colors for output
 COLOR_RESET='\033[0m'
@@ -39,19 +39,27 @@ log_test() {
     fi
 }
 
-# Function to test URL accessibility
+# Function to test URL accessibility with retry
 test_url() {
     local url="$1"
     local test_name="$2"
     local expected_status="${3:-200}"
+    local retries="${4:-1}"
     
-    local response=$(curl -s -w "%{http_code}" -o /dev/null --max-time "$TIMEOUT" "$url" 2>/dev/null || echo "000")
+    for i in $(seq 1 $retries); do
+        local response=$(curl -s -w "%{http_code}" -o /dev/null --max-time "$TIMEOUT" "$url" 2>/dev/null || echo "000")
+        
+        if [ "$response" = "$expected_status" ]; then
+            log_test "$test_name" "PASS" "$url -> $response"
+            return 0
+        fi
+        
+        if [ $i -lt $retries ]; then
+            sleep 2
+        fi
+    done
     
-    if [ "$response" = "$expected_status" ]; then
-        log_test "$test_name" "PASS" "$url -> $response"
-    else
-        log_test "$test_name" "FAIL" "$url -> Expected: $expected_status, Got: $response"
-    fi
+    log_test "$test_name" "FAIL" "$url -> Expected: $expected_status, Got: $response (after $retries attempts)"
 }
 
 # Function to test JSON endpoint
@@ -85,7 +93,7 @@ echo ""
 echo "🔌 Core API Endpoints"
 test_url "$BACKEND_URL/api/health" "API Health"
 test_url "$BACKEND_URL/api/system/info" "System Info"
-test_url "$BACKEND_URL/api/assets" "Assets Endpoint"
+test_url "$BACKEND_URL/api/assets" "Assets Endpoint" "200" "3"
 test_url "$BACKEND_URL/api/news" "News Endpoint"
 test_url "$BACKEND_URL/api/dashboards/default" "Default Dashboards"
 

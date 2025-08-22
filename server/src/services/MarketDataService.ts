@@ -48,11 +48,111 @@ export class MarketDataService {
   ) {
     this.yahooFinanceService = yahooFinanceService || new YahooFinanceService();
     this.cacheService = cacheService || CacheService.getInstance();
-    this.apiKeyManager = new ApiKeyManager(['yahoo-finance-key']);
+
+    // Initialize with multiple API keys from environment
+    const apiKeys = this.getApiKeysFromEnvironment();
+    this.apiKeyManager = new ApiKeyManager(apiKeys, 3, 5); // Rotate after 3 rate limits, disable after 5 errors
+
     this.rateLimitService = new RateLimitService('MarketDataService', {
       requestsPerMinute: 60,
       requestsPerHour: 1000,
     });
+  }
+
+  /**
+   * Get API keys from environment variables
+   */
+  private getApiKeysFromEnvironment(): string[] {
+    const keys: string[] = [];
+
+    // Primary API key
+    if (process.env.YAHOO_FINANCE_API_KEY) {
+      keys.push(process.env.YAHOO_FINANCE_API_KEY);
+    }
+
+    // Additional API keys (YAHOO_FINANCE_API_KEY_2, YAHOO_FINANCE_API_KEY_3, etc.)
+    for (let i = 2; i <= 10; i++) {
+      const key = process.env[`YAHOO_FINANCE_API_KEY_${i}`];
+      if (key) {
+        keys.push(key);
+      }
+    }
+
+    // Fallback to demo keys for development
+    if (keys.length === 0) {
+      keys.push('demo-key-1', 'demo-key-2', 'demo-key-3');
+      logger.warn('No API keys found in environment, using demo keys');
+    }
+
+    logger.info(`Initialized with ${keys.length} API keys`);
+    return keys;
+  }
+
+  /**
+   * Check if an error is a rate limit error
+   */
+  private isRateLimitError(error: unknown): boolean {
+    if (!(error instanceof Error)) return false;
+
+    const message = error.message.toLowerCase();
+    const statusCode =
+      (error as { status?: number; statusCode?: number }).status ||
+      (error as { status?: number; statusCode?: number }).statusCode;
+
+    // Check for common rate limit indicators
+    return (
+      statusCode === 429 ||
+      statusCode === 403 ||
+      message.includes('rate limit') ||
+      message.includes('too many requests') ||
+      message.includes('quota exceeded') ||
+      message.includes('throttled') ||
+      message.includes('rate exceeded')
+    );
+  }
+
+  /**
+   * Retry quote request with new API key
+   */
+  private async retryQuoteWithNewKey(
+    symbol: string,
+    options: MarketDataOptions
+  ): Promise<QuoteData> {
+    const { timeout = 10000 } = options;
+
+    // Get new API key
+    const newApiKey = this.apiKeyManager.getCurrentKey();
+
+    // Check rate limits with new key
+    try {
+      await this.rateLimitService.checkLimit();
+    } catch {
+      throw new Error('Rate limit exceeded for all API keys');
+    }
+
+    try {
+      // Fetch data from API with new key
+      const quoteData = await Promise.race([
+        this.yahooFinanceService.getQuote(symbol),
+        new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error('Request timeout')), timeout)
+        ),
+      ]);
+
+      // Record success
+      this.apiKeyManager.recordSuccess();
+
+      logger.info('Quote retry successful with new API key', {
+        symbol,
+        newApiKey: newApiKey.substring(0, 8) + '...',
+      });
+
+      return quoteData;
+    } catch (retryError) {
+      // Don't rotate again on retry failure
+      this.apiKeyManager.recordError((retryError as Error).message);
+      throw retryError;
+    }
   }
 
   /**
@@ -137,12 +237,44 @@ export class MarketDataService {
 
       return quoteData;
     } catch (error) {
-      // Record failure
-      this.apiKeyManager.recordError((error as Error).message);
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
+
+      // Check if this is a rate limit error
+      if (this.isRateLimitError(error)) {
+        logger.warn('Rate limit detected, rotating API key', {
+          symbol,
+          error: errorMessage,
+          apiKey: apiKey.substring(0, 8) + '...',
+        });
+
+        try {
+          // Rotate to next API key
+          const newKey = this.apiKeyManager.rotateKey();
+          logger.info('Rotated to new API key', {
+            newKey: newKey.substring(0, 8) + '...',
+          });
+
+          // Retry with new key (one time only)
+          return await this.retryQuoteWithNewKey(symbol, options);
+        } catch (retryError) {
+          logger.error('Retry with new API key failed', {
+            symbol,
+            retryError:
+              retryError instanceof Error
+                ? retryError.message
+                : 'Unknown error',
+          });
+          throw retryError;
+        }
+      } else {
+        // Record failure for non-rate-limit errors
+        this.apiKeyManager.recordError(errorMessage);
+      }
 
       logger.error('Failed to fetch quote', {
         symbol,
-        error: error instanceof Error ? error.message : 'Unknown error',
+        error: errorMessage,
         apiKey: apiKey.substring(0, 8) + '...',
       });
 
@@ -574,9 +706,7 @@ export class MarketDataService {
   /**
    * Refresh cache for specific symbols
    */
-  async refreshCache(
-    symbols: string[]
-  ): Promise<{
+  async refreshCache(symbols: string[]): Promise<{
     success: string[];
     errors: Array<{ symbol: string; error: string }>;
   }> {

@@ -99,7 +99,7 @@ export class CacheMonitoringService {
           error: error instanceof Error ? error.message : 'Unknown error',
         });
       }
-    }, 60000); // Collect metrics every minute
+    }, 60000).unref(); // Collect metrics every minute, don't keep process alive
 
     logger.info('Cache monitoring started');
   }

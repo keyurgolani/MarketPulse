@@ -417,6 +417,79 @@ export class WebSocketService {
   }
 
   /**
+   * Subscribe to market data for symbols
+   */
+  subscribeToMarketData(symbols: string[], userId: string): void {
+    if (!this.socket?.connected) {
+      logger.warn('Cannot subscribe to market data: WebSocket not connected');
+      return;
+    }
+
+    this.socket.emit('market_data:subscribe', { symbols, userId });
+    logger.info('Subscribed to market data:', { symbols, userId });
+  }
+
+  /**
+   * Unsubscribe from market data
+   */
+  unsubscribeFromMarketData(symbols?: string[]): void {
+    if (!this.socket?.connected) {
+      logger.warn(
+        'Cannot unsubscribe from market data: WebSocket not connected'
+      );
+      return;
+    }
+
+    this.socket.emit('market_data:unsubscribe', { symbols });
+    logger.info('Unsubscribed from market data:', {
+      symbols: symbols || 'all',
+    });
+  }
+
+  /**
+   * Get current market data subscriptions
+   */
+  getMarketDataSubscriptions(): void {
+    if (!this.socket?.connected) {
+      logger.warn(
+        'Cannot get market data subscriptions: WebSocket not connected'
+      );
+      return;
+    }
+
+    this.socket.emit('market_data:get_subscriptions');
+  }
+
+  /**
+   * Add market data event listener
+   */
+  onMarketDataEvent(event: string, handler: (data: unknown) => void): void {
+    if (!this.socket) {
+      logger.warn(
+        'Cannot add market data event listener: WebSocket not initialized'
+      );
+      return;
+    }
+
+    this.socket.on(event, handler);
+  }
+
+  /**
+   * Remove market data event listener
+   */
+  offMarketDataEvent(event: string, handler?: (data: unknown) => void): void {
+    if (!this.socket) {
+      return;
+    }
+
+    if (handler) {
+      this.socket.off(event, handler);
+    } else {
+      this.socket.off(event);
+    }
+  }
+
+  /**
    * Set event handlers
    */
   setEventHandlers(handlers: WebSocketEventHandlers): void {

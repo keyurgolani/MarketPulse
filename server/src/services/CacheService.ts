@@ -35,19 +35,30 @@ export class CacheService {
    */
   public async initialize(): Promise<void> {
     try {
-      // Try to connect to Redis
-      const redisClient = await redisManager.connect();
+      // Try to connect to Redis with timeout
+      const connectPromise = redisManager.connect();
+      const timeoutPromise = new Promise<null>(resolve => {
+        setTimeout(() => resolve(null), 3000); // 3 second timeout
+      });
+
+      const redisClient = await Promise.race([connectPromise, timeoutPromise]);
 
       if (redisClient) {
         this.fallbackMode = false;
         logger.info('Cache service initialized with Redis');
       } else {
         this.fallbackMode = true;
-        logger.warn('Cache service initialized in fallback mode (memory only)');
+        if (process.env.NODE_ENV !== 'test') {
+          logger.warn(
+            'Cache service initialized in fallback mode (memory only)'
+          );
+        }
       }
     } catch (error) {
       this.fallbackMode = true;
-      logger.warn('Redis unavailable, using memory cache fallback:', error);
+      if (process.env.NODE_ENV !== 'test') {
+        logger.warn('Redis unavailable, using memory cache fallback:', error);
+      }
     }
   }
 
@@ -79,7 +90,9 @@ export class CacheService {
       // If Redis fails, try memory cache
       if (!this.fallbackMode) {
         this.fallbackMode = true;
-        logger.warn('Redis error, switching to memory cache fallback');
+        if (process.env.NODE_ENV !== 'test') {
+          logger.warn('Redis error, switching to memory cache fallback');
+        }
         return await this.memoryCache.get<T>(key);
       }
 

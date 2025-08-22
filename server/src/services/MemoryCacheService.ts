@@ -293,7 +293,7 @@ export class MemoryCacheService {
   private startCleanupInterval(): void {
     this.cleanupInterval = setInterval(() => {
       this.cleanup();
-    }, this.cleanupIntervalMs);
+    }, this.cleanupIntervalMs).unref(); // Don't keep the process alive
   }
 
   /**

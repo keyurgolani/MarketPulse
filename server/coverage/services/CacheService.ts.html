@@ -23,30 +23,30 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">36.31% </span>
+                <span class="strong">34.94% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>65/179</span>
+                <span class='fraction'>65/186</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">28.12% </span>
+                <span class="strong">26.47% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>27/96</span>
+                <span class='fraction'>27/102</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">87.5% </span>
+                <span class="strong">77.77% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>14/16</span>
+                <span class='fraction'>14/18</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">36.31% </span>
+                <span class="strong">35.13% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>65/179</span>
+                <span class='fraction'>65/185</span>
             </div>
         
             
@@ -527,7 +527,18 @@
 <a name='L462'></a><a href='#L462'>462</a>
 <a name='L463'></a><a href='#L463'>463</a>
 <a name='L464'></a><a href='#L464'>464</a>
-<a name='L465'></a><a href='#L465'>465</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">22x</span>
+<a name='L465'></a><a href='#L465'>465</a>
+<a name='L466'></a><a href='#L466'>466</a>
+<a name='L467'></a><a href='#L467'>467</a>
+<a name='L468'></a><a href='#L468'>468</a>
+<a name='L469'></a><a href='#L469'>469</a>
+<a name='L470'></a><a href='#L470'>470</a>
+<a name='L471'></a><a href='#L471'>471</a>
+<a name='L472'></a><a href='#L472'>472</a>
+<a name='L473'></a><a href='#L473'>473</a>
+<a name='L474'></a><a href='#L474'>474</a>
+<a name='L475'></a><a href='#L475'>475</a>
+<a name='L476'></a><a href='#L476'>476</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">22x</span>
 <span class="cline-any cline-yes">22x</span>
 <span class="cline-any cline-yes">22x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -566,6 +577,11 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -573,10 +589,14 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -609,6 +629,8 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -1028,19 +1050,28 @@ export class CacheService {
    */
   public <span class="fstat-no" title="function not covered" >async </span>initialize(): Promise&lt;void&gt; {
 <span class="cstat-no" title="statement not covered" >    try {</span>
-      // Try to connect to Redis
-      const redisClient = <span class="cstat-no" title="statement not covered" >await redisManager.connect();</span>
+      // Try to connect to Redis with timeout
+      const connectPromise = <span class="cstat-no" title="statement not covered" >redisManager.connect();</span>
+      const timeoutPromise = <span class="cstat-no" title="statement not covered" >new Promise&lt;null&gt;(<span class="fstat-no" title="function not covered" >(r</span>esolve) =&gt; {</span>
+<span class="cstat-no" title="statement not covered" >        setTimeout(<span class="fstat-no" title="function not covered" >() =</span>&gt; <span class="cstat-no" title="statement not covered" >resolve(null),</span> 3000); </span>// 3 second timeout
+      });
+&nbsp;
+      const redisClient = <span class="cstat-no" title="statement not covered" >await Promise.race([connectPromise, timeoutPromise]);</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >      if (redisClient) {</span>
 <span class="cstat-no" title="statement not covered" >        this.fallbackMode = false;</span>
 <span class="cstat-no" title="statement not covered" >        logger.info('Cache service initialized with Redis');</span>
       } else {
 <span class="cstat-no" title="statement not covered" >        this.fallbackMode = true;</span>
-<span class="cstat-no" title="statement not covered" >        logger.warn('Cache service initialized in fallback mode (memory only)');</span>
+<span class="cstat-no" title="statement not covered" >        if (process.env.NODE_ENV !== 'test') {</span>
+<span class="cstat-no" title="statement not covered" >          logger.warn('Cache service initialized in fallback mode (memory only)');</span>
+        }
       }
     } catch (error) {
 <span class="cstat-no" title="statement not covered" >      this.fallbackMode = true;</span>
-<span class="cstat-no" title="statement not covered" >      logger.warn('Redis unavailable, using memory cache fallback:', error);</span>
+<span class="cstat-no" title="statement not covered" >      if (process.env.NODE_ENV !== 'test') {</span>
+<span class="cstat-no" title="statement not covered" >        logger.warn('Redis unavailable, using memory cache fallback:', error);</span>
+      }
     }
   }
 &nbsp;
@@ -1072,7 +1103,9 @@ export class CacheService {
       // If Redis fails, try memory cache
 <span class="cstat-no" title="statement not covered" >      if (!this.fallbackMode) {</span>
 <span class="cstat-no" title="statement not covered" >        this.fallbackMode = true;</span>
-<span class="cstat-no" title="statement not covered" >        logger.warn('Redis error, switching to memory cache fallback');</span>
+<span class="cstat-no" title="statement not covered" >        if (process.env.NODE_ENV !== 'test') {</span>
+<span class="cstat-no" title="statement not covered" >          logger.warn('Redis error, switching to memory cache fallback');</span>
+        }
 <span class="cstat-no" title="statement not covered" >        return await this.memoryCache.get&lt;T&gt;(key);</span>
       }
 &nbsp;
@@ -1462,7 +1495,7 @@ export const cacheService = CacheService.getInstance();
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-08-21T19:56:25.266Z
+                at 2025-08-22T00:18:26.500Z
             </div>
         <script src="../prettify.js"></script>
         <script>

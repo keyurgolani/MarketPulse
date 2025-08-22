@@ -50,10 +50,32 @@ export interface UserPresence {
   lastSeen: number;
 }
 
+export interface MarketDataSubscription {
+  socketId: string;
+  userId: string;
+  symbols: Set<string>;
+  subscriptionId: string;
+  createdAt: number;
+  lastUpdate: number;
+}
+
+export interface PriceUpdateEvent {
+  symbol: string;
+  price: number;
+  change: number;
+  changePercent: number;
+  volume: number;
+  timestamp: number;
+  source: string;
+}
+
 export class WebSocketService {
   private io: SocketIOServer | null = null;
   private connectedUsers = new Map<string, UserPresence>();
   private dashboardRooms = new Map<string, Set<string>>(); // dashboardId -> Set of socketIds
+  private marketDataSubscriptions = new Map<string, MarketDataSubscription>(); // socketId -> subscription
+  private symbolSubscribers = new Map<string, Set<string>>(); // symbol -> Set of socketIds
+  private priceUpdateInterval: NodeJS.Timeout | null = null;
 
   initialize(httpServer: HttpServer): void {
     this.io = new SocketIOServer(httpServer, {
@@ -144,6 +166,22 @@ export class WebSocketService {
       // Handle cursor position events
       socket.on('cursor_position', (data: CursorPositionEvent) => {
         this.handleCursorPosition(socket, data);
+      });
+
+      // Handle market data subscriptions
+      socket.on(
+        'market_data:subscribe',
+        (data: { symbols: string[]; userId: string }) => {
+          this.handleMarketDataSubscribe(socket, data);
+        }
+      );
+
+      socket.on('market_data:unsubscribe', (data: { symbols?: string[] }) => {
+        this.handleMarketDataUnsubscribe(socket, data);
+      });
+
+      socket.on('market_data:get_subscriptions', () => {
+        this.handleGetSubscriptions(socket);
       });
 
       // Handle disconnection
@@ -355,6 +393,214 @@ export class WebSocketService {
     // Note: Cursor position events are high-frequency, so we don't log them
   }
 
+  private handleMarketDataSubscribe(
+    socket: Socket,
+    data: { symbols: string[]; userId: string }
+  ): void {
+    const { symbols, userId } = data;
+    const subscriptionId = `${socket.id}_${Date.now()}`;
+
+    // Create or update subscription
+    const subscription: MarketDataSubscription = {
+      socketId: socket.id,
+      userId,
+      symbols: new Set(symbols),
+      subscriptionId,
+      createdAt: Date.now(),
+      lastUpdate: Date.now(),
+    };
+
+    this.marketDataSubscriptions.set(socket.id, subscription);
+
+    // Add socket to symbol subscribers
+    symbols.forEach(symbol => {
+      if (!this.symbolSubscribers.has(symbol)) {
+        this.symbolSubscribers.set(symbol, new Set());
+      }
+      this.symbolSubscribers.get(symbol)!.add(socket.id);
+    });
+
+    // Join market data room
+    socket.join('market_data');
+
+    // Send confirmation
+    socket.emit('market_data:subscribed', {
+      subscriptionId,
+      symbols,
+      timestamp: Date.now(),
+    });
+
+    logger.info(`Market data subscription created for user ${userId}:`, {
+      symbols,
+      subscriptionId,
+    });
+
+    // Start price updates if this is the first subscription
+    if (this.marketDataSubscriptions.size === 1) {
+      this.startPriceUpdates();
+    }
+  }
+
+  private handleMarketDataUnsubscribe(
+    socket: Socket,
+    data: { symbols?: string[] }
+  ): void {
+    const subscription = this.marketDataSubscriptions.get(socket.id);
+    if (!subscription) return;
+
+    const { symbols } = data;
+
+    if (symbols && symbols.length > 0) {
+      // Unsubscribe from specific symbols
+      symbols.forEach(symbol => {
+        subscription.symbols.delete(symbol);
+        const subscribers = this.symbolSubscribers.get(symbol);
+        if (subscribers) {
+          subscribers.delete(socket.id);
+          if (subscribers.size === 0) {
+            this.symbolSubscribers.delete(symbol);
+          }
+        }
+      });
+
+      // Update subscription
+      subscription.lastUpdate = Date.now();
+
+      socket.emit('market_data:unsubscribed', {
+        symbols,
+        timestamp: Date.now(),
+      });
+
+      logger.info(`Unsubscribed from symbols:`, { symbols });
+    } else {
+      // Unsubscribe from all symbols
+      this.removeMarketDataSubscription(socket.id);
+      socket.leave('market_data');
+
+      socket.emit('market_data:unsubscribed', {
+        symbols: Array.from(subscription.symbols),
+        timestamp: Date.now(),
+      });
+
+      logger.info(
+        `Removed all market data subscriptions for socket ${socket.id}`
+      );
+    }
+
+    // Stop price updates if no subscriptions remain
+    if (this.marketDataSubscriptions.size === 0) {
+      this.stopPriceUpdates();
+    }
+  }
+
+  private handleGetSubscriptions(socket: Socket): void {
+    const subscription = this.marketDataSubscriptions.get(socket.id);
+
+    socket.emit('market_data:subscriptions', {
+      subscription: subscription
+        ? {
+            subscriptionId: subscription.subscriptionId,
+            symbols: Array.from(subscription.symbols),
+            createdAt: subscription.createdAt,
+            lastUpdate: subscription.lastUpdate,
+          }
+        : null,
+      timestamp: Date.now(),
+    });
+  }
+
+  private removeMarketDataSubscription(socketId: string): void {
+    const subscription = this.marketDataSubscriptions.get(socketId);
+    if (!subscription) return;
+
+    // Remove from symbol subscribers
+    subscription.symbols.forEach(symbol => {
+      const subscribers = this.symbolSubscribers.get(symbol);
+      if (subscribers) {
+        subscribers.delete(socketId);
+        if (subscribers.size === 0) {
+          this.symbolSubscribers.delete(symbol);
+        }
+      }
+    });
+
+    // Remove subscription
+    this.marketDataSubscriptions.delete(socketId);
+  }
+
+  private async startPriceUpdates(): Promise<void> {
+    if (this.priceUpdateInterval) return;
+
+    logger.info('Starting real-time price updates');
+
+    this.priceUpdateInterval = setInterval(async () => {
+      await this.fetchAndBroadcastPriceUpdates();
+    }, 5000); // Update every 5 seconds
+
+    // Initial fetch
+    await this.fetchAndBroadcastPriceUpdates();
+  }
+
+  private stopPriceUpdates(): void {
+    if (this.priceUpdateInterval) {
+      clearInterval(this.priceUpdateInterval);
+      this.priceUpdateInterval = null;
+      logger.info('Stopped real-time price updates');
+    }
+  }
+
+  private async fetchAndBroadcastPriceUpdates(): Promise<void> {
+    if (!this.io || this.symbolSubscribers.size === 0) return;
+
+    try {
+      // Import MarketDataService dynamically to avoid circular dependency
+      const { marketDataService } = await import('./MarketDataService');
+
+      const symbols = Array.from(this.symbolSubscribers.keys());
+
+      // Fetch price data for all subscribed symbols
+      const pricePromises = symbols.map(async symbol => {
+        try {
+          const quote = await marketDataService.getQuote(symbol, {
+            useCache: false,
+          });
+          return {
+            symbol,
+            price: quote.price || 0,
+            change: quote.change || 0,
+            changePercent: quote.changePercent || 0,
+            volume: quote.volume || 0,
+            timestamp: Date.now(),
+            source: 'yahoo-finance',
+          } as PriceUpdateEvent;
+        } catch (error) {
+          logger.error(`Failed to fetch price for ${symbol}:`, error);
+          return null;
+        }
+      });
+
+      const priceUpdates = (await Promise.all(pricePromises)).filter(
+        Boolean
+      ) as PriceUpdateEvent[];
+
+      // Broadcast updates to subscribers
+      priceUpdates.forEach(update => {
+        const subscribers = this.symbolSubscribers.get(update.symbol);
+        if (subscribers) {
+          subscribers.forEach(socketId => {
+            this.io!.to(socketId).emit('market_data:price_update', update);
+          });
+        }
+      });
+
+      if (priceUpdates.length > 0) {
+        logger.debug(`Broadcasted ${priceUpdates.length} price updates`);
+      }
+    } catch (error) {
+      logger.error('Error fetching price updates:', error);
+    }
+  }
+
   private handleDisconnect(socket: Socket): void {
     const presence = this.connectedUsers.get(socket.id);
 
@@ -383,6 +629,14 @@ export class WebSocketService {
       logger.info(
         `User ${presence.userId} disconnected from dashboard ${presence.dashboardId}`
       );
+    }
+
+    // Remove market data subscriptions
+    this.removeMarketDataSubscription(socket.id);
+
+    // Stop price updates if no subscriptions remain
+    if (this.marketDataSubscriptions.size === 0) {
+      this.stopPriceUpdates();
     }
 
     logger.info(`Client disconnected: ${socket.id}`);
@@ -447,13 +701,58 @@ export class WebSocketService {
     );
   }
 
+  // Public methods for market data management
+  public getMarketDataSubscriptions(): MarketDataSubscription[] {
+    return Array.from(this.marketDataSubscriptions.values());
+  }
+
+  public getSubscribedSymbols(): string[] {
+    return Array.from(this.symbolSubscribers.keys());
+  }
+
+  public getSymbolSubscriberCount(symbol: string): number {
+    return this.symbolSubscribers.get(symbol)?.size || 0;
+  }
+
+  public broadcastPriceUpdate(update: PriceUpdateEvent): void {
+    if (!this.io) return;
+
+    const subscribers = this.symbolSubscribers.get(update.symbol);
+    if (subscribers) {
+      subscribers.forEach(socketId => {
+        this.io!.to(socketId).emit('market_data:price_update', update);
+      });
+    }
+  }
+
+  public broadcastMarketStatus(status: {
+    isOpen: boolean;
+    nextOpen?: number;
+    nextClose?: number;
+    timezone: string;
+  }): void {
+    if (!this.io) return;
+
+    this.io.to('market_data').emit('market_data:status', {
+      ...status,
+      timestamp: Date.now(),
+    });
+  }
+
   public destroy(): void {
+    // Stop price updates
+    this.stopPriceUpdates();
+
     if (this.io) {
       this.io.close();
       this.io = null;
     }
+
     this.connectedUsers.clear();
     this.dashboardRooms.clear();
+    this.marketDataSubscriptions.clear();
+    this.symbolSubscribers.clear();
+
     logger.info('WebSocket service destroyed');
   }
 }

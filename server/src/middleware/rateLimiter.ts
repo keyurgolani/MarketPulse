@@ -25,7 +25,7 @@ export class RateLimiter {
         this.cleanup();
       },
       5 * 60 * 1000
-    );
+    ).unref(); // Don't keep the process alive
   }
 
   private getKey(req: Request): string {
