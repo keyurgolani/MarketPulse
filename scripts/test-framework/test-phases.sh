@@ -97,8 +97,8 @@ run_phase_3_unit_tests() {
     run_test "Frontend Unit Tests with Coverage" "npm run test:coverage" "Unit Tests"
     
     # Backend unit tests
-    run_test "Backend Unit Tests" "cd server && npm run test" "Unit Tests"
-    run_test "Backend Unit Tests with Coverage" "cd server && npm run test:coverage" "Unit Tests"
+    run_test "Backend Unit Tests" "cd server && timeout 300 npm run test" "Unit Tests"
+    run_test "Backend Unit Tests with Coverage" "cd server && timeout 300 npm run test:coverage" "Unit Tests"
     
     # Component-specific tests
     run_test "Frontend Component Tests" "npm run test:run -- src/components" "Unit Tests"
@@ -108,11 +108,11 @@ run_phase_3_unit_tests() {
     run_test "Frontend Utils Tests" "npm run test:run -- src/utils" "Unit Tests"
     
     # Backend component-specific tests
-    run_test "Backend Controller Tests" "cd server && npm test -- --testNamePattern='Controller'" "Unit Tests"
-    run_test "Backend Service Tests" "cd server && npm test -- --testNamePattern='Service'" "Unit Tests"
-    run_test "Backend Model Tests" "cd server && npm test -- --testNamePattern='Model'" "Unit Tests"
-    run_test "Backend Middleware Tests" "cd server && npm test -- --testNamePattern='Middleware'" "Unit Tests"
-    run_test "Backend Utils Tests" "cd server && npm test -- --testNamePattern='Utils|Validation|Logger'" "Unit Tests"
+    run_test "Backend Controller Tests" "cd server && timeout 300 npm test -- --testNamePattern='Controller'" "Unit Tests"
+    run_test "Backend Service Tests" "cd server && timeout 300 npm test -- --testNamePattern='Service'" "Unit Tests"
+    run_test "Backend Model Tests" "cd server && timeout 300 npm test -- --testNamePattern='Model'" "Unit Tests"
+    run_test "Backend Middleware Tests" "cd server && timeout 300 npm test -- --testNamePattern='Middleware'" "Unit Tests"
+    run_test "Backend Utils Tests" "cd server && timeout 300 npm test -- --testNamePattern='Utils|Validation|Logger'" "Unit Tests"
 }
 
 # Phase 4: Integration Tests
@@ -153,10 +153,10 @@ run_phase_4_integration_tests() {
         exit 1
     fi
     
-    run_test "API Integration Tests" "cd server && npm test -- --testPathPatterns=integration" "API Tests"
-    run_test "External API Integration Tests" "cd server && npm test -- --testNamePattern='External API'" "API Tests"
-    run_test "Database Integration Tests" "cd server && npm test -- --testNamePattern='Database'" "API Tests"
-    run_test "Cache Integration Tests" "cd server && npm test -- --testNamePattern='Cache'" "API Tests"
+    run_test "API Integration Tests" "cd server && timeout 300 npm test -- --testPathPatterns=integration" "API Tests"
+    run_test "External API Integration Tests" "cd server && timeout 300 npm test -- --testNamePattern='External API'" "API Tests"
+    run_test "Database Integration Tests" "cd server && timeout 300 npm test -- --testNamePattern='Database'" "API Tests"
+    run_test "Cache Integration Tests" "cd server && timeout 300 npm test -- --testNamePattern='Cache'" "API Tests"
     
     # API endpoint tests
     echo "🔗 Running API endpoint tests..."

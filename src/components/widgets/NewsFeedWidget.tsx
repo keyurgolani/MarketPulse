@@ -51,16 +51,18 @@ export const NewsFeedWidget: React.FC<NewsFeedWidgetProps> = ({
     try {
       setError(null);
 
-      let articles: NewsArticle[];
+      let response;
       if (filterByAssets && symbols.length > 0) {
         // Get asset-specific news for first symbol
-        articles = await newsService.getAssetNews(symbols[0], maxArticles);
+        response = await newsService.getAssetNews(symbols[0], {
+          limit: maxArticles,
+        });
       } else {
         // Get general market news
-        articles = await newsService.getNews();
+        response = await newsService.getNews({ limit: maxArticles });
       }
 
-      setArticles(articles.slice(0, maxArticles));
+      setArticles(response.articles.slice(0, maxArticles));
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Unknown error';
       setError(errorMessage);

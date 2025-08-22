@@ -812,7 +812,18 @@
 <a name='L747'></a><a href='#L747'>747</a>
 <a name='L748'></a><a href='#L748'>748</a>
 <a name='L749'></a><a href='#L749'>749</a>
-<a name='L750'></a><a href='#L750'>750</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L750'></a><a href='#L750'>750</a>
+<a name='L751'></a><a href='#L751'>751</a>
+<a name='L752'></a><a href='#L752'>752</a>
+<a name='L753'></a><a href='#L753'>753</a>
+<a name='L754'></a><a href='#L754'>754</a>
+<a name='L755'></a><a href='#L755'>755</a>
+<a name='L756'></a><a href='#L756'>756</a>
+<a name='L757'></a><a href='#L757'>757</a>
+<a name='L758'></a><a href='#L758'>758</a>
+<a name='L759'></a><a href='#L759'>759</a>
+<a name='L760'></a><a href='#L760'>760</a>
+<a name='L761'></a><a href='#L761'>761</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">5x</span>
 <span class="cline-any cline-yes">5x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -984,9 +995,12 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -1294,6 +1308,8 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -1317,6 +1333,8 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -1369,6 +1387,8 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -1385,6 +1405,8 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -1732,9 +1754,12 @@ export class WebSocketService {
       });
 &nbsp;
       // Handle market data subscriptions
-<span class="cstat-no" title="statement not covered" >      socket.on('market_data:subscribe', <span class="fstat-no" title="function not covered" >(d</span>ata: { symbols: string[]; userId: string }) =&gt; {</span>
-<span class="cstat-no" title="statement not covered" >        this.handleMarketDataSubscribe(socket, data);</span>
-      });
+<span class="cstat-no" title="statement not covered" >      socket.on(</span>
+        'market_data:subscribe',
+<span class="fstat-no" title="function not covered" >        (d</span>ata: { symbols: string[]; userId: string }) =&gt; {
+<span class="cstat-no" title="statement not covered" >          this.handleMarketDataSubscribe(socket, data);</span>
+        }
+      );
 &nbsp;
 <span class="cstat-no" title="statement not covered" >      socket.on('market_data:unsubscribe', <span class="fstat-no" title="function not covered" >(d</span>ata: { symbols?: string[] }) =&gt; {</span>
 <span class="cstat-no" title="statement not covered" >        this.handleMarketDataUnsubscribe(socket, data);</span>
@@ -2042,7 +2067,9 @@ export class WebSocketService {
         timestamp: Date.now(),
       });
 &nbsp;
-<span class="cstat-no" title="statement not covered" >      logger.info(`Removed all market data subscriptions for socket ${socket.id}`);</span>
+<span class="cstat-no" title="statement not covered" >      logger.info(</span>
+        `Removed all market data subscriptions for socket ${socket.id}`
+      );
     }
 &nbsp;
     // Stop price updates if no subscriptions remain
@@ -2053,14 +2080,16 @@ export class WebSocketService {
 &nbsp;
   private <span class="fstat-no" title="function not covered" >handleGetSubscriptions(</span>socket: Socket): void {
     const subscription = <span class="cstat-no" title="statement not covered" >this.marketDataSubscriptions.get(socket.id);</span>
-    
+&nbsp;
 <span class="cstat-no" title="statement not covered" >    socket.emit('market_data:subscriptions', {</span>
-      subscription: subscription ? {
-        subscriptionId: subscription.subscriptionId,
-        symbols: Array.from(subscription.symbols),
-        createdAt: subscription.createdAt,
-        lastUpdate: subscription.lastUpdate,
-      } : null,
+      subscription: subscription
+        ? {
+            subscriptionId: subscription.subscriptionId,
+            symbols: Array.from(subscription.symbols),
+            createdAt: subscription.createdAt,
+            lastUpdate: subscription.lastUpdate,
+          }
+        : null,
       timestamp: Date.now(),
     });
   }
@@ -2111,13 +2140,15 @@ export class WebSocketService {
 <span class="cstat-no" title="statement not covered" >    try {</span>
       // Import MarketDataService dynamically to avoid circular dependency
       const { marketDataService } = <span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >await import('</span>./MarketDataService');</span>
-      
+&nbsp;
       const symbols = <span class="cstat-no" title="statement not covered" >Array.from(this.symbolSubscribers.keys());</span>
-      
+&nbsp;
       // Fetch price data for all subscribed symbols
-      const pricePromises = <span class="cstat-no" title="statement not covered" >symbols.map(<span class="fstat-no" title="function not covered" >async </span>(symbol) =&gt; {</span>
+      const pricePromises = <span class="cstat-no" title="statement not covered" >symbols.map(<span class="fstat-no" title="function not covered" >async </span>symbol =&gt; {</span>
 <span class="cstat-no" title="statement not covered" >        try {</span>
-          const quote = <span class="cstat-no" title="statement not covered" >await marketDataService.getQuote(symbol, { useCache: false });</span>
+          const quote = <span class="cstat-no" title="statement not covered" >await marketDataService.getQuote(symbol, {</span>
+            useCache: false,
+          });
 <span class="cstat-no" title="statement not covered" >          return {</span>
             symbol,
             price: quote.price || 0,
@@ -2133,7 +2164,9 @@ export class WebSocketService {
         }
       });
 &nbsp;
-      const priceUpdates = <span class="cstat-no" title="statement not covered" >(await Promise.all(pricePromises)).filter(Boolean) as PriceUpdateEvent[];</span>
+      const priceUpdates = <span class="cstat-no" title="statement not covered" >(await Promise.all(pricePromises)).filter(</span>
+        Boolean
+      ) as PriceUpdateEvent[];
 &nbsp;
       // Broadcast updates to subscribers
 <span class="cstat-no" title="statement not covered" >      priceUpdates.forEach(<span class="fstat-no" title="function not covered" >update </span>=&gt; {</span>
@@ -2277,10 +2310,10 @@ export class WebSocketService {
     }
   }
 &nbsp;
-  public <span class="fstat-no" title="function not covered" >broadcastMarketStatus(</span>status: { 
-    isOpen: boolean; 
-    nextOpen?: number; 
-    nextClose?: number; 
+  public <span class="fstat-no" title="function not covered" >broadcastMarketStatus(</span>status: {
+    isOpen: boolean;
+    nextOpen?: number;
+    nextClose?: number;
     timezone: string;
   }): void {
 <span class="cstat-no" title="statement not covered" >    if (!this.io) <span class="cstat-no" title="statement not covered" >return;</span></span>
@@ -2299,12 +2332,12 @@ export class WebSocketService {
 <span class="cstat-no" title="statement not covered" >      this.io.close();</span>
 <span class="cstat-no" title="statement not covered" >      this.io = null;</span>
     }
-    
+&nbsp;
 <span class="cstat-no" title="statement not covered" >    this.connectedUsers.clear();</span>
 <span class="cstat-no" title="statement not covered" >    this.dashboardRooms.clear();</span>
 <span class="cstat-no" title="statement not covered" >    this.marketDataSubscriptions.clear();</span>
 <span class="cstat-no" title="statement not covered" >    this.symbolSubscribers.clear();</span>
-    
+&nbsp;
 <span class="cstat-no" title="statement not covered" >    logger.info('WebSocket service destroyed');</span>
   }
 }
@@ -2317,7 +2350,7 @@ export const webSocketService = new WebSocketService();
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-08-22T00:18:26.500Z
+                at 2025-08-22T01:38:22.488Z
             </div>
         <script src="../prettify.js"></script>
         <script>

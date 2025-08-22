@@ -7,45 +7,45 @@
 
 ## Subtasks
 
-- [ ] ### 6.1 Build news widget and article display
-- Create NewsWidget component with article list
-- Implement article preview and full content display
-- Add news article formatting and styling
-- Create news source attribution and links
-- Implement news article sharing functionality
-- Add news article accessibility features
+- [x] ### 6.1 Build news widget and article display ✅ COMPLETE
+- [x] Create NewsWidget component with article list
+- [x] Implement article preview and full content display
+- [x] Add news article formatting and styling
+- [x] Create news source attribution and links
+- [x] Implement news article sharing functionality
+- [x] Add news article accessibility features
 
-- [ ] ### 6.2 Implement news filtering and search
-- Create news category filtering system
-- Add news search functionality
-- Implement date range filtering
-- Create news source filtering
-- Add news relevance scoring
-- Implement news personalization
+- [x] ### 6.2 Implement news filtering and search ✅ COMPLETE
+- [x] Create news category filtering system
+- [x] Add news search functionality
+- [x] Implement date range filtering
+- [x] Create news source filtering
+- [x] Add news relevance scoring
+- [x] Implement news personalization
 
-- [ ] ### 6.3 Add asset-specific news tagging
-- Implement automatic asset symbol tagging
-- Create manual news tagging interface
-- Add news-to-asset relationship management
-- Implement asset-specific news feeds
-- Create news impact analysis
-- Add news sentiment correlation
+- [x] ### 6.3 Add asset-specific news tagging ✅ COMPLETE
+- [x] Implement automatic asset symbol tagging
+- [x] Create manual news tagging interface
+- [x] Add news-to-asset relationship management
+- [x] Implement asset-specific news feeds
+- [x] Create news impact analysis
+- [x] Add news sentiment correlation
 
-- [ ] ### 6.4 Create news caching and real-time updates
-- Implement news data caching strategies
-- Add real-time news update subscriptions
-- Create news refresh mechanisms
-- Implement news update notifications
-- Add news performance optimization
-- Create news offline handling
+- [x] ### 6.4 Create news caching and real-time updates ✅ COMPLETE
+- [x] Implement news data caching strategies
+- [x] Add real-time news update subscriptions
+- [x] Create news refresh mechanisms
+- [x] Implement news update notifications
+- [x] Add news performance optimization
+- [x] Create news offline handling
 
-- [ ] ### 6.5 Implement news sentiment analysis display
-- Add sentiment indicators to news articles
-- Create sentiment-based news filtering
-- Implement sentiment trend analysis
-- Add sentiment impact visualization
-- Create sentiment alert system
-- Implement sentiment accessibility features
+- [x] ### 6.5 Implement news sentiment analysis display ✅ COMPLETE
+- [x] Add sentiment indicators to news articles
+- [x] Create sentiment-based news filtering
+- [x] Implement sentiment trend analysis
+- [x] Add sentiment impact visualization
+- [x] Create sentiment alert system
+- [x] Implement sentiment accessibility features
 
 ## Requirements Coverage
 

@@ -4,66 +4,199 @@
  */
 
 import { apiClient } from './apiClient';
-import type { NewsArticle } from '@/types/news';
-import type { ApiResponse } from '@/types/api';
+import type { NewsArticle, NewsFilter, SentimentLabel } from '@/types/news';
 
 export interface NewsParams {
   symbols?: string[];
   category?: string;
+  sentiment?: SentimentLabel;
+  page?: number;
   limit?: number;
-  offset?: number;
+  from_date?: string;
+  to_date?: string;
   search?: string;
+  include_analysis?: boolean;
+}
+
+export interface NewsResponse {
+  articles: NewsArticle[];
+  total: number;
+  analysis?: {
+    message: string;
+    symbols?: string[];
+  };
+}
+
+export interface TrendingTopicsResponse {
+  topics: string[];
+  timeframe: string;
+  total: number;
 }
 
 export class NewsService {
   /**
-   * Get news articles
+   * Get news articles with comprehensive filtering
    */
-  async getNews(category?: string): Promise<NewsArticle[]> {
-    const queryParams: Record<string, string | number> = {};
+  async getNews(params: NewsParams = {}): Promise<NewsResponse> {
+    const queryParams: Record<string, string | number | boolean> = {};
 
-    if (category) {
-      queryParams.category = category;
+    // Map parameters to API format
+    if (params.symbols && params.symbols.length > 0) {
+      queryParams.symbols = params.symbols.join(',');
+    }
+    if (params.category) queryParams.category = params.category;
+    if (params.sentiment) queryParams.sentiment = params.sentiment;
+    if (params.page) queryParams.page = params.page;
+    if (params.limit) queryParams.limit = params.limit;
+    if (params.from_date) queryParams.from_date = params.from_date;
+    if (params.to_date) queryParams.to_date = params.to_date;
+    if (params.search) queryParams.search = params.search;
+    if (params.include_analysis !== undefined) {
+      queryParams.include_analysis = params.include_analysis;
     }
 
-    const response = await apiClient.get<NewsArticle[]>('/news', queryParams);
+    const response = await apiClient.get<NewsResponse>('/news', queryParams);
     return response.data;
   }
 
   /**
-   * Get news for specific asset
+   * Get news for specific asset symbol
    */
-  async getAssetNews(symbol: string, limit = 10): Promise<NewsArticle[]> {
+  async getAssetNews(
+    symbol: string,
+    params: Omit<NewsParams, 'symbols'> = {}
+  ): Promise<NewsResponse> {
     if (!symbol || symbol.trim() === '') {
       throw new Error('Symbol is required');
     }
 
-    const response = await apiClient.get<NewsArticle[]>(
-      `/news/assets/${encodeURIComponent(symbol)}`,
-      {
-        limit,
-      }
+    const queryParams: Record<string, string | number | boolean> = {};
+
+    // Map parameters to API format
+    if (params.category) queryParams.category = params.category;
+    if (params.sentiment) queryParams.sentiment = params.sentiment;
+    if (params.page) queryParams.page = params.page;
+    if (params.limit) queryParams.limit = params.limit;
+    if (params.from_date) queryParams.from_date = params.from_date;
+    if (params.to_date) queryParams.to_date = params.to_date;
+    if (params.search) queryParams.search = params.search;
+    if (params.include_analysis !== undefined) {
+      queryParams.include_analysis = params.include_analysis;
+    }
+
+    const response = await apiClient.get<NewsResponse>(
+      `/news/${encodeURIComponent(symbol)}`,
+      queryParams
     );
     return response.data;
   }
 
   /**
-   * Get news article by ID
+   * Get trending news topics
    */
-  async getArticle(id: string): Promise<ApiResponse<NewsArticle>> {
-    return apiClient.get<NewsArticle>(
-      `/news/article/${encodeURIComponent(id)}`
+  async getTrendingTopics(
+    timeframe: '1h' | '6h' | '1d' | '1w' = '1d',
+    limit = 10
+  ): Promise<TrendingTopicsResponse> {
+    const response = await apiClient.get<TrendingTopicsResponse>(
+      '/news/trending',
+      { timeframe, limit }
     );
+    return response.data;
   }
 
   /**
-   * Search news articles
+   * Get market analysis
+   */
+  async getMarketAnalysis(
+    symbols?: string[],
+    timeframe: '1h' | '4h' | '1d' | '1w' = '1d',
+    analysisType: 'technical' | 'fundamental' | 'sentiment' | 'all' = 'all'
+  ): Promise<unknown> {
+    const queryParams: Record<string, string> = {
+      timeframe,
+      analysis_type: analysisType,
+    };
+
+    if (symbols && symbols.length > 0) {
+      queryParams.symbols = symbols.join(',');
+    }
+
+    const response = await apiClient.get<unknown>(
+      '/news/analysis',
+      queryParams
+    );
+    return response.data;
+  }
+
+  /**
+   * Search news articles with advanced filtering
    */
   async searchNews(
     query: string,
-    limit = 20
-  ): Promise<ApiResponse<NewsArticle[]>> {
-    return apiClient.get<NewsArticle[]>('/news/search', { q: query, limit });
+    filters: NewsFilter = {},
+    limit = 20,
+    page = 1
+  ): Promise<NewsResponse> {
+    const params: NewsParams = {
+      search: query,
+      limit,
+      page,
+      symbols: filters.assets,
+      category: filters.categories?.[0], // API supports single category
+      sentiment: filters.sentiment?.[0], // API supports single sentiment
+    };
+
+    // Add date range if provided
+    if (filters.dateRange) {
+      params.from_date = filters.dateRange.start.toISOString().split('T')[0];
+      params.to_date = filters.dateRange.end.toISOString().split('T')[0];
+    }
+
+    return this.getNews(params);
+  }
+
+  /**
+   * Get news by category
+   */
+  async getNewsByCategory(
+    category: string,
+    limit = 20,
+    page = 1
+  ): Promise<NewsResponse> {
+    return this.getNews({ category, limit, page });
+  }
+
+  /**
+   * Get news by sentiment
+   */
+  async getNewsBySentiment(
+    sentiment: SentimentLabel,
+    limit = 20,
+    page = 1
+  ): Promise<NewsResponse> {
+    return this.getNews({ sentiment, limit, page });
+  }
+
+  /**
+   * Get news for multiple assets
+   */
+  async getMultiAssetNews(
+    symbols: string[],
+    limit = 20,
+    page = 1
+  ): Promise<NewsResponse> {
+    return this.getNews({ symbols, limit, page, include_analysis: true });
+  }
+
+  /**
+   * Clear news cache (admin only)
+   */
+  async clearCache(symbol?: string): Promise<void> {
+    const endpoint = symbol
+      ? `/news/${encodeURIComponent(symbol)}/cache`
+      : '/news/cache';
+    await apiClient.delete(endpoint);
   }
 }
 

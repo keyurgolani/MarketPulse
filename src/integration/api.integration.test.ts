@@ -79,15 +79,14 @@ describe('API Integration Tests', () => {
     it('should have correct service methods available', () => {
       expect(typeof newsService.getNews).toBe('function');
       expect(typeof newsService.getAssetNews).toBe('function');
-      expect(typeof newsService.getArticle).toBe('function');
+      expect(typeof newsService.getTrendingTopics).toBe('function');
       expect(typeof newsService.searchNews).toBe('function');
     });
 
     it('should call getAssetNews with correct parameters', async () => {
       const { apiClient } = await import('@/services/apiClient');
-      const mockResponse = {
-        success: true,
-        data: [
+      const mockResponseData = {
+        articles: [
           {
             id: '1',
             title: 'Apple Reports Strong Quarterly Results',
@@ -96,36 +95,48 @@ describe('API Integration Tests', () => {
             summary: 'Apple exceeded expectations...',
           },
         ],
+        total: 1,
+      };
+
+      const mockResponse = {
+        success: true,
+        data: mockResponseData,
         timestamp: Date.now(),
       };
 
       vi.mocked(apiClient.get).mockResolvedValueOnce(mockResponse);
 
-      const result = await newsService.getAssetNews('AAPL', 10);
+      const result = await newsService.getAssetNews('AAPL', { limit: 10 });
 
-      expect(apiClient.get).toHaveBeenCalledWith('/news/assets/AAPL', {
+      expect(apiClient.get).toHaveBeenCalledWith('/news/AAPL', {
         limit: 10,
       });
-      expect(result).toEqual(mockResponse.data);
+      expect(result).toEqual(mockResponseData);
     });
 
     it('should call searchNews with correct parameters', async () => {
       const { apiClient } = await import('@/services/apiClient');
+      const mockResponseData = {
+        articles: [],
+        total: 0,
+      };
+
       const mockResponse = {
         success: true,
-        data: [],
+        data: mockResponseData,
         timestamp: Date.now(),
       };
 
       vi.mocked(apiClient.get).mockResolvedValueOnce(mockResponse);
 
-      const result = await newsService.searchNews('earnings', 20);
+      const result = await newsService.searchNews('earnings', {}, 20, 1);
 
-      expect(apiClient.get).toHaveBeenCalledWith('/news/search', {
-        q: 'earnings',
+      expect(apiClient.get).toHaveBeenCalledWith('/news', {
+        search: 'earnings',
         limit: 20,
+        page: 1,
       });
-      expect(result).toEqual(mockResponse);
+      expect(result).toEqual(mockResponseData);
     });
   });
 });
