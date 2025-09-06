@@ -1,484 +1,280 @@
-# MarketPulse Implementation Plan
+# Implementation Plan
 
 ## Overview
 
-This implementation plan reflects the current state of the MarketPulse application and focuses on the remaining tasks needed to complete the requirements. The backend infrastructure, data models, and API endpoints are largely complete. The focus now is on building the frontend application and integrating it with the existing backend.
+This implementation plan follows a slice-by-slice approach where each slice represents a complete, end-to-end working feature. Each task must pass comprehensive quality gates (zero errors, zero warnings, full testing, no regression) before being committed to git.
 
-## Current Implementation Status
+The implementation progresses from a minimal Proof of Concept (POC) to complete feature slices, ensuring that every git commit represents a fully functional, tested, and deployable state of the application.
 
-- [ ] ### ✅ Completed Backend Infrastructure
-
-- [x] **Project Setup**: Complete React/TypeScript/Vite setup with build tools and linting
-- [x] **Backend Infrastructure**: Express.js server with comprehensive middleware, logging, and error handling
-- [x] **Data Models**: SQLite database with models (User, Dashboard, Widget, Asset) and TypeScript interfaces
-- [x] **External APIs**: Yahoo Finance service with rate limiting, Google Finance fallback, and news aggregation
-- [x] **Caching System**: Redis with memory fallback, multi-level caching with TTL management
-- [x] **API Endpoints**: Complete REST API for assets, dashboards, news, and system health
-- [x] **Testing**: Backend test suite with 20+ test files covering all services
-
-- [ ] ### 🔄 Frontend Implementation Required
-
-The frontend currently has only a basic placeholder App.tsx. All UI components, state management, and frontend functionality need to be implemented.
-
-## Task Execution Guidelines (Mandatory)
-
-### Test-Driven Development Workflow
-
-1. **Test-Results Setup**: Check if `test-results.md` exists, create if not
-2. **Test Categories**: List all test types for current service state
-3. **Systematic Execution**: Run tests one by one, logging results and issues
-4. **Issue Tracking**: For each test, identify issues, fix them, mark as resolved
-5. **Continuous Updates**: Update test results after each fix
-6. **Completion Criteria**: Mark test done only when fully passing
-
-### Before Starting Any Task
-
-1. **Context Management**: Check if `.kiro/specs/market-pulse/context/{task-name}-context.md` exists
-   - If exists: Load context and resume from last checkpoint
-   - If not: Create context file with task objective and current state analysis
-2. **Code Analysis**: Perform comprehensive code analysis to identify exact fix locations
-3. **Exit Criteria**: Define crisp and clear exit criteria for the task and each sub-step
-4. **Test Setup**: Ensure `test-results.md` is updated with relevant test categories
-5. **TDD Preparation**: Write comprehensive tests BEFORE implementing components
-
-### During Task Execution
-
-1. **Context Updates**: Update task context file after every significant step
-2. **Test-First Development**: Create/update test files before writing component code
-3. **Continuous Testing**: Run tests after each change, update `test-results.md`
-4. **Integration Checks**: Verify backend-frontend integration consistency
-5. **Browser Validation**: Use browser console logs and puppeteer for validation
-6. **Zero Errors Policy**: Fix all linting, compilation, build, deployment errors immediately
-7. **Code Quality**: Break large files into single-responsibility modules
-8. **Duplicate Elimination**: Remove duplicate implementations, create single source of truth
-
-### Task Completion Criteria
-
-1. **Implementation Complete**: All implementation checkboxes marked
-2. **Validation Complete**: All validation checkboxes marked
-3. **Tests Passing**: All relevant tests in `test-results.md` marked as done
-4. **Production Ready**: `./scripts/deploy.sh production` runs successfully
-5. **Browser Clean**: Application loads without console errors
-6. **Features Working**: All implemented features function correctly
-7. **Code Quality**: No lint warnings, no unused code, single source of truth maintained
-8. **Integration Verified**: Backend-frontend integration consistent
+**Current Status**: No code implementation exists yet. Starting from scratch with complete project setup.
 
 ## Implementation Tasks
 
-- [x] ### Task 1: Frontend Core Components and UI Foundation
-  **Details:** [uber-tasks/task-1-frontend-core.md](./uber-tasks/task-1-frontend-core.md)
-  **Context:** [context/task-1-context.md](./context/task-1-context.md)
-  **Requirements:** 6.1, 7.1, 8.1, 9.1, 10.1, 11.1
-
-**Implementation Status:** ✅ Completed
-**Validation Status:** ✅ Completed
-
-- [x] ### Task 2: Dashboard System Implementation
-  **Details:** [uber-tasks/task-2-dashboard-system.md](./uber-tasks/task-2-dashboard-system.md)
-  **Context:** [context/task-2-context.md](./context/task-2-context.md)
-  **Requirements:** 1.1, 2.1, 2.2, 2.3, 2.4
-
-**Implementation Status:** ✅ Completed
-**Validation Status:** ✅ Completed
-
-- [x] ### Task 3: Widget Framework and Components
-  **Details:** [uber-tasks/task-3-widget-framework.md](./uber-tasks/task-3-widget-framework.md)
-  **Context:** [context/task-3-context.md](./context/task-3-context.md)
-  **Requirements:** 9.1, 9.2, 9.3, 9.4
-
-**Implementation Status:** ✅ Completed
-**Validation Status:** ✅ Completed
-
-- [x] ### Task 4: Data Visualization and Charts
-  **Details:** [task-4-data-visualization.md](./task-4-data-visualization.md)
-  **Context:** [context/4-context.md](./context/4-context.md)
-  **Requirements:** 3.1, 9.1, 9.2, 9.3, 8.1
-
-**Implementation Status:** ✅ Completed
-**Validation Status:** ✅ Completed
-
-- [x] ### Task 5: Real-time Data Integration ✅ COMPLETE
-  **Details:** [uber-tasks/task-5-realtime-integration.md](./uber-tasks/task-5-realtime-integration.md)
-  **Context:** [context/task-5-context.md](./context/task-5-context.md)
-  **Requirements:** 3.1, 3.2, 3.3, 3.4
-
-**Implementation Status:** ✅ Completed
-**Validation Status:** ✅ Completed
-
-**Final Verification Results:**
-
-- ✅ All TypeScript compilation: 0 errors
-- ✅ All ESLint validation: 0 errors, 0 warnings
-- ✅ All tests passing: 633 tests (220 frontend + 413 backend)
-- ✅ Production build successful
-- ✅ Real-time WebSocket market data streaming implemented
-- ✅ Multiple API key rotation with automatic fallback working
-- ✅ Connection status indicators and offline handling complete
-- ✅ All Task 5 requirements (3.1, 3.2, 3.3, 3.4) fully satisfied
-
-- [x] ### Task 6: News and Content Integration
-  **Details:** [task-6-news-integration.md](./task-6-news-integration.md)
-  **Context:** [context/task-6-context.md](./context/task-6-context.md)
-  **Requirements:** 5.1, 5.2, 5.3, 5.4
-
-**Implementation Status:** ✅ Completed
-**Validation Status:** ✅ Completed
-
-- [x] #### Implementation Details
-- [x] 6.1 Build news widget and article display
-- [x] 6.2 Implement news filtering and search
-- [x] 6.3 Add asset-specific news tagging
-- [x] 6.4 Create news caching and real-time updates
-- [x] 6.5 Implement news sentiment analysis display
-
-- [x] #### Validation Details
-- [x] News widgets display articles correctly
-- [x] Filtering and search return accurate results
-- [x] Asset-specific news shows relevant content
-- [x] News caching improves performance
-- [x] Sentiment analysis displays meaningful data
-
-**Exit Criteria:** ✅ All Completed
-
-- ✅ News widgets load and display articles without errors
-- ✅ Search and filtering functions work accurately
-- ✅ Asset-specific news correlation is correct
-- ✅ Caching reduces API calls and improves performance
-- ✅ Sentiment analysis provides valuable insights
-
-**Final Implementation Summary:**
-
-- ✅ Enhanced NewsService with comprehensive API integration
-- ✅ Created advanced NewsWidget with filtering, sentiment display, and asset tagging
-- ✅ Built SentimentIndicator components for visual sentiment analysis
-- ✅ Implemented NewsFilters component for advanced filtering capabilities
-- ✅ Created useNewsUpdates hook for real-time news updates (WebSocket ready)
-- ✅ All TypeScript compilation successful (0 errors)
-- ✅ All tests passing (220 frontend + 413 backend tests)
-- ✅ Production build successful
-- ✅ All Task 6 requirements (5.1, 5.2, 5.3, 5.4) fully satisfied
-
-- [x] ### Task 7: User Management and Preferences
-  **Details:** [task-7-user-management.md](./task-7-user-management.md)
-  **Context:** [context/task-7-context.md](./context/task-7-context.md)
-  **Requirements:** 7.1, 7.2, 7.3, 7.4
-
-**Implementation Status:** ✅ Completed
-**Validation Status:** ✅ Completed
-
-- [x] #### Implementation Details
-- [x] 7.1 Implement user authentication system
-- [x] 7.2 Create user preferences management
-- [x] 7.3 Add theme switching functionality
-- [x] 7.4 Implement user session management
-- [x] 7.5 Create user profile and settings interface
-
-- [x] #### Validation Details
-- [x] Authentication system works securely
-- [x] User preferences save and load correctly
-- [x] Theme switching functions smoothly
-- [x] Session management handles all scenarios
-- [x] Profile interface is user-friendly
-
-**Exit Criteria:** ✅ All Completed
-
-- ✅ Authentication system is secure and reliable
-- ✅ User preferences persist across sessions
-- ✅ Theme switching works without page refresh
-- ✅ Session management handles timeouts gracefully
-- ✅ Profile interface is intuitive and accessible
-
-**Final Implementation Summary:**
-
-- ✅ Complete authentication system with LoginForm, RegisterForm, PasswordResetForm, and AuthModal components
-- ✅ Comprehensive UserProfile component with settings management for notifications, display, and accessibility
-- ✅ Advanced theme system with light/dark/system modes, smooth transitions, and persistence
-- ✅ Robust user session management with timeout handling and activity tracking
-- ✅ Full authentication service with JWT token management and API integration
-- ✅ useAuth hook providing complete authentication state management
-- ✅ All TypeScript compilation successful (0 errors)
-- ✅ All tests passing (236 frontend + 413 backend tests)
-- ✅ Production build successful
-- ✅ All Task 7 requirements (7.1, 7.2, 7.3, 7.4) fully satisfied
-
-- [x] ### Task 8: Performance Optimization and Caching ✅ COMPLETE
-  **Details:** [task-8-performance-optimization.md](./task-8-performance-optimization.md)
-  **Context:** [context/task-8-context.md](./context/task-8-context.md)
-  **Requirements:** 4.1, 4.2, 4.3, 4.4, 14.1, 14.2, 14.3, 14.4
-
-**Implementation Status:** ✅ Completed
-**Validation Status:** ✅ Completed
-
-- [x] #### Implementation Details
-- [x] 8.1 Implement client-side caching strategies
-- [x] 8.2 Add code splitting and lazy loading
-- [x] 8.3 Optimize rendering performance
-- [x] 8.4 Implement virtualization for large datasets
-- [x] 8.5 Add performance monitoring and metrics
-
-- [x] #### Validation Details
-- [x] Caching reduces API calls significantly
-- [x] Code splitting improves initial load time
-- [x] Rendering performance meets benchmarks
-- [x] Virtualization handles large datasets smoothly
-- [x] Performance metrics provide actionable insights
-
-**Exit Criteria:** ✅ All Completed
-
-- ✅ Client-side caching reduces redundant API calls by 80%
-- ✅ Initial page load time is under 3 seconds
-- ✅ Rendering performance maintains 60fps
-- ✅ Large datasets scroll smoothly with virtualization
-- ✅ Performance monitoring identifies bottlenecks accurately
-
-**Final Implementation Summary:**
-
-- ✅ Enhanced cache service with intelligent caching, compression, and request deduplication
-- ✅ Service worker implementation for offline caching and background sync
-- ✅ Optimized Vite configuration with code splitting reducing bundle size by 53%
-- ✅ Comprehensive performance monitoring service with Core Web Vitals tracking
-- ✅ Virtualization utilities for large datasets with virtual scrolling and infinite scroll
-- ✅ React performance optimization hooks with render monitoring
-- ✅ All TypeScript compilation successful (0 errors)
-- ✅ All tests passing with performance optimizations
-- ✅ Production build successful with optimized bundles
-- ✅ All Task 8 requirements (4.1, 4.2, 4.3, 4.4, 14.1, 14.2, 14.3, 14.4) fully satisfied
-
-- [ ] ### Task 9: Accessibility and Responsive Design
-  **Details:** [task-9-accessibility-responsive.md](./task-9-accessibility-responsive.md)
-  **Context:** [context/task-9-context.md](./context/task-9-context.md)
-  **Requirements:** 6.1, 6.2, 6.3, 6.4, 8.1, 8.2, 8.3, 8.4
-
-**Implementation Status:** ❌ Not Started
-**Validation Status:** ❌ Not Started
-
-- [ ] #### Implementation Details
-- [ ] 9.1 Implement WCAG-AA accessibility compliance
-- [ ] 9.2 Create responsive design across all devices
-- [ ] 9.3 Add keyboard navigation support
-- [ ] 9.4 Implement screen reader optimization
-- [ ] 9.5 Add accessibility testing and validation
-
-- [ ] #### Validation Details
-- [ ] WCAG-AA compliance verified with automated tools
-- [ ] Responsive design works on all target devices
-- [ ] Keyboard navigation covers all functionality
-- [ ] Screen readers announce content correctly
-- [ ] Accessibility tests pass all requirements
-
-**Exit Criteria:**
-
-- WCAG-AA compliance score of 100%
-- Responsive design works flawlessly on mobile, tablet, desktop
-- All functionality accessible via keyboard navigation
-- Screen reader compatibility verified
-- Accessibility audit tools show no violations
-
-- [ ] ### Task 10: UI Polish and Animations
-  **Details:** [task-10-ui-polish.md](./task-10-ui-polish.md)
-  **Context:** [context/task-10-context.md](./context/task-10-context.md)
-  **Requirements:** 10.1, 10.2, 10.3, 10.4
-
-**Implementation Status:** ❌ Not Started
-**Validation Status:** ❌ Not Started
-
-- [ ] #### Implementation Details
-- [ ] 10.1 Implement smooth animations and transitions
-- [ ] 10.2 Create loading states and error handling
-- [ ] 10.3 Add micro-interactions and feedback
-- [ ] 10.4 Implement visual state indicators
-- [ ] 10.5 Polish overall user experience
-
-- [ ] #### Validation Details
-- [ ] Animations run smoothly at 60fps
-- [ ] Loading states provide clear feedback
-- [ ] Micro-interactions enhance usability
-- [ ] Visual indicators communicate state clearly
-- [ ] Overall UX feels polished and professional
-
-**Exit Criteria:**
-
-- All animations maintain 60fps performance
-- Loading states provide meaningful feedback
-- Micro-interactions feel natural and responsive
-- Visual state indicators are clear and consistent
-- User experience feels polished and professional
-
-- [ ] ### Task 11: Testing and Quality Assurance
-  **Details:** [task-11-testing-qa.md](./task-11-testing-qa.md)
-  **Context:** [context/task-11-context.md](./context/task-11-context.md)
-  **Requirements:** 15.1, 15.2, 15.3, 15.4, 15.5, 16.1, 16.2, 16.3
-
-**Implementation Status:** 🔄 Partially Complete (Basic tests passing)
-**Validation Status:** 🔄 Partially Complete (Initial validation done)
-
-- [ ] #### Implementation Details
-- [x] 11.1 Build comprehensive unit test suite (Backend: 405 tests, Frontend: 53 tests)
-- [ ] 11.2 Implement integration tests
-- [ ] 11.3 Create end-to-end test scenarios
-- [ ] 11.4 Add accessibility testing
-- [ ] 11.5 Implement performance testing
-- [x] 11.6 Execute systematic testing validation (test-results.md created)
-- [ ] 11.7 Create feature-specific test buckets (core, asset graph, news, dashboard)
-
-- [ ] #### Validation Details
-- [x] Backend unit tests pass (22 suites, 405 tests)
-- [x] Frontend unit tests pass (2 suites, 53 tests)
-- [x] TypeScript compilation successful
-- [x] ESLint and Prettier checks pass
-- [ ] Integration tests validate API endpoints
-- [ ] E2E tests validate user workflows
-- [ ] Accessibility tests meet WCAG-AA standards
-- [ ] Performance tests meet benchmarks
-- [ ] All test categories in test-results.md completed
-
-**Exit Criteria:**
-
-- All test categories in test-results.md show 100% pass rate
-- Integration tests cover all API endpoints
-- E2E tests validate complete user workflows
-- Accessibility tests achieve WCAG-AA compliance
-- Performance tests meet all benchmarks
-- Test suite runs successfully in CI/CD pipeline
-
-- [ ] ### Task 12: Production Deployment and Monitoring
-  **Details:** [task-12-deployment-monitoring.md](./task-12-deployment-monitoring.md)
-  **Context:** [context/task-12-context.md](./context/task-12-context.md)
-  **Requirements:** 13.1, 13.2, 13.3, 13.4
-
-**Implementation Status:** ❌ Not Started
-**Validation Status:** ❌ Not Started
-
-- [ ] #### Implementation Details
-- [ ] 12.1 Set up production build pipeline
-- [ ] 12.2 Implement deployment automation
-- [ ] 12.3 Add monitoring and logging
-- [ ] 12.4 Create health checks and alerts
-- [ ] 12.5 Implement error tracking and recovery
-
-- [ ] #### Validation Details
-- [ ] Production build pipeline runs without errors
-- [ ] Deployment automation works reliably
-- [ ] Monitoring captures all critical metrics
-- [ ] Health checks detect issues accurately
-- [ ] Error tracking provides actionable insights
-
-**Exit Criteria:**
-
-- `./scripts/deploy.sh production` runs successfully
-- Production environment serves application without errors
-- All monitoring systems are operational
-- Health checks validate all services
-- Error tracking and recovery systems are functional
-
-- [ ] ### Task 13: Final Integration and Code Quality
-  **Details:** [task-13-final-integration.md](./task-13-final-integration.md)
-  **Context:** [context/task-13-context.md](./context/task-13-context.md)
-  **Requirements:** 11.1, 11.2, 11.3, 11.4, 11.5, 12.1, 12.2, 12.3
-
-**Implementation Status:** ❌ Not Started
-**Validation Status:** ❌ Not Started
-
-- [ ] #### Implementation Details
-- [ ] 13.1 Code consolidation and refactoring
-- [ ] 13.2 Remove duplicate implementations
-- [ ] 13.3 Optimize imports and dependencies
-- [ ] 13.4 Final quality assurance validation
-- [ ] 13.5 Production readiness verification
-- [ ] 13.6 Eliminate all unused code and components
-- [ ] 13.7 Apply linting to entire codebase
-
-- [ ] #### Validation Details
-- [ ] All duplicate code eliminated
-- [ ] No unused imports or dependencies
-- [ ] Linting passes with zero warnings
-- [ ] Code quality meets highest standards
-- [ ] Production deployment successful
-- [ ] All features work end-to-end
-- [ ] Browser console shows zero errors
-
-**Exit Criteria:**
-
-- Codebase has single source of truth for all features
-- Zero lint warnings across entire project
-- All unused code and dependencies removed
-- Production deployment runs flawlessly
-- Application loads and functions perfectly in production
-- All tests pass with 100% success rate
-- Browser console shows no errors or warnings
-
-## Task Execution Guidelines
-
-- [ ] ### Before Starting Any Task
-
-1. **Read Detailed Task Files**: Each task references a detailed implementation file containing:
-   - Comprehensive subtask breakdowns
-   - Specific file creation instructions
-   - Validation criteria and testing requirements
-   - Git commit guidelines and milestones
-
-2. **Context Management**
-   - Check if `.kiro/specs/market-pulse/context/{task-number}-context.md` exists
-   - If exists, load context and resume from last checkpoint
-   - If not, create context file with task objective and current state analysis
-   - Perform comprehensive code analysis to identify best implementation approach
-
-3. **Dependency Verification**
-   - Verify all prerequisite tasks are completed
-   - Check that required infrastructure and dependencies are in place
-   - Validate that previous task outputs are functioning correctly
-
-- [ ] ### During Task Execution
-
-- **Follow Detailed Task Files**: Use the referenced task files for step-by-step implementation guidance
-- **Continuous Documentation**: Update task context file with objective, progress, and changes
-- **Frequent Validation**: Run linting, compilation, build, and deployment checks after every change
-- **Integration Testing**: Ensure backend-frontend integration remains aligned
-- **Test-Driven Development**: Write tests before implementing components
-- **Single Responsibility**: Break large files into single-responsibility modules
-- **Code Quality**: Remove unused code and refactor for readability
-- **No Duplication**: Improve existing functionality instead of creating alternatives
-- **Git Commits**: Create commits at substantial milestones with conventional commit messages
-
-- [ ] ### Task Completion Criteria
-
-- All linting, compilation, build, and deployment errors resolved
-- Application loads cleanly in production environment
-- All features work as expected with proper error handling
-- Browser console shows no errors
-- All tests pass for implemented functionality
-- Context file updated with final status
-- No regression in existing functionality
-- Git commit created with descriptive conventional commit message
-- Working directory clean with all changes properly versioned
-
-## Requirements Coverage
-
-Each task maps to specific requirements from the requirements document:
-
-- **Requirements 1-2**: Dashboard system and user customization (Tasks 2-3)
-- **Requirements 3-4**: Real-time data and caching (Task 5, 8)
-- **Requirement 5**: News integration (Task 6)
-- **Requirements 6-8**: Accessibility and responsive design (Task 9)
-- **Requirements 9-10**: UI components and feedback (Tasks 1, 4, 10)
-- **Requirements 11-12**: Code quality and testing (Tasks 11, 13)
-- **Requirements 13-14**: Error handling and performance (Tasks 8, 12)
-- **Requirements 15-16**: Systematic testing (Task 11)
-
-## Project Context Management
-
-Maintain `.kiro/specs/market-pulse/project-context.md` with:
-
-- **Command Alternatives**: Failed commands and their working alternatives
-- **File Tracking**: Temporary/debug/test files and their purposes
-- **Reusable Scripts**: Validation scripts that can be reused across tasks
-- **Issue Solutions**: Known issues and their documented solutions
-- **Code Consolidation**: Components with duplicate implementations needing consolidation
-
-## Next Steps
-
-1. **Start with Task 1**: Frontend Core Components and UI Foundation
-2. **Follow Sequential Order**: Complete tasks in order due to dependencies
-3. **Use Detailed Task Files**: Reference the specific task detail files for implementation guidance
-4. **Maintain Context**: Keep task context files updated throughout execution
-5. **Validate Continuously**: Run tests and checks after each significant change
+### Phase 1: Foundation Setup
+
+- [x] 1. Project Structure and Build Configuration
+  - Create root directory structure with separate frontend and backend folders
+  - Initialize frontend with Vite + React + TypeScript configuration
+  - Initialize backend with Express + TypeScript configuration
+  - Set up package.json files with exact dependency versions and npm scripts
+  - Configure TypeScript strict mode for both frontend and backend
+  - Set up ESLint and Prettier with zero-warning enforcement
+  - Create .gitignore and basic environment configuration templates
+  - _Requirements: 12.2, 12.3, 13.7_
+
+- [ ] 2. Database Setup and Core Models
+  - Set up SQLite database with connection utilities
+  - Create database migration system for schema management
+  - Implement core database tables (users, dashboards, widgets, assets)
+  - Create TypeScript interfaces and Zod validation schemas for all models
+  - Implement basic repository pattern for data access
+  - Write unit tests for database operations and model validation
+  - _Requirements: 6.1, 6.2, 10.2_
+
+- [ ] 3. Backend API Foundation
+  - Create Express.js server with TypeScript and middleware setup
+  - Implement CORS, request logging, and centralized error handling
+  - Create system health check endpoint with database connectivity verification
+  - Set up Winston structured logging with appropriate log levels
+  - Implement rate limiting middleware (100 requests per 15 minutes per user)
+  - Create basic API response format and error handling patterns
+  - Write unit tests for middleware and health check functionality
+  - _Requirements: 11.1, 11.2, 10.1, 10.6_
+
+- [ ] 4. Frontend Foundation and UI Components
+  - Create React application with TypeScript and Vite dev server
+  - Set up Tailwind CSS with responsive design and dark/light theme support
+  - Implement base UI components (Button, Input, Card, Modal, LoadingSpinner)
+  - Create layout components (Header, Navigation, Footer) with accessibility features
+  - Set up React Router for client-side navigation
+  - Implement error boundary component for graceful error handling
+  - Write unit tests for all UI components using Vitest and React Testing Library
+  - _Requirements: 8.1, 8.2, 8.3, 8.4_
+
+- [ ] 5. Authentication System Implementation
+  - Implement JWT-based authentication service with secure token generation
+  - Create user registration and login API endpoints with Zod validation
+  - Build authentication forms with proper validation and error handling
+  - Implement authentication middleware for protected API routes
+  - Create user session management with secure token storage
+  - Set up authentication context and custom hooks for frontend state
+  - Write comprehensive tests for complete authentication flow
+  - _Requirements: 6.1, 6.2, 6.5, 6.6, 10.5_
+
+- [ ] 6. Development Environment Integration
+  - Set up concurrent development servers for frontend and backend
+  - Configure API proxy for development environment
+  - Create npm scripts for development, testing, and building
+  - Implement pre-commit hooks with Husky and lint-staged
+  - Set up test coverage reporting and quality gate enforcement
+  - Create basic deployment scripts and environment validation
+  - Verify end-to-end functionality from registration to authenticated dashboard access
+  - _Requirements: 12.1, 12.4, 12.5, 12.6, 12.7_
+
+### Phase 2: Core Features
+
+- [ ] 7. Market Data Integration
+  - Implement Yahoo Finance API client with error handling and rate limiting
+  - Create Google Finance API client as fallback with automatic failover logic
+  - Set up multi-level caching service (Redis primary, memory fallback)
+  - Create asset database tables and repository pattern for data persistence
+  - Implement AssetService with cache-first data retrieval strategy
+  - Create RESTful API endpoints for asset data (GET /api/assets/:symbol, search)
+  - Write comprehensive tests for API clients, caching, and data flow
+  - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 7.1, 7.2_
+
+- [ ] 8. Asset Display and Search
+  - Implement asset data service on frontend with React Query integration
+  - Create AssetWidget component with real-time price display and formatting
+  - Add asset search functionality with debounced input and autocomplete
+  - Implement loading states, error handling, and retry logic for asset data
+  - Create asset list and detail views with responsive design
+  - Write integration tests for API endpoints and E2E tests for asset display
+  - _Requirements: 1.1, 1.7, 4.1, 4.5_
+
+- [ ] 9. Dashboard System Implementation
+  - Create dashboard and widget database tables with proper relationships
+  - Implement Dashboard and Widget TypeScript interfaces with Zod validation
+  - Create DashboardService with user-specific dashboard management
+  - Implement API endpoints for dashboard CRUD operations (GET, POST, PUT, DELETE)
+  - Add owner-configured default dashboard provisioning logic
+  - Create dashboard repository with proper authorization middleware
+  - Write unit tests for dashboard models and repository operations
+  - _Requirements: 2.1, 2.2, 2.3, 2.4, 2.5, 3.1, 3.2, 3.3, 3.5_
+
+- [ ] 10. Dashboard UI and Widget Framework
+  - Create DashboardGrid component with drag-and-drop functionality using react-grid-layout
+  - Implement WidgetContainer with resizing and positioning capabilities
+  - Build dashboard creation and editing forms with validation
+  - Add dashboard navigation with tabs and switching functionality
+  - Implement widget addition/removal with confirmation dialogs
+  - Create dashboard templates and default layout application
+  - Write E2E tests for complete dashboard management workflow
+  - _Requirements: 2.6, 3.4, 3.6, 3.7_
+
+- [ ] 11. WebSocket Real-time Updates
+  - Set up Socket.IO server with authentication and connection handling
+  - Implement WebSocket middleware for user authentication and authorization
+  - Create connection management with automatic reconnection and heartbeat
+  - Implement market data subscription management per user/dashboard
+  - Create real-time price update broadcasting to connected clients
+  - Add efficient data streaming with subscription filtering
+  - Write unit tests for WebSocket connection and event handling
+  - _Requirements: 9.1, 9.2, 9.3, 9.4, 9.5, 9.6_
+
+- [ ] 12. Frontend Real-time Integration
+  - Create useWebSocket hook for connection management and data handling
+  - Implement real-time price updates in AssetWidget components
+  - Add connection status indicators and reconnection notifications
+  - Create smooth animations for real-time data updates using Framer Motion
+  - Implement graceful degradation to polling when WebSocket fails
+  - Create real-time data synchronization across multiple browser tabs
+  - Write E2E tests for real-time data flow and UI updates
+  - _Requirements: 9.7, 1.6, 4.4_
+
+- [ ] 13. News Integration and Sentiment Analysis
+  - Create news article database schema with asset relationship tables
+  - Implement news API clients for multiple financial news sources
+  - Design NewsArticle and sentiment analysis TypeScript interfaces
+  - Create news aggregation service with deduplication logic
+  - Implement basic sentiment analysis using natural language processing
+  - Create automatic asset symbol extraction from news content
+  - Add news filtering and categorization by relevance and sentiment
+  - Write unit tests for news models and API integration
+  - _Requirements: 5.1, 5.2, 5.3, 5.4, 5.7_
+
+- [ ] 14. News UI and Real-time Updates
+  - Create NewsWidget component with article display and filtering
+  - Implement news feed with infinite scrolling and lazy loading
+  - Add sentiment indicators and asset tag display
+  - Create news article modal with full content display
+  - Implement real-time news updates via WebSocket
+  - Create news search and filtering functionality
+  - Write E2E tests for news display and interaction
+  - _Requirements: 5.5, 5.6_
+
+- [ ] 15. Data Visualization and Charting
+  - Set up Chart.js with React integration and responsive configuration
+  - Implement historical price data API endpoints with timeframe support
+  - Create chart data processing utilities for different timeframes (1D, 1W, 1M, etc.)
+  - Create ChartWidget component with multiple chart types (line, candlestick)
+  - Implement interactive features (zoom, pan, hover tooltips)
+  - Add chart performance optimization with data virtualization
+  - Implement chart theming for light/dark mode compatibility
+  - Write unit tests for chart data processing and utilities
+  - _Requirements: 4.1, 4.2, 4.3, 4.5, 4.6_
+
+- [ ] 16. Advanced Chart Features
+  - Add technical indicators and overlays (moving averages, volume)
+  - Create chart customization options (colors, timeframes, indicators)
+  - Implement chart virtualization for large datasets
+  - Add real-time chart updates with smooth animations
+  - Create chart comparison functionality for multiple assets
+  - Add mobile-optimized chart interactions and gestures
+  - Write performance tests and E2E tests for chart functionality
+  - _Requirements: 4.7, 7.4_
+
+- [ ] 17. Performance Optimization
+  - Implement code splitting with dynamic imports for route-based chunks
+  - Add React.memo and useMemo optimization for expensive components
+  - Create service worker for offline functionality and asset caching
+  - Implement image optimization and lazy loading for media assets
+  - Add bundle analysis and size monitoring with warnings
+  - Implement advanced Redis caching with cache warming strategies
+  - Add database query optimization with proper indexing
+  - Create API response compression and optimization
+  - Write performance tests with Lighthouse integration
+  - _Requirements: 7.1, 7.2, 7.3, 7.5, 7.6, 7.7_
+
+- [ ] 18. Accessibility and Responsive Design
+  - Implement comprehensive keyboard navigation for all interactive elements
+  - Add proper ARIA labels, roles, and properties throughout the application
+  - Create screen reader optimization with semantic HTML structure
+  - Implement focus management and skip navigation links
+  - Add color contrast compliance and alternative text for visual elements
+  - Implement responsive breakpoints (640px, 768px, 1024px) with mobile-first approach
+  - Create touch-optimized interactions for mobile devices
+  - Add responsive dashboard layouts with adaptive widget sizing
+  - Write automated accessibility tests with Axe integration
+  - _Requirements: 8.1, 8.3, 8.4, 8.5, 8.6, 8.7_
+
+- [ ] 19. UI Polish and User Experience
+  - Implement comprehensive dark/light theme system with smooth transitions
+  - Create advanced animation system using Framer Motion
+  - Add micro-interactions and loading states throughout the application
+  - Implement toast notifications and user feedback systems
+  - Create consistent visual design system with design tokens
+  - Implement comprehensive user preferences with real-time synchronization
+  - Add dashboard customization options (themes, layouts, widget preferences)
+  - Create user onboarding flow with guided tutorials
+  - Write visual regression tests for UI consistency
+  - _Requirements: 6.3, 6.4, 6.7_
+
+### Phase 3: Production Readiness
+
+- [ ] 20. Security and Monitoring
+  - Implement comprehensive input validation and sanitization
+  - Add CSRF protection and security headers middleware
+  - Create API rate limiting with user-specific quotas
+  - Implement secure session management with token rotation
+  - Add security audit logging and intrusion detection
+  - Implement comprehensive application monitoring with metrics collection
+  - Add performance monitoring with alerting thresholds
+  - Create system health dashboards and status pages
+  - Write security tests and monitoring validation
+  - _Requirements: 10.1, 10.2, 10.3, 10.4, 10.5, 10.6, 11.3, 11.4, 11.5, 11.6, 11.7_
+
+- [ ] 21. Testing and Quality Assurance
+  - Execute complete test suite with full coverage validation (80%+ required)
+  - Perform comprehensive regression testing across all features
+  - Run accessibility audit with WCAG-AA compliance verification
+  - Execute performance testing with benchmark validation
+  - Conduct security audit and vulnerability assessment
+  - Validate all quality gates and zero-error policy compliance
+  - Create comprehensive API documentation and user guides
+  - _Requirements: 13.1, 13.2, 13.3, 13.4, 13.5, 13.6, 13.7_
+
+- [ ] 22. Production Deployment
+  - Create production deployment pipeline with automated testing
+  - Implement database migration strategy for production
+  - Set up production monitoring and alerting systems
+  - Implement backup and disaster recovery procedures
+  - Execute final production deployment with smoke testing
+  - Verify all functionality works in production environment
+  - _Requirements: 12.7_
+
+## Quality Gate Validation
+
+Each task must pass the following quality gates before being marked complete:
+
+### Implementation Validation
+- [ ] Feature works end-to-end as specified in requirements
+- [ ] All TypeScript compilation passes with zero errors
+- [ ] All ESLint validation passes with zero warnings
+- [ ] All Prettier formatting is correct
+- [ ] Production build completes successfully
+- [ ] Application starts and runs without errors
+
+### Testing Validation
+- [ ] Unit tests written and passing with appropriate coverage
+- [ ] Integration tests validate API contracts and data flow
+- [ ] End-to-end tests verify complete user workflows
+- [ ] Accessibility tests confirm WCAG-AA compliance
+- [ ] Performance tests meet benchmark requirements
+- [ ] Security tests validate protection measures
+
+### Regression Validation
+- [ ] All existing functionality continues to work
+- [ ] No performance degradation from previous slice
+- [ ] Browser console shows zero errors or warnings
+- [ ] All previous tests continue to pass
+- [ ] Database migrations work correctly
+- [ ] API contracts remain backward compatible
+
+### Git Commit Criteria
+- [ ] All quality gates pass successfully
+- [ ] Code is properly formatted and documented
+- [ ] Commit message follows conventional commit format
+- [ ] No temporary or debug code remains
+- [ ] Environment variables and secrets are properly configured
+- [ ] Application is in fully deployable state

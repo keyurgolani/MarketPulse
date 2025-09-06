@@ -2,271 +2,203 @@
 
 ## Overview
 
-MarketPulse is a modern, accessible financial dashboard platform built with a focus on performance, accessibility, and user experience. The system follows a modular architecture with aggressive caching, multi-source data aggregation, and responsive design principles. The platform supports both owner-configured default dashboards and user-created custom dashboards with real-time market data, news aggregation, and comprehensive accessibility features.
+MarketPulse is designed as a modular, scalable financial dashboard platform that supports slice-by-slice implementation. The architecture emphasizes clear separation of concerns, well-defined interfaces, and incremental feature development while maintaining strict quality standards and zero-error policy enforcement.
 
-## TypeScript Guidelines
+The system follows a modern web application architecture with a React-based frontend, Express.js backend, and multi-level caching strategy. The design prioritizes performance, accessibility, real-time capabilities, and comprehensive security measures while ensuring each implementation slice can be developed and deployed independently.
 
-All code examples and implementations in this design document follow strict TypeScript guidelines:
-
-- **Never use `any` type** - Always identify and use the correct specific type
-- **Use `unknown` instead of `any`** - When the type is truly unknown, use `unknown` and add type guards
-- **Explicit return types** - All functions must have explicit return types
-- **Strict null checks** - Handle null and undefined cases explicitly
-- **Generic constraints** - Use extends for type safety in generics
-- **Type guards** - Implement proper type guards for runtime type checking
+**Key Design Principles:**
+- **Owner-Configured Defaults**: Platform owners can configure default dashboard layouts that are automatically provisioned to new users
+- **Multi-Source Data Aggregation**: Primary Yahoo Finance API with automatic Google Finance failover and API key rotation
+- **Aggressive Caching Strategy**: Redis primary cache with memory fallback and 30-second TTL for market data
+- **Real-time WebSocket Updates**: Sub-second market data updates with automatic reconnection and graceful degradation
+- **WCAG-AA Accessibility**: Full compliance with accessibility standards across all features
+- **Zero-Error Quality Gates**: Comprehensive testing and validation before each git commit
 
 ## Architecture
 
-- - [ ] ### High-Level Architecture
+### High-Level Architecture
 
 ```mermaid
 graph TB
-    subgraph "Frontend Layer"
-        UI[React UI Components]
-        State[State Management - Zustand]
-        Cache[Client-side Cache]
+    subgraph "Client Layer"
+        UI[React Frontend]
+        SW[Service Worker]
     end
-
-    subgraph "Backend Layer"
-        API[Express.js API Server]
-        DataAgg[Data Aggregation Service]
-        CacheLayer[Redis Cache Layer]
-        RateLimit[Rate Limiting Service]
+    
+    subgraph "API Gateway"
+        LB[Load Balancer]
+        CORS[CORS Middleware]
+        RL[Rate Limiter]
     end
-
-    subgraph "External APIs"
-        Yahoo[Yahoo Finance API]
-        Google[Google Finance API]
-        News[News APIs]
+    
+    subgraph "Application Layer"
+        API[Express.js API]
+        WS[WebSocket Server]
+        AUTH[Auth Service]
     end
-
-    subgraph "Storage"
+    
+    subgraph "Business Logic"
+        DS[Dashboard Service]
+        AS[Asset Service]
+        NS[News Service]
+        CS[Cache Service]
+    end
+    
+    subgraph "Data Layer"
         DB[(SQLite Database)]
-        FileCache[File System Cache]
+        REDIS[(Redis Cache)]
+        MEM[Memory Cache]
     end
-
-    UI --> API
-    State --> Cache
-    API --> DataAgg
-    DataAgg --> CacheLayer
-    DataAgg --> RateLimit
-    RateLimit --> Yahoo
-    RateLimit --> Google
-    RateLimit --> News
+    
+    subgraph "External APIs"
+        YF[Yahoo Finance - Primary]
+        GF[Google Finance - Fallback]
+        NEWS[Multi-Source News APIs]
+        SENTIMENT[Sentiment Analysis Service]
+    end
+    
+    UI --> LB
+    LB --> CORS
+    CORS --> RL
+    RL --> API
+    API --> WS
+    API --> AUTH
+    API --> DS
+    API --> AS
+    API --> NS
+    DS --> CS
+    AS --> CS
+    NS --> CS
+    CS --> REDIS
+    CS --> MEM
     API --> DB
-    CacheLayer --> FileCache
+    AS --> YF
+    AS --> GF
+    NS --> NEWS
+    NS --> SENTIMENT
 ```
 
-- - [ ] ### Technology Stack
+### Slice-by-Slice Architecture Design
 
-**Frontend:**
+The architecture is designed to support incremental development where each slice adds complete end-to-end functionality:
 
-- React 18 with TypeScript
-- Tailwind CSS for styling with custom design system
-- Zustand for state management
-- React Query for server state management
-- Chart.js/Recharts for data visualization
-- Framer Motion for animations
+**Slice Independence:**
+- Each feature slice has its own database tables, API endpoints, and UI components
+- Shared infrastructure (auth, caching, logging, monitoring) is established in POC
+- New slices extend existing patterns without modifying core functionality
+- Owner-configured default dashboards are provisioned automatically to new users
 
-**Backend:**
+**Interface Contracts:**
+- Well-defined TypeScript interfaces between layers with explicit return types
+- API contracts using Zod schemas for validation and security
+- Database schema migrations for incremental changes
+- Comprehensive error handling with proper HTTP status codes
 
-- Node.js with Express.js
-- TypeScript for type safety
-- SQLite for local data storage
-- Redis for caching (with fallback to memory cache)
-- Node-cron for scheduled tasks
-
-**Development & Build:**
-
-- Vite for fast development and building
-- ESLint + Prettier for code quality
-- Vitest for unit testing
-- Playwright for E2E testing
+**Quality Gate Integration:**
+- Zero-error policy enforced at every slice completion
+- Comprehensive testing (unit, integration, E2E, accessibility, performance)
+- TypeScript strict mode with no implicit any types
+- ESLint validation with zero warnings tolerance
+- 80% minimum test coverage across all code paths
 
 ## Components and Interfaces
 
-- - [ ] ### Frontend Components
+### Frontend Architecture
 
-- - [ ] #### Core Layout Components
+#### Component Hierarchy
 
-```typescript
-// Layout Components
-interface AppLayoutProps {
-  children: React.ReactNode;
-  theme: 'light' | 'dark';
-}
-
-interface NavigationProps {
-  dashboards: Dashboard[];
-  activeDashboard: string;
-  onDashboardChange: (id: string) => void;
-}
-
-interface HeaderProps {
-  user?: User;
-  onThemeToggle: () => void;
-  onRefresh: () => void;
-}
+```
+src/
+├── components/
+│   ├── ui/                    # Base UI components (WCAG-AA compliant)
+│   │   ├── Button.tsx         # Keyboard accessible with ARIA labels
+│   │   ├── Input.tsx          # Form validation with error messages
+│   │   ├── Modal.tsx          # Focus management and escape handling
+│   │   ├── Card.tsx           # Semantic structure with proper headings
+│   │   ├── LoadingSpinner.tsx # Screen reader announcements
+│   │   └── ErrorBoundary.tsx  # Graceful error handling
+│   ├── layout/                # Responsive layout components
+│   │   ├── Header.tsx         # Navigation with skip links
+│   │   ├── Navigation.tsx     # Keyboard navigation support
+│   │   ├── Sidebar.tsx        # Collapsible with touch gestures
+│   │   └── Footer.tsx         # Accessible footer links
+│   ├── widgets/               # Dashboard widgets with real-time updates
+│   │   ├── AssetWidget.tsx    # Live price updates via WebSocket
+│   │   ├── NewsWidget.tsx     # Sentiment analysis display
+│   │   ├── ChartWidget.tsx    # Interactive charts with Chart.js
+│   │   └── SummaryWidget.tsx  # Portfolio summary calculations
+│   ├── forms/                 # Validated form components
+│   │   ├── LoginForm.tsx      # JWT authentication
+│   │   ├── RegisterForm.tsx   # User registration with validation
+│   │   └── DashboardForm.tsx  # Dashboard configuration
+│   ├── dashboard/             # Dashboard management
+│   │   ├── DashboardGrid.tsx  # Drag-and-drop with grid snapping
+│   │   ├── WidgetContainer.tsx # Widget positioning and resizing
+│   │   ├── DashboardTabs.tsx  # Multiple dashboard navigation
+│   │   └── DefaultDashboardManager.tsx # Owner configuration interface
+│   └── admin/                 # Platform owner components
+│       ├── DefaultDashboardConfig.tsx
+│       ├── UserManagement.tsx
+│       └── SystemMonitoring.tsx
+├── hooks/                     # Custom React hooks
+│   ├── useMarketData.ts       # Market data with caching and failover
+│   ├── useWebSocket.ts        # Real-time updates with reconnection
+│   ├── useAuth.ts             # JWT authentication and session management
+│   ├── useDashboard.ts        # Dashboard CRUD operations
+│   ├── useLocalStorage.ts     # Persistent user preferences
+│   ├── useAccessibility.ts    # WCAG-AA compliance helpers
+│   ├── usePerformance.ts      # Performance monitoring and optimization
+│   └── useTheme.ts            # Dark/light theme with smooth transitions
+├── services/                  # API services with error handling
+│   ├── api.ts                 # Base API client with rate limiting
+│   ├── marketDataService.ts   # Yahoo Finance + Google Finance failover
+│   ├── dashboardService.ts    # Dashboard CRUD with owner defaults
+│   ├── newsService.ts         # Multi-source news with sentiment analysis
+│   ├── authService.ts         # JWT authentication and session management
+│   ├── cacheService.ts        # Multi-level caching strategy
+│   └── monitoringService.ts   # System health and performance metrics
+├── stores/                    # Zustand state management
+│   ├── authStore.ts           # User authentication state
+│   ├── themeStore.ts          # Dark/light theme preferences
+│   ├── dashboardStore.ts      # Dashboard configurations and layouts
+│   ├── notificationStore.ts   # Toast notifications and alerts
+│   ├── websocketStore.ts      # WebSocket connection status
+│   └── performanceStore.ts    # Performance metrics and monitoring
+├── types/                     # TypeScript type definitions (strict mode)
+│   ├── api.ts                 # API response interfaces with Zod schemas
+│   ├── dashboard.ts           # Dashboard and widget configuration types
+│   ├── asset.ts               # Market data and asset information types
+│   ├── news.ts                # News articles and sentiment analysis types
+│   ├── user.ts                # User authentication and preferences types
+│   ├── websocket.ts           # WebSocket message and event types
+│   └── monitoring.ts          # System health and performance types
+└── utils/                     # Utility functions
+    ├── formatters.ts          # Currency, date, and number formatting
+    ├── validators.ts          # Zod schema validation utilities
+    ├── constants.ts           # Application constants and configuration
+    ├── helpers.ts             # General utility functions
+    ├── accessibility.ts       # WCAG-AA compliance utilities
+    ├── performance.ts         # Performance monitoring and optimization
+    └── security.ts            # Security utilities and sanitization
 ```
 
-- - [ ] #### Dashboard Components
+#### Key Frontend Interfaces
 
 ```typescript
-interface DashboardProps {
-  dashboard: Dashboard;
-  isEditable: boolean;
-  onUpdate: (dashboard: Dashboard) => void;
+// Core API Response Interface
+interface ApiResponse<T> {
+  data: T;
+  success: boolean;
+  error?: string;
+  timestamp: number;
+  metadata?: {
+    page?: number;
+    limit?: number;
+    total?: number;
+  };
 }
 
-interface WidgetContainerProps {
-  widgets: Widget[];
-  layout: LayoutConfig;
-  onLayoutChange: (layout: LayoutConfig) => void;
-}
-
-interface AssetWidgetProps {
-  assets: Asset[];
-  displayMode: 'list' | 'grid' | 'chart';
-  refreshInterval: number;
-}
-```
-
-- - [ ] #### Data Visualization Components
-
-```typescript
-interface ChartWidgetProps {
-  asset: Asset;
-  timeframe: '1D' | '1W' | '1M' | '3M' | '1Y';
-  indicators: TechnicalIndicator[];
-  height: number;
-  chartTypes: ('line' | 'candlestick' | 'bar')[]; // Configurable chart types
-  responsive: boolean; // Responsive layout support
-}
-
-interface DataTableProps {
-  data: Asset[];
-  columns: TableColumn[];
-  sortable: boolean; // Sortable tables requirement
-  filterable: boolean; // Data filtering requirement
-  virtualScrolling: boolean; // Performance optimization for large datasets
-  touchOptimized: boolean; // Mobile optimization
-}
-
-interface WidgetContainerProps {
-  widgets: Widget[];
-  layout: LayoutConfig;
-  onLayoutChange: (layout: LayoutConfig) => void;
-  dragAndDrop?: boolean; // Optional drag-and-drop functionality
-  responsive: boolean; // Multi-device support
-}
-
-interface LoadingStateProps {
-  type: 'skeleton' | 'spinner' | 'progress';
-  preventLayoutShift: boolean; // Prevent layout shifts during loading
-  message?: string;
-}
-
-interface ErrorStateProps {
-  error: string;
-  icon: string;
-  color: 'error' | 'warning' | 'info';
-  retryAction?: () => void;
-  recoveryOptions?: string[];
-}
-```
-
-- - [ ] ### Backend API Interfaces
-
-- - [ ] #### Data Aggregation Service
-
-```typescript
-interface DataAggregationService {
-  getAssetData(symbols: string[]): Promise<Asset[]>;
-  getHistoricalData(symbol: string, timeframe: string): Promise<HistoricalData>;
-  getNewsData(symbols?: string[]): Promise<NewsArticle[]>;
-  refreshCache(symbols?: string[]): Promise<void>;
-}
-
-interface CacheService {
-  get<T>(key: string): Promise<T | null>;
-  set<T>(key: string, value: T, ttl?: number): Promise<void>;
-  invalidate(pattern: string): Promise<void>;
-  getStats(): Promise<CacheStats>;
-}
-```
-
-- - [ ] #### API Endpoints
-
-```typescript
-// REST API Endpoints
-GET /api/dashboards - Get user dashboards (including owner-configured defaults)
-POST /api/dashboards - Create new custom dashboard
-PUT /api/dashboards/:id - Update dashboard configuration
-DELETE /api/dashboards/:id - Delete custom dashboard
-GET /api/dashboards/defaults - Get system owner-configured default dashboards
-
-GET /api/assets/:symbols - Get real-time asset data with market sentiment
-GET /api/assets/:symbol/history - Get historical data with technical indicators
-GET /api/assets/search - Search and filter assets
-GET /api/news - Get market news with asset tagging
-GET /api/news/:symbol - Get asset-specific news
-POST /api/cache/refresh - Manual cache refresh trigger
-POST /api/cache/invalidate - Ad-hoc cache invalidation
-
-GET /api/system/health - System health check
-GET /api/system/cache-stats - Cache statistics and performance metrics
-GET /api/system/performance - Performance monitoring dashboard
-GET /api/system/errors - Error tracking and logging
-
-// WebSocket Endpoints
-WS /ws/market-data - Real-time price updates
-WS /ws/news - Real-time news updates
-WS /ws/system - System status updates
-```
-
-## Data Models
-
-- - [ ] ### Core Data Models
-
-```typescript
-interface User {
-  id: string;
-  email: string;
-  preferences: UserPreferences;
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-interface UserPreferences {
-  theme: 'light' | 'dark' | 'system';
-  defaultDashboard?: string;
-  refreshInterval: number;
-  notifications: NotificationSettings;
-}
-
-interface Dashboard {
-  id: string;
-  name: string;
-  description?: string;
-  isDefault: boolean; // Owner-configured system dashboards
-  isPublic: boolean;
-  ownerId: string;
-  widgets: Widget[];
-  layout: LayoutConfig;
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-interface Widget {
-  id: string;
-  type: 'asset-list' | 'chart' | 'news' | 'market-summary';
-  title: string;
-  config: WidgetConfig;
-  position: WidgetPosition;
-  sortable: boolean; // For sortable tables requirement
-  filterable: boolean; // For data filtering requirement
-}
-
+// Asset Data Interface
 interface Asset {
   symbol: string;
   name: string;
@@ -274,364 +206,1113 @@ interface Asset {
   change: number;
   changePercent: number;
   volume: number;
-  marketCap?: number;
-  marketSentiment?: 'positive' | 'negative' | 'neutral'; // Market sentiment requirement
-  ancillaryMetrics: Record<string, unknown>; // Additional financial metrics
-  lastUpdated: Date;
-  source: DataSource;
+  marketCap: number;
+  lastUpdated: string;
 }
 
+// Dashboard Configuration Interface
+interface Dashboard {
+  id: string;
+  name: string;
+  description?: string;
+  isDefault: boolean;
+  layout: DashboardLayout;
+  widgets: Widget[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Widget Configuration Interface
+interface Widget {
+  id: string;
+  type: 'asset' | 'news' | 'chart' | 'summary';
+  position: { x: number; y: number; w: number; h: number };
+  config: WidgetConfig;
+}
+
+// WebSocket Message Interface
+interface WebSocketMessage {
+  type: 'price_update' | 'news_update' | 'system_status' | 'connection_status';
+  payload: any;
+  timestamp: number;
+  userId?: string;
+}
+
+// User Preferences Interface
+interface UserPreferences {
+  theme: 'light' | 'dark';
+  refreshInterval: number;
+  notifications: {
+    priceAlerts: boolean;
+    newsUpdates: boolean;
+    systemStatus: boolean;
+  };
+  accessibility: {
+    reduceMotion: boolean;
+    highContrast: boolean;
+    screenReader: boolean;
+  };
+}
+
+// Owner Default Dashboard Configuration
+interface DefaultDashboardConfig {
+  id: string;
+  name: string;
+  description: string;
+  layout: DashboardLayout;
+  widgets: DefaultWidget[];
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// News Article with Sentiment Analysis
 interface NewsArticle {
   id: string;
   title: string;
+  content: string;
   summary: string;
-  url: string;
-  publishedAt: Date;
   source: string;
-  relatedAssets: string[]; // Tagged with relevant asset symbols
-  sentiment?: 'positive' | 'negative' | 'neutral';
-  fullContent?: string; // Access to full article content
+  author?: string;
+  url: string;
+  publishedAt: string;
+  sentimentScore: number; // -1 to 1 (negative to positive)
+  sentimentLabel: 'positive' | 'negative' | 'neutral';
+  assetTags: string[];
+  relevanceScore: number;
 }
 
-interface SystemState {
-  loading: boolean;
-  error: string | null;
-  success: boolean;
-  lastUpdated: Date;
+// System Health Monitoring
+interface SystemHealth {
+  status: 'healthy' | 'degraded' | 'unhealthy';
+  timestamp: number;
+  services: {
+    database: ServiceStatus;
+    redis: ServiceStatus;
+    externalApis: {
+      yahooFinance: ServiceStatus;
+      googleFinance: ServiceStatus;
+      newsApis: ServiceStatus[];
+    };
+    websocket: ServiceStatus;
+  };
+  metrics: {
+    responseTime: number;
+    errorRate: number;
+    activeConnections: number;
+    memoryUsage: number;
+    cpuUsage: number;
+  };
 }
 
-interface PerformanceMetrics {
-  responseTime: number;
-  cacheHitRatio: number;
-  memoryUsage: number;
-  concurrentRequests: number;
+interface ServiceStatus {
+  status: 'up' | 'down' | 'degraded';
+  responseTime?: number;
+  lastCheck: string;
+  error?: string;
 }
 ```
 
-- - [ ] ### Configuration Models
+### Backend Architecture
+
+#### Service Layer Design
+
+```
+server/src/
+├── controllers/               # Request handlers
+│   ├── dashboardController.ts
+│   ├── assetController.ts
+│   ├── newsController.ts
+│   ├── authController.ts
+│   └── systemController.ts
+├── services/                  # Business logic
+│   ├── DashboardService.ts    # Dashboard CRUD and owner defaults
+│   ├── AssetService.ts        # Market data with failover and caching
+│   ├── NewsService.ts         # News aggregation and sentiment analysis
+│   ├── AuthService.ts         # JWT authentication and session management
+│   ├── CacheService.ts        # Multi-level caching (Redis + Memory)
+│   ├── DataAggregationService.ts # Real-time data processing
+│   ├── WebSocketService.ts    # Real-time updates and connection management
+│   ├── MonitoringService.ts   # System health and performance metrics
+│   ├── SecurityService.ts     # Rate limiting and input validation
+│   └── DefaultDashboardService.ts # Owner-configured dashboard management
+├── models/                    # Database models
+│   ├── User.ts
+│   ├── Dashboard.ts
+│   ├── Asset.ts
+│   ├── News.ts
+│   └── Session.ts
+├── middleware/                # Express middleware
+│   ├── authMiddleware.ts      # JWT token validation and user context
+│   ├── validationMiddleware.ts # Zod schema validation for all inputs
+│   ├── rateLimitMiddleware.ts # 100 requests per 15 minutes per user
+│   ├── errorHandler.ts        # Centralized error handling with logging
+│   ├── corsMiddleware.ts      # CORS configuration for allowed origins
+│   ├── securityMiddleware.ts  # Security headers and input sanitization
+│   └── monitoringMiddleware.ts # Request/response metrics collection
+├── routes/                    # API routes
+│   ├── dashboards.ts          # Dashboard CRUD operations
+│   ├── assets.ts              # Market data endpoints
+│   ├── news.ts                # News aggregation and filtering
+│   ├── auth.ts                # Authentication and user management
+│   ├── system.ts              # Health checks and system status
+│   ├── admin.ts               # Owner dashboard configuration
+│   └── monitoring.ts          # Performance metrics and monitoring
+├── config/                    # Configuration
+│   ├── database.ts
+│   ├── cache.ts
+│   ├── apiKeys.ts
+│   └── environment.ts
+├── utils/                     # Server utilities
+│   ├── logger.ts
+│   ├── validation.ts
+│   ├── security.ts
+│   └── helpers.ts
+└── websocket/                 # WebSocket handlers
+    ├── handlers.ts
+    ├── events.ts
+    └── middleware.ts
+```
+
+#### Key Backend Interfaces
 
 ```typescript
-interface DataSourceConfig {
-  name: string;
-  apiKeys: string[]; // Multiple API keys for automatic rotation
-  rateLimit: {
-    requestsPerMinute: number;
-    requestsPerHour: number;
-  };
-  endpoints: {
-    assets: string;
-    historical: string;
-    news: string;
-  };
-  cacheTTL: {
-    assets: number; // Minimum 1 minute, configurable
-    historical: number;
-    news: number; // Refresh at least every 15 minutes
-  };
-  fallbackSources: string[]; // Alternative data sources for graceful degradation
+// Service Interface Pattern
+interface IAssetService {
+  getAsset(symbol: string): Promise<Asset>;
+  getAssets(symbols: string[]): Promise<Asset[]>;
+  searchAssets(query: string): Promise<Asset[]>;
+  getPopularAssets(): Promise<Asset[]>;
+  subscribeToUpdates(symbols: string[]): void;
 }
 
-interface CacheConfig {
-  defaultTTL: number;
-  maxSize: number;
-  cleanupInterval: number;
-  persistToDisk: boolean;
-  aggressiveCaching: boolean; // To avoid API throttling
-  autoExtendOnRateLimit: boolean; // Extend cache duration on rate limits
+// Repository Interface Pattern
+interface IAssetRepository {
+  findBySymbol(symbol: string): Promise<Asset | null>;
+  findBySymbols(symbols: string[]): Promise<Asset[]>;
+  create(asset: Asset): Promise<Asset>;
+  update(symbol: string, data: Partial<Asset>): Promise<Asset>;
+  search(query: string, limit: number): Promise<Asset[]>;
 }
 
-interface AccessibilityConfig {
-  wcagLevel: 'AA' | 'AAA';
-  highContrast: boolean;
-  screenReaderSupport: boolean;
-  keyboardNavigation: boolean;
-  focusManagement: boolean;
+// Cache Service Interface
+interface ICacheService {
+  get<T>(key: string): Promise<T | null>;
+  set<T>(key: string, value: T, ttl?: number): Promise<void>;
+  del(key: string): Promise<void>;
+  exists(key: string): Promise<boolean>;
+  flush(): Promise<void>;
 }
 
-interface ResponsiveConfig {
-  breakpoints: {
-    mobile: number; // 640px
-    tablet: number; // 768px
-    desktop: number; // 1024px
-    ultraWide: number; // 1440px+
-  };
-  touchOptimized: boolean;
-  performanceOptimized: boolean;
+// External API Interface with Failover
+interface IMarketDataProvider {
+  getAssetData(symbol: string): Promise<Asset>;
+  getMultipleAssets(symbols: string[]): Promise<Asset[]>;
+  getHistoricalData(symbol: string, period: string): Promise<HistoricalData[]>;
+  isHealthy(): Promise<boolean>;
+  getApiKeyRotation(): string[];
 }
+
+// News Service Interface
+interface INewsService {
+  aggregateNews(): Promise<NewsArticle[]>;
+  getAssetNews(symbol: string): Promise<NewsArticle[]>;
+  analyzeSentiment(content: string): Promise<SentimentAnalysis>;
+  tagAssetsInNews(article: NewsArticle): Promise<string[]>;
+  refreshNewsFeed(): Promise<void>;
+}
+
+// WebSocket Service Interface
+interface IWebSocketService {
+  broadcast(message: WebSocketMessage): void;
+  subscribeToAsset(userId: string, symbol: string): void;
+  unsubscribeFromAsset(userId: string, symbol: string): void;
+  handleConnection(socket: Socket): void;
+  handleDisconnection(userId: string): void;
+  getConnectionStatus(): ConnectionStatus;
+}
+
+// Monitoring Service Interface
+interface IMonitoringService {
+  getSystemHealth(): Promise<SystemHealth>;
+  collectMetrics(): Promise<SystemMetrics>;
+  logPerformance(endpoint: string, responseTime: number): void;
+  checkExternalApiHealth(): Promise<ExternalApiStatus>;
+  generateAlert(severity: 'low' | 'medium' | 'high', message: string): void;
+}
+
+// Default Dashboard Service Interface
+interface IDefaultDashboardService {
+  getDefaultConfigs(): Promise<DefaultDashboardConfig[]>;
+  createDefaultConfig(config: DefaultDashboardConfig): Promise<DefaultDashboardConfig>;
+  updateDefaultConfig(id: string, config: Partial<DefaultDashboardConfig>): Promise<DefaultDashboardConfig>;
+  provisionUserDefaults(userId: string): Promise<Dashboard[]>;
+  applyTemplateUpdates(userId: string, templateId: string): Promise<Dashboard>;
+}
+```
+
+## Data Models
+
+### Database Schema Design
+
+The database schema is designed for incremental development with clear relationships and extensibility:
+
+```sql
+-- Users table (POC + Auth Slice)
+CREATE TABLE users (
+  id TEXT PRIMARY KEY,
+  email TEXT UNIQUE NOT NULL,
+  password_hash TEXT NOT NULL,
+  first_name TEXT,
+  last_name TEXT,
+  preferences TEXT, -- JSON blob for user preferences
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Dashboards table (Dashboard Management Slice)
+CREATE TABLE dashboards (
+  id TEXT PRIMARY KEY,
+  user_id TEXT REFERENCES users(id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
+  description TEXT,
+  is_default BOOLEAN DEFAULT FALSE,
+  layout_config TEXT, -- JSON blob for layout configuration
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Widgets table (Dashboard Management Slice)
+CREATE TABLE widgets (
+  id TEXT PRIMARY KEY,
+  dashboard_id TEXT REFERENCES dashboards(id) ON DELETE CASCADE,
+  type TEXT NOT NULL, -- 'asset', 'news', 'chart', 'summary'
+  position_config TEXT, -- JSON blob for position and size
+  widget_config TEXT, -- JSON blob for widget-specific configuration
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Assets table (Asset Data Slice)
+CREATE TABLE assets (
+  symbol TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  sector TEXT,
+  market_cap REAL,
+  description TEXT,
+  last_updated DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Asset prices table (Asset Data Slice)
+CREATE TABLE asset_prices (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  symbol TEXT REFERENCES assets(symbol),
+  price REAL NOT NULL,
+  change_amount REAL,
+  change_percent REAL,
+  volume INTEGER,
+  timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- News articles table (News Integration Slice)
+CREATE TABLE news_articles (
+  id TEXT PRIMARY KEY,
+  title TEXT NOT NULL,
+  content TEXT,
+  summary TEXT,
+  source TEXT NOT NULL,
+  author TEXT,
+  url TEXT UNIQUE,
+  published_at DATETIME,
+  sentiment_score REAL, -- -1 to 1 (negative to positive)
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- News-Asset relationships (News Integration Slice)
+CREATE TABLE news_assets (
+  news_id TEXT REFERENCES news_articles(id) ON DELETE CASCADE,
+  asset_symbol TEXT REFERENCES assets(symbol) ON DELETE CASCADE,
+  relevance_score REAL DEFAULT 1.0,
+  PRIMARY KEY (news_id, asset_symbol)
+);
+
+-- User sessions table (Auth Slice)
+CREATE TABLE user_sessions (
+  id TEXT PRIMARY KEY,
+  user_id TEXT REFERENCES users(id) ON DELETE CASCADE,
+  token_hash TEXT NOT NULL,
+  expires_at DATETIME NOT NULL,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Watchlists table (Dashboard Management Slice)
+CREATE TABLE watchlists (
+  id TEXT PRIMARY KEY,
+  user_id TEXT REFERENCES users(id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
+  description TEXT,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Watchlist assets table (Dashboard Management Slice)
+CREATE TABLE watchlist_assets (
+  watchlist_id TEXT REFERENCES watchlists(id) ON DELETE CASCADE,
+  asset_symbol TEXT REFERENCES assets(symbol) ON DELETE CASCADE,
+  added_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (watchlist_id, asset_symbol)
+);
+
+-- Default dashboard configurations table (Owner Configuration Slice)
+CREATE TABLE default_dashboard_configs (
+  id TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  description TEXT,
+  layout_config TEXT, -- JSON blob for layout configuration
+  widget_configs TEXT, -- JSON blob for default widget configurations
+  is_active BOOLEAN DEFAULT TRUE,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- System monitoring and metrics table (Monitoring Slice)
+CREATE TABLE system_metrics (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  metric_type TEXT NOT NULL, -- 'response_time', 'error_rate', 'connection_count', etc.
+  metric_value REAL NOT NULL,
+  endpoint TEXT,
+  user_id TEXT,
+  timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+  metadata TEXT -- JSON blob for additional metric data
+);
+
+-- API health status table (Monitoring Slice)
+CREATE TABLE api_health_status (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  service_name TEXT NOT NULL, -- 'yahoo_finance', 'google_finance', 'news_api', etc.
+  status TEXT NOT NULL, -- 'up', 'down', 'degraded'
+  response_time REAL,
+  error_message TEXT,
+  last_check DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- User preference history table (User Management Slice)
+CREATE TABLE user_preference_history (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id TEXT REFERENCES users(id) ON DELETE CASCADE,
+  preference_key TEXT NOT NULL,
+  old_value TEXT,
+  new_value TEXT,
+  changed_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Rate limiting tracking table (Security Slice)
+CREATE TABLE rate_limit_tracking (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id TEXT,
+  ip_address TEXT,
+  endpoint TEXT,
+  request_count INTEGER DEFAULT 1,
+  window_start DATETIME DEFAULT CURRENT_TIMESTAMP,
+  last_request DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+### Data Flow Architecture
+
+```mermaid
+sequenceDiagram
+    participant UI as Frontend UI
+    participant API as Express API
+    participant Service as Business Service
+    participant Cache as Cache Layer
+    participant DB as Database
+    participant Ext as External API
+
+    UI->>API: Request asset data
+    API->>Service: Process request
+    Service->>Cache: Check cache
+    alt Cache hit
+        Cache-->>Service: Return cached data
+    else Cache miss
+        Service->>DB: Check database
+        alt DB has recent data
+            DB-->>Service: Return DB data
+        else Need fresh data
+            Service->>Ext: Fetch from external API
+            Ext-->>Service: Return fresh data
+            Service->>DB: Store in database
+            Service->>Cache: Store in cache
+        end
+    end
+    Service-->>API: Return data
+    API-->>UI: Send response
 ```
 
 ## Error Handling
 
-- - [ ] ### Frontend Error Handling
+### Error Handling Strategy
+
+The system implements a comprehensive error handling strategy with proper HTTP status codes, structured logging, and user-friendly error messages:
+
+#### Frontend Error Handling
 
 ```typescript
-interface ErrorBoundaryState {
-  hasError: boolean;
-  error?: Error;
-  errorInfo?: ErrorInfo;
+// Error Boundary Component
+class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  constructor(props: ErrorBoundaryProps) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error: Error): ErrorBoundaryState {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo): void {
+    logger.error('React Error Boundary caught error', { error, errorInfo });
+  }
+
+  render(): React.ReactNode {
+    if (this.state.hasError) {
+      return <ErrorFallback error={this.state.error} />;
+    }
+    return this.props.children;
+  }
 }
 
-interface ApiErrorResponse {
-  error: string;
-  message: string;
-  statusCode: number;
-  timestamp: string;
+// API Error Handling
+class ApiError extends Error {
+  constructor(
+    public status: number,
+    public message: string,
+    public code?: string
+  ) {
+    super(message);
+    this.name = 'ApiError';
+  }
 }
 
-interface SystemStateIndicators {
-  loading: boolean;
-  error: string | null;
-  success: boolean;
-  retryCount: number;
-}
-
-// Error handling strategies:
-// 1. Component-level error boundaries for widget failures
-// 2. Global error boundary for application-level errors
-// 3. Toast notifications for user-actionable errors with appropriate icons and colors
-// 4. Retry mechanisms for network failures with exponential backoff
-// 5. Graceful degradation for missing data with fallback content
-// 6. Clear visual feedback for loading, error, and success states
-// 7. Consistent styling and iconography across all message types
-// 8. Visually appealing loading indicators that prevent layout shifts
+// Service Error Handling with React Query
+const useAssetData = (symbol: string) => {
+  return useQuery({
+    queryKey: ['asset', symbol],
+    queryFn: () => marketDataService.getAsset(symbol),
+    retry: (failureCount, error) => {
+      if (error instanceof ApiError && error.status >= 400 && error.status < 500) {
+        return false; // Don't retry client errors
+      }
+      return failureCount < 3;
+    },
+    onError: (error) => {
+      notificationStore.addNotification({
+        type: 'error',
+        message: `Failed to load asset data: ${error.message}`,
+      });
+    },
+  });
+};
 ```
 
-- - [ ] ### Backend Error Handling
+#### Backend Error Handling
 
 ```typescript
-interface ErrorHandler {
-  handleApiError(error: Error, req: Request, res: Response): void;
-  handleCacheError(error: Error): void;
-  handleDataSourceError(error: Error, source: string): void;
-  handleNetworkConnectivity(error: Error): void;
-  handleDatabaseFailure(error: Error): void;
+// Custom Error Classes
+class ServiceError extends Error {
+  constructor(
+    public message: string,
+    public statusCode: number = 500,
+    public code?: string
+  ) {
+    super(message);
+    this.name = 'ServiceError';
+  }
 }
 
-interface RecoveryMechanisms {
-  gracefulDegradation: boolean;
-  alternativeDataSources: string[];
-  retryStrategies: RetryConfig[];
-  fallbackCaching: CacheConfig;
+class ValidationError extends ServiceError {
+  constructor(message: string, public field?: string) {
+    super(message, 400, 'VALIDATION_ERROR');
+  }
 }
 
-// Error handling patterns:
-// 1. Structured error responses with consistent format and user-friendly messages
-// 2. Automatic retry with exponential backoff for external APIs
-// 3. Circuit breaker pattern for failing data sources with automatic recovery
-// 4. Comprehensive logging with error tracking and monitoring
-// 5. Fallback data sources when primary sources fail (Google Finance when Yahoo fails)
-// 6. Graceful degradation when external APIs fail with alternative data sources
-// 7. Network connectivity loss handling with appropriate user messaging and retry mechanisms
-// 8. Cache system failure fallback to alternative caching strategies
-// 9. Database operation failure handling with user-friendly error messages
-// 10. Robust error handling and recovery mechanisms for application stability
+class NotFoundError extends ServiceError {
+  constructor(resource: string) {
+    super(`${resource} not found`, 404, 'NOT_FOUND');
+  }
+}
+
+// Global Error Handler Middleware
+const errorHandler = (
+  error: Error,
+  req: Request,
+  res: Response,
+  next: NextFunction
+): void => {
+  logger.error('API Error', {
+    error: error.message,
+    stack: error.stack,
+    url: req.url,
+    method: req.method,
+    userId: req.user?.id,
+  });
+
+  if (error instanceof ServiceError) {
+    res.status(error.statusCode).json({
+      success: false,
+      error: error.message,
+      code: error.code,
+      timestamp: Date.now(),
+    });
+    return;
+  }
+
+  // Unhandled errors
+  res.status(500).json({
+    success: false,
+    error: 'Internal server error',
+    timestamp: Date.now(),
+  });
+};
+
+// Service Layer Error Handling
+class AssetService {
+  async getAsset(symbol: string): Promise<Asset> {
+    try {
+      // Try cache first
+      const cached = await this.cacheService.get(`asset:${symbol}`);
+      if (cached) return cached;
+
+      // Try database
+      const dbAsset = await this.assetRepository.findBySymbol(symbol);
+      if (dbAsset && this.isRecentData(dbAsset.lastUpdated)) {
+        await this.cacheService.set(`asset:${symbol}`, dbAsset, 300);
+        return dbAsset;
+      }
+
+      // Fetch from external API with fallback
+      const asset = await this.fetchFromExternalAPI(symbol);
+      await this.assetRepository.upsert(asset);
+      await this.cacheService.set(`asset:${symbol}`, asset, 300);
+      
+      return asset;
+    } catch (error) {
+      if (error instanceof ExternalAPIError) {
+        throw new ServiceError(`Failed to fetch asset data for ${symbol}`, 503);
+      }
+      throw error;
+    }
+  }
+
+  private async fetchFromExternalAPI(symbol: string): Promise<Asset> {
+    try {
+      return await this.yahooFinanceProvider.getAsset(symbol);
+    } catch (error) {
+      logger.warn('Yahoo Finance failed, trying Google Finance', { symbol, error });
+      try {
+        return await this.googleFinanceProvider.getAsset(symbol);
+      } catch (fallbackError) {
+        throw new ExternalAPIError('All external APIs failed');
+      }
+    }
+  }
+}
+```
+
+## Security and Performance Design
+
+### Security Architecture
+
+The security design implements defense-in-depth principles with multiple layers of protection:
+
+#### Authentication and Authorization
+
+```typescript
+// JWT Token Structure
+interface JWTPayload {
+  userId: string;
+  email: string;
+  role: 'user' | 'admin' | 'owner';
+  permissions: string[];
+  iat: number;
+  exp: number;
+  sessionId: string;
+}
+
+// Session Management
+class SessionManager {
+  async createSession(user: User): Promise<SessionToken> {
+    const sessionId = generateSecureId();
+    const token = jwt.sign(
+      { userId: user.id, email: user.email, sessionId },
+      process.env.JWT_SECRET,
+      { expiresIn: '24h' }
+    );
+    
+    await this.storeSession(sessionId, user.id, token);
+    return { token, expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000) };
+  }
+
+  async validateSession(token: string): Promise<User | null> {
+    try {
+      const payload = jwt.verify(token, process.env.JWT_SECRET) as JWTPayload;
+      const session = await this.getSession(payload.sessionId);
+      
+      if (!session || session.userId !== payload.userId) {
+        throw new Error('Invalid session');
+      }
+      
+      return await this.getUserById(payload.userId);
+    } catch (error) {
+      return null;
+    }
+  }
+}
+```
+
+#### Input Validation and Sanitization
+
+```typescript
+// Zod Schema Validation
+const AssetRequestSchema = z.object({
+  symbol: z.string().regex(/^[A-Z]{1,5}$/, 'Invalid symbol format'),
+  timeframe: z.enum(['1D', '1W', '1M', '3M', '6M', '1Y', '5Y']).optional(),
+});
+
+const DashboardConfigSchema = z.object({
+  name: z.string().min(1).max(100).trim(),
+  description: z.string().max(500).optional(),
+  widgets: z.array(WidgetSchema).max(20),
+  layout: z.object({
+    columns: z.number().min(1).max(12),
+    rows: z.number().min(1).max(20),
+  }),
+});
+
+// Input Sanitization Middleware
+const sanitizeInput = (req: Request, res: Response, next: NextFunction) => {
+  const sanitizeObject = (obj: any): any => {
+    if (typeof obj === 'string') {
+      return DOMPurify.sanitize(obj);
+    }
+    if (Array.isArray(obj)) {
+      return obj.map(sanitizeObject);
+    }
+    if (obj && typeof obj === 'object') {
+      const sanitized: any = {};
+      for (const [key, value] of Object.entries(obj)) {
+        sanitized[key] = sanitizeObject(value);
+      }
+      return sanitized;
+    }
+    return obj;
+  };
+
+  req.body = sanitizeObject(req.body);
+  req.query = sanitizeObject(req.query);
+  next();
+};
+```
+
+#### Rate Limiting and API Protection
+
+```typescript
+// Advanced Rate Limiting
+class RateLimiter {
+  private redis: Redis;
+  private limits = {
+    api: { requests: 100, window: 15 * 60 * 1000 }, // 100 requests per 15 minutes
+    websocket: { connections: 10, window: 60 * 1000 }, // 10 connections per minute
+    login: { attempts: 5, window: 15 * 60 * 1000 }, // 5 login attempts per 15 minutes
+  };
+
+  async checkLimit(
+    key: string, 
+    type: keyof typeof this.limits, 
+    identifier: string
+  ): Promise<{ allowed: boolean; remaining: number; resetTime: number }> {
+    const limit = this.limits[type];
+    const redisKey = `rate_limit:${type}:${identifier}`;
+    
+    const current = await this.redis.incr(redisKey);
+    
+    if (current === 1) {
+      await this.redis.expire(redisKey, Math.ceil(limit.window / 1000));
+    }
+    
+    const ttl = await this.redis.ttl(redisKey);
+    const resetTime = Date.now() + (ttl * 1000);
+    
+    return {
+      allowed: current <= limit.requests,
+      remaining: Math.max(0, limit.requests - current),
+      resetTime,
+    };
+  }
+}
+```
+
+### Performance Optimization Design
+
+#### Multi-Level Caching Strategy
+
+```typescript
+// Cache Hierarchy Implementation
+class CacheService implements ICacheService {
+  private redis: Redis;
+  private memoryCache: Map<string, CacheEntry>;
+  private readonly TTL = {
+    market_data: 30, // 30 seconds for market data
+    news: 300, // 5 minutes for news
+    user_preferences: 3600, // 1 hour for user preferences
+    dashboard_config: 1800, // 30 minutes for dashboard configs
+  };
+
+  async get<T>(key: string): Promise<T | null> {
+    // Level 1: Memory cache (fastest)
+    const memoryEntry = this.memoryCache.get(key);
+    if (memoryEntry && !this.isExpired(memoryEntry)) {
+      return memoryEntry.value as T;
+    }
+
+    // Level 2: Redis cache
+    try {
+      const redisValue = await this.redis.get(key);
+      if (redisValue) {
+        const parsed = JSON.parse(redisValue) as T;
+        // Populate memory cache
+        this.memoryCache.set(key, {
+          value: parsed,
+          expiry: Date.now() + (this.TTL.market_data * 1000),
+        });
+        return parsed;
+      }
+    } catch (error) {
+      logger.warn('Redis cache miss, falling back to database', { key, error });
+    }
+
+    return null;
+  }
+
+  async set<T>(key: string, value: T, ttl?: number): Promise<void> {
+    const actualTTL = ttl || this.getTTLForKey(key);
+    
+    // Set in memory cache
+    this.memoryCache.set(key, {
+      value,
+      expiry: Date.now() + (actualTTL * 1000),
+    });
+
+    // Set in Redis cache
+    try {
+      await this.redis.setex(key, actualTTL, JSON.stringify(value));
+    } catch (error) {
+      logger.error('Failed to set Redis cache', { key, error });
+    }
+  }
+}
+```
+
+#### Code Splitting and Lazy Loading
+
+```typescript
+// Route-based Code Splitting
+const Dashboard = lazy(() => import('@/pages/Dashboard'));
+const AssetDetail = lazy(() => import('@/pages/AssetDetail'));
+const NewsPage = lazy(() => import('@/pages/News'));
+const Settings = lazy(() => import('@/pages/Settings'));
+
+// Component-based Lazy Loading
+const ChartWidget = lazy(() => import('@/components/widgets/ChartWidget'));
+const NewsWidget = lazy(() => import('@/components/widgets/NewsWidget'));
+
+// Bundle Optimization Configuration
+const bundleConfig = {
+  manualChunks: {
+    'vendor-react': ['react', 'react-dom'],
+    'vendor-charts': ['chart.js', 'react-chartjs-2'],
+    'vendor-ui': ['@headlessui/react', '@heroicons/react'],
+    services: ['src/services/*'],
+    stores: ['src/stores/*'],
+    'components-ui': ['src/components/ui/*'],
+  },
+  rollupOptions: {
+    output: {
+      chunkFileNames: 'assets/[name]-[hash].js',
+      entryFileNames: 'assets/[name]-[hash].js',
+      assetFileNames: 'assets/[name]-[hash].[ext]',
+    },
+  },
+};
+```
+
+#### Virtualization for Large Datasets
+
+```typescript
+// Virtual Scrolling for Large Lists
+const VirtualizedAssetList: React.FC<{ assets: Asset[] }> = ({ assets }) => {
+  const { height, width } = useWindowSize();
+  
+  const Row = ({ index, style }: { index: number; style: React.CSSProperties }) => (
+    <div style={style}>
+      <AssetListItem asset={assets[index]} />
+    </div>
+  );
+
+  return (
+    <FixedSizeList
+      height={height - 200}
+      width={width}
+      itemCount={assets.length}
+      itemSize={60}
+      overscanCount={5}
+    >
+      {Row}
+    </FixedSizeList>
+  );
+};
+
+// Chart Data Virtualization
+const VirtualizedChart: React.FC<{ data: ChartDataPoint[] }> = ({ data }) => {
+  const [visibleRange, setVisibleRange] = useState({ start: 0, end: 100 });
+  
+  const visibleData = useMemo(() => {
+    return data.slice(visibleRange.start, visibleRange.end);
+  }, [data, visibleRange]);
+
+  return (
+    <Chart
+      data={visibleData}
+      onZoom={(range) => setVisibleRange(range)}
+      options={{
+        responsive: true,
+        maintainAspectRatio: false,
+        animation: { duration: 0 }, // Disable animations for performance
+      }}
+    />
+  );
+};
 ```
 
 ## Testing Strategy
 
-- - [ ] ### Systematic Testing Framework
+### Comprehensive Testing Approach
 
-The application follows a comprehensive testing approach using `test-results.md` for progress tracking:
+The testing strategy supports the slice-by-slice implementation with comprehensive coverage at each level:
 
-- **11 test categories** covering all aspects from structure to production
-- **Issue-driven development** with systematic problem resolution
-- **Zero-error policy** ensuring no test is marked complete until fully passing
-- **Step-by-step validation** with progress documentation
-- **Regression testing** to ensure existing functionality continues working after changes
+#### Testing Pyramid
 
-- - [ ] ### Frontend Testing
-
-```typescript
-// Unit Tests - Vitest
-describe('AssetWidget', () => {
-  it('should display asset data correctly');
-  it('should handle loading states');
-  it('should handle error states');
-  it('should be accessible via keyboard navigation');
-  it('should maintain single responsibility principle');
-});
-
-// Integration Tests - React Testing Library
-describe('Dashboard Integration', () => {
-  it('should load and display dashboard data');
-  it('should handle real-time updates');
-  it('should persist user changes');
-  it('should validate existing functionality after changes');
-});
-
-// E2E Tests - Playwright
-describe('User Workflows', () => {
-  it('should create and customize dashboard');
-  it('should switch between light and dark themes');
-  it('should work on mobile devices');
-  it('should maintain performance under load');
-});
+```mermaid
+graph TB
+    subgraph "Testing Pyramid"
+        E2E[End-to-End Tests<br/>Playwright<br/>User Workflows]
+        INT[Integration Tests<br/>API + Database<br/>Service Integration]
+        UNIT[Unit Tests<br/>Vitest + Jest<br/>Component + Service Logic]
+    end
+    
+    subgraph "Specialized Testing"
+        ACC[Accessibility Tests<br/>Axe + WCAG-AA]
+        PERF[Performance Tests<br/>Lighthouse + Metrics]
+        SEC[Security Tests<br/>OWASP + Penetration]
+    end
 ```
 
-- - [ ] ### Backend Testing
+#### Testing Implementation per Slice
 
+**POC Testing:**
+- Basic health check endpoint test
+- Simple component rendering test
+- Database connection test
+- Build and deployment test
+
+**Asset Data Slice Testing:**
 ```typescript
 // Unit Tests
-describe('DataAggregationService', () => {
-  it('should aggregate data from multiple sources');
-  it('should handle API failures gracefully');
-  it('should respect rate limits');
-  it('should maintain response times under 200ms for cached data');
+describe('AssetService', () => {
+  it('should fetch asset data with cache fallback', async () => {
+    const mockAsset = { symbol: 'AAPL', price: 150.00 };
+    cacheService.get.mockResolvedValue(null);
+    yahooFinanceProvider.getAsset.mockResolvedValue(mockAsset);
+    
+    const result = await assetService.getAsset('AAPL');
+    
+    expect(result).toEqual(mockAsset);
+    expect(cacheService.set).toHaveBeenCalledWith('asset:AAPL', mockAsset, 300);
+  });
 });
 
 // Integration Tests
-describe('API Endpoints', () => {
-  it('should return dashboard data');
-  it('should handle cache refresh');
-  it('should validate request parameters');
-  it('should handle concurrent requests efficiently');
+describe('Asset API Integration', () => {
+  it('should return asset data via API endpoint', async () => {
+    const response = await request(app)
+      .get('/api/assets/AAPL')
+      .expect(200);
+    
+    expect(response.body.success).toBe(true);
+    expect(response.body.data.symbol).toBe('AAPL');
+  });
 });
 
-// Performance Tests
-describe('Performance', () => {
-  it('should handle 100 concurrent requests');
-  it('should respond within 200ms for cached data');
-  it('should not exceed memory limits');
-  it('should implement cleanup and optimization routines');
+// E2E Tests
+test('user can view asset data on dashboard', async ({ page }) => {
+  await page.goto('/dashboard');
+  await page.click('[data-testid="add-widget"]');
+  await page.selectOption('[data-testid="widget-type"]', 'asset');
+  await page.fill('[data-testid="asset-symbol"]', 'AAPL');
+  await page.click('[data-testid="add-widget-confirm"]');
+  
+  await expect(page.locator('[data-testid="asset-widget-AAPL"]')).toBeVisible();
+  await expect(page.locator('[data-testid="asset-price"]')).toContainText('$');
 });
 ```
 
-- - [ ] ### Accessibility Testing
+#### Quality Gates per Slice (Zero-Error Policy)
+
+```bash
+# Mandatory test execution before slice completion
+npm run test:unit          # Unit tests with 80%+ coverage (branches, functions, lines, statements)
+npm run test:integration   # API and service integration tests
+npm run test:e2e          # End-to-end user workflow tests (Playwright)
+npm run test:accessibility # WCAG-AA compliance validation (Axe)
+npm run test:performance   # Performance benchmarks (Lighthouse)
+npm run test:security     # Security vulnerability scanning (OWASP)
+npm run test:websocket    # WebSocket functionality and connection tests
+
+# Quality metrics validation (Zero tolerance)
+npm run type-check        # Zero TypeScript errors (strict mode)
+npm run lint             # Zero ESLint warnings (strict rules)
+npm run format:check     # Proper code formatting (Prettier)
+npm run build           # Successful production build (no warnings)
+
+# Regression testing
+npm run test:regression   # Verify existing functionality still works
+npm run test:browser     # Browser console error validation
+npm run test:api         # API endpoint contract validation
+```
+
+#### Test-Driven Development (TDD) Enforcement
 
 ```typescript
-// Automated Accessibility Tests
-describe('Accessibility', () => {
-  it('should meet WCAG AA standards');
-  it('should support keyboard navigation');
-  it('should provide screen reader announcements');
-  it('should maintain focus management');
-  it('should have sufficient color contrast');
-  it('should work with high contrast mode');
+// Example TDD Test Structure
+describe('AssetService with Failover', () => {
+  beforeEach(() => {
+    // Setup test environment
+    mockYahooFinanceAPI.reset();
+    mockGoogleFinanceAPI.reset();
+    cacheService.clear();
+  });
+
+  describe('getAsset with primary API failure', () => {
+    it('should failover to Google Finance when Yahoo Finance fails', async () => {
+      // Arrange
+      const symbol = 'AAPL';
+      const expectedAsset = { symbol, price: 150.00, change: 2.50 };
+      
+      mockYahooFinanceAPI.getAsset.mockRejectedValue(new Error('Rate limit exceeded'));
+      mockGoogleFinanceAPI.getAsset.mockResolvedValue(expectedAsset);
+
+      // Act
+      const result = await assetService.getAsset(symbol);
+
+      // Assert
+      expect(result).toEqual(expectedAsset);
+      expect(mockYahooFinanceAPI.getAsset).toHaveBeenCalledWith(symbol);
+      expect(mockGoogleFinanceAPI.getAsset).toHaveBeenCalledWith(symbol);
+      expect(cacheService.set).toHaveBeenCalledWith(`asset:${symbol}`, expectedAsset, 30);
+    });
+
+    it('should implement exponential backoff for API retries', async () => {
+      // Test implementation for requirement 1.7
+    });
+
+    it('should rotate API keys when rate limits are encountered', async () => {
+      // Test implementation for requirement 1.3
+    });
+  });
+});
+
+// Accessibility Testing
+describe('AssetWidget Accessibility', () => {
+  it('should be WCAG-AA compliant', async () => {
+    const { container } = render(<AssetWidget symbol="AAPL" />);
+    const results = await axe(container);
+    expect(results).toHaveNoViolations();
+  });
+
+  it('should support keyboard navigation', async () => {
+    render(<AssetWidget symbol="AAPL" />);
+    
+    // Test tab navigation
+    await user.tab();
+    expect(screen.getByRole('button', { name: /refresh/i })).toHaveFocus();
+    
+    // Test enter key activation
+    await user.keyboard('{Enter}');
+    expect(mockRefreshFunction).toHaveBeenCalled();
+  });
+});
+
+// Performance Testing
+describe('Dashboard Performance', () => {
+  it('should load within 3 seconds', async () => {
+    const startTime = performance.now();
+    render(<Dashboard />);
+    
+    await waitFor(() => {
+      expect(screen.getByTestId('dashboard-loaded')).toBeInTheDocument();
+    });
+    
+    const loadTime = performance.now() - startTime;
+    expect(loadTime).toBeLessThan(3000);
+  });
+
+  it('should maintain 60fps with virtualization', async () => {
+    const { container } = render(<VirtualizedAssetList assets={largeAssetList} />);
+    
+    // Simulate scrolling and measure frame rate
+    const frameRates = await measureScrollPerformance(container);
+    const averageFrameRate = frameRates.reduce((a, b) => a + b) / frameRates.length;
+    
+    expect(averageFrameRate).toBeGreaterThanOrEqual(60);
+  });
 });
 ```
 
-- - [ ] ### Testing Validation Process
+#### Comprehensive Test Coverage Requirements
 
-1. **test-results.md tracking** - All testing progress documented with comprehensive issue tracking
-2. **Sequential execution** - Tests run in systematic order with 11 comprehensive categories
-3. **Issue documentation** - All problems logged with specific details and resolution steps
-4. **Regression testing** - Existing functionality validated after every change
-5. **Completion criteria** - Zero errors before marking tests done, systematic problem resolution
-6. **Quality gates** - No advancement until all tests pass and issues are resolved
-7. **Performance validation** - Response times, memory usage, and concurrent request handling
-8. **Code quality assurance** - Single responsibility principle and modular architecture validation
+**Unit Tests (80% minimum coverage):**
+- All service methods with mocked dependencies
+- All utility functions with edge cases
+- All React components with various props
+- All custom hooks with different states
+- All validation schemas with invalid inputs
 
-## Performance Considerations
+**Integration Tests:**
+- API endpoint request/response contracts
+- Database operations with real database
+- Cache service with Redis and memory fallback
+- WebSocket connection and message handling
+- External API integration with mock servers
 
-- - [ ] ### Caching Strategy
+**End-to-End Tests (Playwright):**
+- Complete user registration and login workflow
+- Dashboard creation and widget management
+- Real-time price updates and WebSocket functionality
+- News feed interaction and sentiment display
+- Accessibility compliance across all user journeys
+- Mobile responsive design validation
 
-1. **Multi-level Caching:**
-   - Browser cache for static assets
-   - Client-side cache for API responses
-   - Server-side Redis cache for external API data
-   - File system cache for persistence
-   - Configurable cache duration (minimum 1 minute) with automatic extension on rate limit approach
+**Performance Tests (Lighthouse):**
+- Initial page load under 3 seconds
+- Bundle size optimization validation
+- Memory usage monitoring
+- Network request optimization
+- Core Web Vitals compliance
 
-2. **Cache Invalidation:**
-   - Time-based expiration (TTL) with configurable durations
-   - Manual refresh triggers and ad-hoc cache invalidation
-   - Smart invalidation based on data freshness
-   - Background refresh mechanisms for seamless user experience
+**Security Tests:**
+- Input validation and sanitization
+- Authentication and authorization flows
+- Rate limiting enforcement
+- CORS configuration validation
+- XSS and injection attack prevention
 
-3. **Rate Limiting:**
-   - Multiple API keys per source with automatic rotation
-   - Exponential backoff on rate limit hits
-   - Circuit breaker pattern for failing sources
-   - Aggressive caching to avoid API throttling and protect API keys
-
-- - [ ] ### Optimization Techniques
-
-1. **Frontend Optimizations:**
-   - Code splitting and lazy loading for improved initial load times
-   - Virtual scrolling for large data sets
-   - Debounced user inputs to reduce unnecessary API calls
-   - Optimized re-renders with React.memo and selective updates
-   - Virtualization and lazy loading techniques for large datasets
-
-2. **Backend Optimizations:**
-   - Connection pooling for database operations
-   - Batch API requests where possible to minimize external calls
-   - Compression for API responses to reduce bandwidth
-   - Efficient data serialization and response formatting
-   - Response times maintained under 200ms for cached data
-   - Memory usage monitoring with cleanup and optimization routines
-
-3. **Real-time Updates:**
-   - WebSocket connections for live data streaming
-   - Selective updates to minimize re-renders and layout shifts
-   - Optimistic updates for better user experience
-   - Efficient data synchronization across components
-
-4. **Performance Monitoring:**
-   - Concurrent request handling (100+ simultaneous requests)
-   - Memory usage thresholds with automatic cleanup
-   - Response time tracking and optimization
-   - Performance metrics dashboard for system monitoring
-
-## Security Considerations
-
-1. **API Security:**
-   - API key rotation and secure storage with multiple keys per source
-   - Rate limiting per user/IP with automatic key rotation on 429 responses
-   - Input validation and sanitization for all user inputs
-   - CORS configuration for secure cross-origin requests
-
-2. **Data Protection:**
-   - No sensitive user data storage beyond preferences
-   - Secure session management with proper authentication
-   - HTTPS enforcement in production environments
-   - Content Security Policy headers for XSS protection
-
-3. **Client Security:**
-   - XSS protection with input sanitization
-   - Secure cookie settings and session management
-   - Environment variable protection for API keys
-   - Dependency vulnerability scanning and updates
-
-4. **System Resilience:**
-   - Circuit breaker patterns for external API failures
-   - Graceful degradation when services are unavailable
-   - Comprehensive error logging without exposing sensitive information
-   - Fallback mechanisms for critical functionality
-
-## Code Quality and Maintainability
-
-- - [ ] ### Modular Architecture
-
-1. **Single Responsibility Principle:**
-   - Each file and component has one conceptual responsibility
-   - Large files broken down into smaller, manageable modules
-   - Duplicate code consolidated into reusable components
-   - Unused code removed to maintain clean codebase
-
-2. **Code Enhancement Policy:**
-   - Enhance existing files instead of creating alternative versions
-   - No `enhanced*`, `*v2`, `improved*` files allowed
-   - Modify original files to maintain single source of truth
-   - Maintain backward compatibility during enhancements
-
-3. **Quality Assurance:**
-   - Comprehensive validation that existing functionality isn't broken
-   - Regression tests for all new features and changes
-   - UI behavior and interactions remain unchanged during refactoring
-   - API changes maintain backward compatibility and data integrity
-
-- - [ ] ### Development Standards
-
-1. **TypeScript Guidelines:**
-   - Never use `any` type - always identify correct specific types
-   - Use `unknown` instead of `any` with proper type guards
-   - Explicit return types for all public functions
-   - Strict null checks with explicit handling
-   - Generic constraints using extends for type safety
-
-2. **Testing Requirements:**
-   - Systematic testing with 11 comprehensive test categories
-   - Issue tracking in test-results.md with detailed resolution steps
-   - Zero-error completion policy - no tests marked done until fully passing
-   - Regression testing to verify existing functionality continues working
+This comprehensive design document provides the foundation for implementing MarketPulse using the slice-by-slice approach while maintaining strict quality standards, zero-error policy enforcement, and architectural integrity across all system components.

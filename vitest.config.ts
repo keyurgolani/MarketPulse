@@ -1,30 +1,25 @@
-import { defineConfig } from 'vitest/config';
-import react from '@vitejs/plugin-react';
-import { fileURLToPath, URL } from 'node:url';
+import { defineConfig } from 'vitest/config'
+import react from '@vitejs/plugin-react'
+import { resolve } from 'path'
 
 export default defineConfig({
   plugins: [react()],
   test: {
     globals: true,
     environment: 'jsdom',
-    setupFiles: './src/setupTests.ts',
-    css: true,
+    setupFiles: ['./tests/setup.ts'],
+    include: ['src/**/*.{test,spec}.{ts,tsx}', 'tests/**/*.{test,spec}.{ts,tsx}'],
+    exclude: ['node_modules', 'dist', 'server'],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
       exclude: [
         'node_modules/',
-        'dist/',
-        'server/',
         'tests/',
-        '**/*.config.*',
-        '**/*.test.*',
-        '**/*.spec.*',
-        '**/setupTests.ts',
-        '**/main.tsx',
-        '**/debug-api.ts',
-        '**/__tests__/**',
-        '**/__mocks__/**',
+        '**/*.d.ts',
+        '**/*.config.{ts,js}',
+        '**/index.ts',
+        'src/main.tsx',
       ],
       thresholds: {
         global: {
@@ -35,26 +30,18 @@ export default defineConfig({
         },
       },
     },
-    exclude: [
-      '**/node_modules/**',
-      '**/dist/**',
-      '**/server/**', // Exclude backend tests - they use Jest
-      '**/tests/**', // Exclude all tests directory - they use Playwright
-      '**/.{idea,git,cache,output,temp}/**',
-      '**/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tsup,build}.config.*',
-    ],
+    testTimeout: 10000,
+    hookTimeout: 10000,
   },
   resolve: {
     alias: {
-      '@': fileURLToPath(new URL('./src', import.meta.url)),
-      '@/components': fileURLToPath(
-        new URL('./src/components', import.meta.url)
-      ),
-      '@/hooks': fileURLToPath(new URL('./src/hooks', import.meta.url)),
-      '@/services': fileURLToPath(new URL('./src/services', import.meta.url)),
-      '@/stores': fileURLToPath(new URL('./src/stores', import.meta.url)),
-      '@/types': fileURLToPath(new URL('./src/types', import.meta.url)),
-      '@/utils': fileURLToPath(new URL('./src/utils', import.meta.url)),
+      '@': resolve(__dirname, './src'),
+      '@/components': resolve(__dirname, './src/components'),
+      '@/hooks': resolve(__dirname, './src/hooks'),
+      '@/services': resolve(__dirname, './src/services'),
+      '@/stores': resolve(__dirname, './src/stores'),
+      '@/types': resolve(__dirname, './src/types'),
+      '@/utils': resolve(__dirname, './src/utils'),
     },
   },
-});
+})

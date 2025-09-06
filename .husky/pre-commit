@@ -1,1 +1,14 @@
-./node_modules/.bin/lint-staged
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# Run lint-staged for frontend
+npx lint-staged
+
+# Run lint-staged for backend
+cd server && npx lint-staged && cd ..
+
+# Run type checking
+npm run type-check
+cd server && npm run type-check && cd ..
+
+echo "✅ Pre-commit checks passed"
