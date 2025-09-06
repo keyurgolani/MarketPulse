@@ -23,6 +23,7 @@ import {
 import systemRoutes from './routes/system';
 import authRoutes from './routes/auth';
 import dashboardRoutes from './routes/dashboard';
+import assetRoutes from './routes/assets';
 
 // Load environment variables
 config();
@@ -80,15 +81,15 @@ app.use(rateLimiter);
 // Connection tracking middleware
 app.use((_req, res, next) => {
   healthService.incrementConnections();
-  
+
   res.on('finish', () => {
     healthService.decrementConnections();
   });
-  
+
   res.on('close', () => {
     healthService.decrementConnections();
   });
-  
+
   next();
 });
 
@@ -96,6 +97,7 @@ app.use((_req, res, next) => {
 app.use('/api/system', systemRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/dashboards', dashboardRoutes);
+app.use('/api/assets', assetRoutes);
 
 // Root endpoint
 app.get('/', (_req, res) => {
@@ -124,6 +126,7 @@ app.get('/api', (_req, res) => {
         info: '/api/system/info',
         auth: '/api/auth',
         dashboards: '/api/dashboards',
+        assets: '/api/assets',
       },
     },
     timestamp: Date.now(),
@@ -138,7 +141,7 @@ app.use('*', (req, res) => {
     ip: req.ip,
     userAgent: req.get('User-Agent'),
   });
-  
+
   res.status(404).json({
     success: false,
     error: 'Endpoint not found',
@@ -165,20 +168,22 @@ const startServer = async (): Promise<void> => {
         nodeVersion: process.version,
         timestamp: new Date().toISOString(),
       });
-      
+
       console.log(`🚀 MarketPulse API server running on port ${PORT}`);
       console.log(`📊 Environment: ${process.env.NODE_ENV || 'development'}`);
-      console.log(`🔗 Health check: http://localhost:${PORT}/api/system/health`);
+      console.log(
+        `🔗 Health check: http://localhost:${PORT}/api/system/health`
+      );
       console.log(`📋 API docs: http://localhost:${PORT}/api`);
     });
 
     // Graceful shutdown handling
     const gracefulShutdown = async (signal: string): Promise<void> => {
       logger.info(`Received ${signal}, starting graceful shutdown`);
-      
+
       server.close(async () => {
         logger.info('HTTP server closed');
-        
+
         try {
           await db.disconnect();
           logger.info('Database disconnected');
@@ -196,7 +201,10 @@ const startServer = async (): Promise<void> => {
 
     // Handle uncaught exceptions
     process.on('uncaughtException', (error) => {
-      logger.error('Uncaught Exception', { error: error.message, stack: error.stack });
+      logger.error('Uncaught Exception', {
+        error: error.message,
+        stack: error.stack,
+      });
       process.exit(1);
     });
 
@@ -205,7 +213,6 @@ const startServer = async (): Promise<void> => {
       logger.error('Unhandled Rejection', { reason, promise });
       process.exit(1);
     });
-
   } catch (error) {
     logger.error('Failed to start server', { error });
     process.exit(1);

@@ -36,7 +36,7 @@ export const createAuthMiddleware = (db: Database) => {
     try {
       // Extract token from Authorization header
       const authHeader = req.headers.authorization;
-      if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      if (!authHeader?.startsWith('Bearer ')) {
         res.status(401).json({
           success: false,
           error: 'Access token required',
@@ -50,14 +50,16 @@ export const createAuthMiddleware = (db: Database) => {
 
       // Verify token and get user
       const user = await authService.verifyToken(token);
-      
+
       // Extract session ID from token (for logout functionality)
       const tokenParts = token.split('.');
       if (tokenParts.length !== 3) {
         throw new Error('Invalid token format');
       }
-      const payload = JSON.parse(Buffer.from(tokenParts[1]!, 'base64').toString());
-      
+      const payload = JSON.parse(
+        Buffer.from(tokenParts[1]!, 'base64').toString()
+      );
+
       // Attach user and session to request
       req.user = user;
       req.sessionId = payload.sessionId;
@@ -71,7 +73,8 @@ export const createAuthMiddleware = (db: Database) => {
 
       next();
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
       logger.debug('Authentication failed', {
         error: errorMessage,
         url: req.url,
@@ -98,7 +101,7 @@ export const createAuthMiddleware = (db: Database) => {
   ): Promise<void> => {
     try {
       const authHeader = req.headers.authorization;
-      if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      if (!authHeader?.startsWith('Bearer ')) {
         // No token provided, continue without authentication
         next();
         return;
@@ -110,8 +113,10 @@ export const createAuthMiddleware = (db: Database) => {
       if (tokenParts.length !== 3) {
         throw new Error('Invalid token format');
       }
-      const payload = JSON.parse(Buffer.from(tokenParts[1]!, 'base64').toString());
-      
+      const payload = JSON.parse(
+        Buffer.from(tokenParts[1]!, 'base64').toString()
+      );
+
       req.user = user;
       req.sessionId = payload.sessionId;
 
@@ -120,7 +125,8 @@ export const createAuthMiddleware = (db: Database) => {
         email: user.email,
       });
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
       logger.debug('Optional authentication failed, continuing without auth', {
         error: errorMessage,
       });
@@ -193,7 +199,7 @@ export const createAuthMiddleware = (db: Database) => {
       }
 
       const resourceUserId = req.params[userIdParam] || req.body[userIdParam];
-      
+
       if (resourceUserId && resourceUserId !== req.user.id) {
         logger.warn('Unauthorized access attempt', {
           userId: req.user.id,

@@ -93,9 +93,9 @@ export interface SummaryWidgetConfig {
 export interface Asset {
   symbol: string;
   name: string;
-  sector?: string;
-  market_cap?: number;
-  description?: string;
+  sector?: string | undefined;
+  market_cap?: number | undefined;
+  description?: string | undefined;
   last_updated: string;
 }
 
@@ -103,9 +103,9 @@ export interface AssetPrice {
   id: number;
   symbol: string;
   price: number;
-  change_amount?: number;
-  change_percent?: number;
-  volume?: number;
+  change_amount?: number | undefined;
+  change_percent?: number | undefined;
+  volume?: number | undefined;
   timestamp: string;
 }
 

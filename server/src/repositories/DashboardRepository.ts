@@ -1,7 +1,14 @@
-import { BaseRepository, PaginationOptions, PaginatedResult } from './BaseRepository';
+import {
+  BaseRepository,
+  PaginationOptions,
+  PaginatedResult,
+} from './BaseRepository';
 import { Database } from '../config/database';
 import { Dashboard, DashboardLayout } from '../types/database';
-import { CreateDashboardSchema, UpdateDashboardSchema } from '../schemas/validation';
+import {
+  CreateDashboardSchema,
+  UpdateDashboardSchema,
+} from '../schemas/validation';
 import { z } from 'zod';
 import { v4 as uuidv4 } from 'uuid';
 import { logger } from '../utils/logger';
@@ -18,11 +25,17 @@ export class DashboardRepository extends BaseRepository<Dashboard, any, any> {
     return super.findById(id);
   }
 
-  async findByUserId(userId: string, options?: PaginationOptions): Promise<Dashboard[]> {
+  async findByUserId(
+    userId: string,
+    options?: PaginationOptions
+  ): Promise<Dashboard[]> {
     return super.findWhere('user_id = ?', [userId], options);
   }
 
-  async findByUserIdPaginated(userId: string, options: PaginationOptions): Promise<PaginatedResult<Dashboard>> {
+  async findByUserIdPaginated(
+    userId: string,
+    options: PaginationOptions
+  ): Promise<PaginatedResult<Dashboard>> {
     try {
       // Get total count for user
       const total = await super.count('user_id = ?', [userId]);
@@ -46,7 +59,10 @@ export class DashboardRepository extends BaseRepository<Dashboard, any, any> {
         },
       };
     } catch (error) {
-      logger.error('Error finding paginated dashboards by user', { userId, error });
+      logger.error('Error finding paginated dashboards by user', {
+        userId,
+        error,
+      });
       throw error;
     }
   }
@@ -55,11 +71,17 @@ export class DashboardRepository extends BaseRepository<Dashboard, any, any> {
     return super.findWhere('user_id = ? AND is_default = 1', [userId]);
   }
 
-  async findUserDashboard(userId: string, dashboardId: string): Promise<Dashboard | null> {
+  async findUserDashboard(
+    userId: string,
+    dashboardId: string
+  ): Promise<Dashboard | null> {
     return super.findOneWhere('id = ? AND user_id = ?', [dashboardId, userId]);
   }
 
-  async createForUser(userId: string, data: CreateDashboardData): Promise<Dashboard> {
+  async createForUser(
+    userId: string,
+    data: CreateDashboardData
+  ): Promise<Dashboard> {
     try {
       // Validate input data
       const validatedData = CreateDashboardSchema.parse(data);
@@ -71,7 +93,9 @@ export class DashboardRepository extends BaseRepository<Dashboard, any, any> {
         name: validatedData.name,
         description: validatedData.description,
         is_default: validatedData.is_default,
-        layout_config: validatedData.layout ? JSON.stringify(validatedData.layout) : undefined,
+        layout_config: validatedData.layout
+          ? JSON.stringify(validatedData.layout)
+          : undefined,
       };
 
       return await super.create(dashboardData);
@@ -81,14 +105,17 @@ export class DashboardRepository extends BaseRepository<Dashboard, any, any> {
     }
   }
 
-  override async update(id: string, data: UpdateDashboardData): Promise<Dashboard | null> {
+  override async update(
+    id: string,
+    data: UpdateDashboardData
+  ): Promise<Dashboard | null> {
     try {
       // Validate input data
       const validatedData = UpdateDashboardSchema.parse(data);
 
       // Prepare update data
       const updateData: any = {};
-      
+
       if (validatedData.name !== undefined) {
         updateData.name = validatedData.name;
       }
@@ -109,10 +136,13 @@ export class DashboardRepository extends BaseRepository<Dashboard, any, any> {
     }
   }
 
-  async updateLayout(id: string, layout: DashboardLayout): Promise<Dashboard | null> {
+  async updateLayout(
+    id: string,
+    layout: DashboardLayout
+  ): Promise<Dashboard | null> {
     try {
       return await super.update(id, {
-        layout_config: JSON.stringify(layout)
+        layout_config: JSON.stringify(layout),
       } as any);
     } catch (error) {
       logger.error('Error updating dashboard layout', { id, layout, error });
@@ -120,7 +150,10 @@ export class DashboardRepository extends BaseRepository<Dashboard, any, any> {
     }
   }
 
-  async setAsDefault(userId: string, dashboardId: string): Promise<Dashboard | null> {
+  async setAsDefault(
+    userId: string,
+    dashboardId: string
+  ): Promise<Dashboard | null> {
     try {
       // First, unset all other default dashboards for this user
       await this.db.run(
@@ -131,7 +164,11 @@ export class DashboardRepository extends BaseRepository<Dashboard, any, any> {
       // Then set the specified dashboard as default
       return await super.update(dashboardId, { is_default: true } as any);
     } catch (error) {
-      logger.error('Error setting dashboard as default', { userId, dashboardId, error });
+      logger.error('Error setting dashboard as default', {
+        userId,
+        dashboardId,
+        error,
+      });
       throw error;
     }
   }
@@ -140,13 +177,20 @@ export class DashboardRepository extends BaseRepository<Dashboard, any, any> {
     return super.delete(id);
   }
 
-  async deleteUserDashboard(userId: string, dashboardId: string): Promise<boolean> {
+  async deleteUserDashboard(
+    userId: string,
+    dashboardId: string
+  ): Promise<boolean> {
     try {
       const sql = 'DELETE FROM dashboards WHERE id = ? AND user_id = ?';
       const result = await this.db.run(sql, [dashboardId, userId]);
       return (result.changes ?? 0) > 0;
     } catch (error) {
-      logger.error('Error deleting user dashboard', { userId, dashboardId, error });
+      logger.error('Error deleting user dashboard', {
+        userId,
+        dashboardId,
+        error,
+      });
       throw error;
     }
   }
@@ -160,7 +204,11 @@ export class DashboardRepository extends BaseRepository<Dashboard, any, any> {
       const dashboard = await this.findUserDashboard(userId, dashboardId);
       return dashboard !== null;
     } catch (error) {
-      logger.error('Error checking dashboard ownership', { userId, dashboardId, error });
+      logger.error('Error checking dashboard ownership', {
+        userId,
+        dashboardId,
+        error,
+      });
       return false;
     }
   }
@@ -168,7 +216,7 @@ export class DashboardRepository extends BaseRepository<Dashboard, any, any> {
   async getDashboardLayout(id: string): Promise<DashboardLayout | null> {
     try {
       const dashboard = await this.findById(id);
-      if (!dashboard || !dashboard.layout_config) {
+      if (!dashboard?.layout_config) {
         return null;
       }
 
@@ -183,7 +231,11 @@ export class DashboardRepository extends BaseRepository<Dashboard, any, any> {
     return super.count('user_id = ?', [userId]);
   }
 
-  async searchUserDashboards(userId: string, query: string, options?: PaginationOptions): Promise<Dashboard[]> {
+  async searchUserDashboards(
+    userId: string,
+    query: string,
+    options?: PaginationOptions
+  ): Promise<Dashboard[]> {
     try {
       const searchTerm = `%${query}%`;
       return await super.findWhere(

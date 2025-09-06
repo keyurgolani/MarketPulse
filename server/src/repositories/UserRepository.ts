@@ -1,4 +1,8 @@
-import { BaseRepository, PaginationOptions, PaginatedResult } from './BaseRepository';
+import {
+  BaseRepository,
+  PaginationOptions,
+  PaginatedResult,
+} from './BaseRepository';
 import { Database } from '../config/database';
 import { User, UserPreferences } from '../types/database';
 import { CreateUserSchema, UpdateUserSchema } from '../schemas/validation';
@@ -27,7 +31,9 @@ export class UserRepository extends BaseRepository<User, any, any> {
     return super.findAll(options);
   }
 
-  override async findAllPaginated(options: PaginationOptions): Promise<PaginatedResult<User>> {
+  override async findAllPaginated(
+    options: PaginationOptions
+  ): Promise<PaginatedResult<User>> {
     return super.findAllPaginated(options);
   }
 
@@ -38,7 +44,10 @@ export class UserRepository extends BaseRepository<User, any, any> {
 
       // Hash password
       const saltRounds = 12;
-      const password_hash = await bcrypt.hash(validatedData.password, saltRounds);
+      const password_hash = await bcrypt.hash(
+        validatedData.password,
+        saltRounds
+      );
 
       // Prepare user data
       const userData = {
@@ -47,7 +56,9 @@ export class UserRepository extends BaseRepository<User, any, any> {
         password_hash,
         first_name: validatedData.first_name,
         last_name: validatedData.last_name,
-        preferences: validatedData.preferences ? JSON.stringify(validatedData.preferences) : undefined,
+        preferences: validatedData.preferences
+          ? JSON.stringify(validatedData.preferences)
+          : undefined,
       };
 
       return await super.create(userData as any);
@@ -57,14 +68,17 @@ export class UserRepository extends BaseRepository<User, any, any> {
     }
   }
 
-  override async update(id: string, data: UpdateUserData): Promise<User | null> {
+  override async update(
+    id: string,
+    data: UpdateUserData
+  ): Promise<User | null> {
     try {
       // Validate input data
       const validatedData = UpdateUserSchema.parse(data);
 
       // Prepare update data
       const updateData: any = {};
-      
+
       if (validatedData.first_name !== undefined) {
         updateData.first_name = validatedData.first_name;
       }
@@ -86,7 +100,7 @@ export class UserRepository extends BaseRepository<User, any, any> {
     try {
       const saltRounds = 12;
       const password_hash = await bcrypt.hash(newPassword, saltRounds);
-      
+
       return await super.update(id, { password_hash } as any);
     } catch (error) {
       logger.error('Error updating user password', { id, error });
@@ -108,7 +122,10 @@ export class UserRepository extends BaseRepository<User, any, any> {
     }
   }
 
-  async verifyPasswordByEmail(email: string, password: string): Promise<User | null> {
+  async verifyPasswordByEmail(
+    email: string,
+    password: string
+  ): Promise<User | null> {
     try {
       const user = await this.findByEmail(email);
       if (!user) {
@@ -126,7 +143,7 @@ export class UserRepository extends BaseRepository<User, any, any> {
   async getUserPreferences(id: string): Promise<UserPreferences | null> {
     try {
       const user = await this.findById(id);
-      if (!user || !user.preferences) {
+      if (!user?.preferences) {
         return null;
       }
 
@@ -137,10 +154,13 @@ export class UserRepository extends BaseRepository<User, any, any> {
     }
   }
 
-  async updatePreferences(id: string, preferences: UserPreferences): Promise<User | null> {
+  async updatePreferences(
+    id: string,
+    preferences: UserPreferences
+  ): Promise<User | null> {
     try {
-      return await super.update(id, { 
-        preferences: JSON.stringify(preferences) 
+      return await super.update(id, {
+        preferences: JSON.stringify(preferences),
       } as any);
     } catch (error) {
       logger.error('Error updating user preferences', { id, error });
@@ -166,7 +186,10 @@ export class UserRepository extends BaseRepository<User, any, any> {
     }
   }
 
-  async searchUsers(query: string, options?: PaginationOptions): Promise<User[]> {
+  async searchUsers(
+    query: string,
+    options?: PaginationOptions
+  ): Promise<User[]> {
     try {
       const searchTerm = `%${query}%`;
       return await super.findWhere(
