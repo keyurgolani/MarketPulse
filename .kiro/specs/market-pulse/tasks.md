@@ -282,3 +282,58 @@ Each task must pass the following quality gates before being marked complete:
 - [ ] No temporary or debug code remains
 - [ ] Environment variables and secrets are properly configured
 - [ ] Application is in fully deployable state
+
+## File Organization and Context Management
+
+### Context Documentation Requirements
+
+**MANDATORY**: All task implementation summaries and agent work documentation MUST be stored in the proper context location to maintain clean project structure.
+
+#### Context File Location Rules:
+- **Task Context**: Store in `.kiro/specs/market-pulse/context/task-{number}-{name}.md`
+- **Implementation Summaries**: Include in task-specific context files, NOT in project directories
+- **Agent Work Documentation**: Store in `.kiro/specs/market-pulse/context/` directory only
+- **Temporary Files**: NEVER commit temporary files to the project repository
+
+#### Prohibited File Locations:
+- **NEVER** create files named `IMPLEMENTATION_SUMMARY.md` in project directories
+- **NEVER** create files with prefixes like `summary-`, `context-`, `agent-work-` in `src/`, `server/`, or root directories
+- **NEVER** commit temporary files, debug files, or agent work files to production directories
+- **NEVER** create files with names like `*-temp`, `*-draft`, `*-notes` in project directories
+
+#### Required Actions After Task Completion:
+1. **Create Context File**: Always create `task-{number}-{description}.md` in `.kiro/specs/market-pulse/context/`
+2. **Document Implementation**: Include comprehensive implementation summary in context file
+3. **Clean Project Directory**: Remove any temporary files created during implementation
+4. **Verify Clean Structure**: Ensure project directories contain only production code and standard files
+
+#### Context File Content Requirements:
+- Task completion status and requirements mapping
+- Implementation details and file locations
+- Test coverage and validation results
+- Key features and architectural decisions
+- Requirements traceability
+- Status confirmation (COMPLETED ✅)
+
+### Project Structure Integrity
+
+The project MUST maintain a clean, publication-ready structure at all times:
+
+#### Production Directories (Clean Code Only):
+- `src/` - Frontend production code only
+- `server/src/` - Backend production code only
+- `tests/` - Test files only
+- `scripts/` - Build and deployment scripts only
+- Root directory - Standard project files only (package.json, README.md, etc.)
+
+#### Context and Documentation:
+- `.kiro/specs/market-pulse/context/` - All agent work and implementation summaries
+- `.kiro/specs/market-pulse/` - Spec documents (requirements.md, design.md, tasks.md)
+- `.kiro/steering/` - Development guidelines and standards
+
+#### File Naming Standards:
+- Context files: `task-{number}-{kebab-case-description}.md`
+- No spaces, special characters, or temporary suffixes in context file names
+- Use descriptive names that clearly identify the task and scope
+
+This ensures the project remains GitHub publication-ready with a pristine, professional structure while maintaining comprehensive development context in the appropriate locations.

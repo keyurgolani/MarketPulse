@@ -143,6 +143,59 @@ interface ApiResponse<T> {
 - **Refactor in place** rather than duplicating
 - **Single source of truth** for each feature
 
+### Project Structure Integrity (MANDATORY)
+
+**CRITICAL**: Maintain pristine project structure ready for GitHub publication at ALL times.
+
+#### File Organization Rules:
+- **Production Code Only** in `src/`, `server/src/`, `tests/`, `scripts/`
+- **NO temporary files** in project directories
+- **NO implementation summaries** in production folders
+- **NO agent work files** outside `.kiro/` directory
+
+#### Context Documentation (REQUIRED):
+- **Task Context**: Store ALL implementation summaries in `.kiro/specs/market-pulse/context/`
+- **File Naming**: Use `task-{number}-{kebab-case-description}.md` format
+- **Content**: Include implementation details, test results, requirements mapping
+- **Timing**: Create context file IMMEDIATELY after task completion
+
+#### Prohibited Files in Project Directories:
+```bash
+# NEVER create these in src/, server/, or root:
+IMPLEMENTATION_SUMMARY.md
+summary-*.md
+context-*.md
+agent-work-*.md
+*-temp.*
+*-draft.*
+*-notes.*
+*-backup.*
+```
+
+#### Required Actions After Each Task:
+1. **Create Context File**: `.kiro/specs/market-pulse/context/task-{n}-{name}.md`
+2. **Document Implementation**: Comprehensive summary with requirements mapping
+3. **Clean Project Directory**: Remove ALL temporary files
+4. **Verify Structure**: Ensure only production code remains
+5. **Commit Clean State**: Project ready for GitHub publication
+
+#### Context File Template:
+```markdown
+# {Task Name} - Implementation Summary
+
+## Task {Number}: {Task Name} - COMPLETED ✅
+
+### Requirements Implemented:
+- Requirement mapping with ✅ status
+
+### Implementation Details:
+- File locations and key features
+- Test coverage and validation
+- Architecture decisions
+
+### Status: COMPLETED ✅
+```
+
 ### MarketPulse-Specific Rules
 - **Data Sources**: Yahoo Finance (primary), Google Finance (fallback)
 - **Caching**: Redis → Memory cache fallback
@@ -244,10 +297,18 @@ cd server && npm run migrate   # Database migrations
 
 ## Task Execution Guidelines
 
-### Context Management
-- **Create/update** `<task_name>.md` in `.kiro/specs/market-pulse/context/`
-- **Record**: objective, context gathered, changes made
+### Context Management (MANDATORY)
+- **ALWAYS create** `task-{number}-{description}.md` in `.kiro/specs/market-pulse/context/`
+- **NEVER create** implementation summaries in project directories
+- **Record**: objective, implementation details, test results, requirements mapping
 - **Load existing context** at task start and resume from checkpoint
+- **Clean up** any temporary files created during implementation
+
+### File Organization During Development
+- **Work in production directories** for actual implementation
+- **Create context files** in `.kiro/specs/market-pulse/context/` for documentation
+- **Remove temporary files** before committing
+- **Maintain clean structure** throughout development process
 
 ### Execution Rules
 - Begin with **thorough code analysis** to identify exact locations
@@ -255,6 +316,7 @@ cd server && npm run migrate   # Database migrations
 - Run **lint, build, deploy checks** after every change
 - **Verify backend-frontend integration** consistency
 - **Iterate until zero errors** remain
+- **Create context documentation** immediately after completion
 
 ### Test-Driven Development (Mandatory)
 - Write **comprehensive tests BEFORE** implementing components
@@ -268,6 +330,15 @@ cd server && npm run migrate   # Database migrations
 - **Browser console must show zero errors**
 - **All tests must pass** for implemented functionality
 - **No regression** in existing functionality
+- **Project structure remains clean** and publication-ready
+
+### Post-Task Cleanup Checklist
+- [ ] Context file created in `.kiro/specs/market-pulse/context/`
+- [ ] All temporary files removed from project directories
+- [ ] Implementation summary documented with requirements mapping
+- [ ] Project structure verified as clean and professional
+- [ ] All quality gates passed
+- [ ] Ready for GitHub publication
 
 ## Current Implementation Status
 
