@@ -2,7 +2,7 @@
 
 ## Introduction
 
-MarketPulse is a comprehensive financial dashboard platform that enables users to monitor real-time market data through owner-configured default dashboards and custom user watchlists. The platform aggregates data from multiple financial sources (Yahoo Finance, Google Finance) with aggressive caching, provides WebSocket-based real-time updates, integrates news feeds with sentiment analysis, and maintains WCAG-AA accessibility compliance throughout the user experience.
+MarketPulse is a comprehensive financial dashboard platform that enables users to monitor real-time market data through owner-configured default dashboards and custom user watchlists. The platform aggregates data from multiple financial sources (Alpha Vantage, Twelve Data, Finnhub) with aggressive caching, provides WebSocket-based real-time updates, integrates news feeds with sentiment analysis, and maintains WCAG-AA accessibility compliance throughout the user experience.
 
 The system serves both individual investors and financial professionals who need reliable, fast, and accessible market data visualization with customizable dashboard configurations and real-time monitoring capabilities.
 
@@ -26,13 +26,14 @@ This approach ensures incremental progress with maintained quality standards and
 
 #### Acceptance Criteria
 
-1. WHEN the system requests market data THEN it SHALL first attempt to retrieve data from Yahoo Finance API
-2. IF Yahoo Finance API fails or returns 429 rate limit THEN the system SHALL automatically failover to Google Finance API
-3. WHEN API rate limits are encountered THEN the system SHALL implement automatic API key rotation
-4. WHEN market data is retrieved THEN the system SHALL cache the data in Redis with memory fallback
-5. WHEN cached data exists and is less than 30 seconds old THEN the system SHALL serve cached data instead of making new API calls
-6. WHEN real-time updates are enabled THEN the system SHALL establish WebSocket connections for live price feeds
-7. WHEN WebSocket connection fails THEN the system SHALL automatically attempt reconnection with exponential backoff
+1. WHEN the system requests market data THEN it SHALL first attempt to retrieve data from Alpha Vantage API (primary source)
+2. IF Alpha Vantage API fails or returns 429 rate limit THEN the system SHALL automatically failover to Twelve Data API (secondary source)
+3. IF Twelve Data API fails or returns 429 rate limit THEN the system SHALL automatically failover to Finnhub API (tertiary source)
+4. WHEN API rate limits are encountered THEN the system SHALL implement automatic API key rotation
+5. WHEN market data is retrieved THEN the system SHALL cache the data in Redis with memory fallback
+6. WHEN cached data exists and is less than 30 seconds old THEN the system SHALL serve cached data instead of making new API calls
+7. WHEN real-time updates are enabled THEN the system SHALL establish WebSocket connections for live price feeds
+8. WHEN WebSocket connection fails THEN the system SHALL automatically attempt reconnection with exponential backoff
 
 ### Requirement 2: Owner-Configured Default Dashboards
 

@@ -7,8 +7,9 @@ MarketPulse is designed as a modular, scalable financial dashboard platform that
 The system follows a modern web application architecture with a React-based frontend, Express.js backend, and multi-level caching strategy. The design prioritizes performance, accessibility, real-time capabilities, and comprehensive security measures while ensuring each implementation slice can be developed and deployed independently.
 
 **Key Design Principles:**
+
 - **Owner-Configured Defaults**: Platform owners can configure default dashboard layouts that are automatically provisioned to new users
-- **Multi-Source Data Aggregation**: Primary Yahoo Finance API with automatic Google Finance failover and API key rotation
+- **Multi-Source Data Aggregation**: Primary Alpha Vantage API with automatic Twelve Data and Finnhub failover and API key rotation
 - **Aggressive Caching Strategy**: Redis primary cache with memory fallback and 30-second TTL for market data
 - **Real-time WebSocket Updates**: Sub-second market data updates with automatic reconnection and graceful degradation
 - **WCAG-AA Accessibility**: Full compliance with accessibility standards across all features
@@ -24,39 +25,40 @@ graph TB
         UI[React Frontend]
         SW[Service Worker]
     end
-    
+
     subgraph "API Gateway"
         LB[Load Balancer]
         CORS[CORS Middleware]
         RL[Rate Limiter]
     end
-    
+
     subgraph "Application Layer"
         API[Express.js API]
         WS[WebSocket Server]
         AUTH[Auth Service]
     end
-    
+
     subgraph "Business Logic"
         DS[Dashboard Service]
         AS[Asset Service]
         NS[News Service]
         CS[Cache Service]
     end
-    
+
     subgraph "Data Layer"
         DB[(SQLite Database)]
         REDIS[(Redis Cache)]
         MEM[Memory Cache]
     end
-    
+
     subgraph "External APIs"
-        YF[Yahoo Finance - Primary]
-        GF[Google Finance - Fallback]
+        AV[Alpha Vantage - Primary]
+        TD[Twelve Data - Secondary]
+        FH[Finnhub - Tertiary]
         NEWS[Multi-Source News APIs]
         SENTIMENT[Sentiment Analysis Service]
     end
-    
+
     UI --> LB
     LB --> CORS
     CORS --> RL
@@ -72,8 +74,9 @@ graph TB
     CS --> REDIS
     CS --> MEM
     API --> DB
-    AS --> YF
-    AS --> GF
+    AS --> AV
+    AS --> TD
+    AS --> FH
     NS --> NEWS
     NS --> SENTIMENT
 ```
@@ -83,18 +86,21 @@ graph TB
 The architecture is designed to support incremental development where each slice adds complete end-to-end functionality:
 
 **Slice Independence:**
+
 - Each feature slice has its own database tables, API endpoints, and UI components
 - Shared infrastructure (auth, caching, logging, monitoring) is established in POC
 - New slices extend existing patterns without modifying core functionality
 - Owner-configured default dashboards are provisioned automatically to new users
 
 **Interface Contracts:**
+
 - Well-defined TypeScript interfaces between layers with explicit return types
 - API contracts using Zod schemas for validation and security
 - Database schema migrations for incremental changes
 - Comprehensive error handling with proper HTTP status codes
 
 **Quality Gate Integration:**
+
 - Zero-error policy enforced at every slice completion
 - Comprehensive testing (unit, integration, E2E, accessibility, performance)
 - TypeScript strict mode with no implicit any types
@@ -444,8 +450,13 @@ interface IMonitoringService {
 // Default Dashboard Service Interface
 interface IDefaultDashboardService {
   getDefaultConfigs(): Promise<DefaultDashboardConfig[]>;
-  createDefaultConfig(config: DefaultDashboardConfig): Promise<DefaultDashboardConfig>;
-  updateDefaultConfig(id: string, config: Partial<DefaultDashboardConfig>): Promise<DefaultDashboardConfig>;
+  createDefaultConfig(
+    config: DefaultDashboardConfig
+  ): Promise<DefaultDashboardConfig>;
+  updateDefaultConfig(
+    id: string,
+    config: Partial<DefaultDashboardConfig>
+  ): Promise<DefaultDashboardConfig>;
   provisionUserDefaults(userId: string): Promise<Dashboard[]>;
   applyTemplateUpdates(userId: string, templateId: string): Promise<Dashboard>;
 }
@@ -730,7 +741,10 @@ class ServiceError extends Error {
 }
 
 class ValidationError extends ServiceError {
-  constructor(message: string, public field?: string) {
+  constructor(
+    message: string,
+    public field?: string
+  ) {
     super(message, 400, 'VALIDATION_ERROR');
   }
 }
@@ -793,7 +807,7 @@ class AssetService {
       const asset = await this.fetchFromExternalAPI(symbol);
       await this.assetRepository.upsert(asset);
       await this.cacheService.set(`asset:${symbol}`, asset, 300);
-      
+
       return asset;
     } catch (error) {
       if (error instanceof ExternalAPIError) {
@@ -805,13 +819,24 @@ class AssetService {
 
   private async fetchFromExternalAPI(symbol: string): Promise<Asset> {
     try {
-      return await this.yahooFinanceProvider.getAsset(symbol);
+      return await this.alphaVantageProvider.getAsset(symbol);
     } catch (error) {
-      logger.warn('Yahoo Finance failed, trying Google Finance', { symbol, error });
+      logger.warn('Alpha Vantage failed, trying Twelve Data', {
+        symbol,
+        error,
+      });
       try {
-        return await this.googleFinanceProvider.getAsset(symbol);
-      } catch (fallbackError) {
-        throw new ExternalAPIError('All external APIs failed');
+        return await this.twelveDataProvider.getAsset(symbol);
+      } catch (secondaryError) {
+        logger.warn('Twelve Data failed, trying Finnhub', {
+          symbol,
+          error: secondaryError,
+        });
+        try {
+          return await this.finnhubProvider.getAsset(symbol);
+        } catch (tertiaryError) {
+          throw new ExternalAPIError('All external APIs failed');
+        }
       }
     }
   }
@@ -847,7 +872,7 @@ class SessionManager {
       process.env.JWT_SECRET,
       { expiresIn: '24h' }
     );
-    
+
     await this.storeSession(sessionId, user.id, token);
     return { token, expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000) };
   }
@@ -856,11 +881,11 @@ class SessionManager {
     try {
       const payload = jwt.verify(token, process.env.JWT_SECRET) as JWTPayload;
       const session = await this.getSession(payload.sessionId);
-      
+
       if (!session || session.userId !== payload.userId) {
         throw new Error('Invalid session');
       }
-      
+
       return await this.getUserById(payload.userId);
     } catch (error) {
       return null;
@@ -926,22 +951,22 @@ class RateLimiter {
   };
 
   async checkLimit(
-    key: string, 
-    type: keyof typeof this.limits, 
+    key: string,
+    type: keyof typeof this.limits,
     identifier: string
   ): Promise<{ allowed: boolean; remaining: number; resetTime: number }> {
     const limit = this.limits[type];
     const redisKey = `rate_limit:${type}:${identifier}`;
-    
+
     const current = await this.redis.incr(redisKey);
-    
+
     if (current === 1) {
       await this.redis.expire(redisKey, Math.ceil(limit.window / 1000));
     }
-    
+
     const ttl = await this.redis.ttl(redisKey);
-    const resetTime = Date.now() + (ttl * 1000);
-    
+    const resetTime = Date.now() + ttl * 1000;
+
     return {
       allowed: current <= limit.requests,
       remaining: Math.max(0, limit.requests - current),
@@ -982,7 +1007,7 @@ class CacheService implements ICacheService {
         // Populate memory cache
         this.memoryCache.set(key, {
           value: parsed,
-          expiry: Date.now() + (this.TTL.market_data * 1000),
+          expiry: Date.now() + this.TTL.market_data * 1000,
         });
         return parsed;
       }
@@ -995,11 +1020,11 @@ class CacheService implements ICacheService {
 
   async set<T>(key: string, value: T, ttl?: number): Promise<void> {
     const actualTTL = ttl || this.getTTLForKey(key);
-    
+
     // Set in memory cache
     this.memoryCache.set(key, {
       value,
-      expiry: Date.now() + (actualTTL * 1000),
+      expiry: Date.now() + actualTTL * 1000,
     });
 
     // Set in Redis cache
@@ -1051,7 +1076,7 @@ const bundleConfig = {
 // Virtual Scrolling for Large Lists
 const VirtualizedAssetList: React.FC<{ assets: Asset[] }> = ({ assets }) => {
   const { height, width } = useWindowSize();
-  
+
   const Row = ({ index, style }: { index: number; style: React.CSSProperties }) => (
     <div style={style}>
       <AssetListItem asset={assets[index]} />
@@ -1074,7 +1099,7 @@ const VirtualizedAssetList: React.FC<{ assets: Asset[] }> = ({ assets }) => {
 // Chart Data Virtualization
 const VirtualizedChart: React.FC<{ data: ChartDataPoint[] }> = ({ data }) => {
   const [visibleRange, setVisibleRange] = useState({ start: 0, end: 100 });
-  
+
   const visibleData = useMemo(() => {
     return data.slice(visibleRange.start, visibleRange.end);
   }, [data, visibleRange]);
@@ -1108,7 +1133,7 @@ graph TB
         INT[Integration Tests<br/>API + Database<br/>Service Integration]
         UNIT[Unit Tests<br/>Vitest + Jest<br/>Component + Service Logic]
     end
-    
+
     subgraph "Specialized Testing"
         ACC[Accessibility Tests<br/>Axe + WCAG-AA]
         PERF[Performance Tests<br/>Lighthouse + Metrics]
@@ -1119,22 +1144,24 @@ graph TB
 #### Testing Implementation per Slice
 
 **POC Testing:**
+
 - Basic health check endpoint test
 - Simple component rendering test
 - Database connection test
 - Build and deployment test
 
 **Asset Data Slice Testing:**
+
 ```typescript
 // Unit Tests
 describe('AssetService', () => {
   it('should fetch asset data with cache fallback', async () => {
-    const mockAsset = { symbol: 'AAPL', price: 150.00 };
+    const mockAsset = { symbol: 'AAPL', price: 150.0 };
     cacheService.get.mockResolvedValue(null);
     yahooFinanceProvider.getAsset.mockResolvedValue(mockAsset);
-    
+
     const result = await assetService.getAsset('AAPL');
-    
+
     expect(result).toEqual(mockAsset);
     expect(cacheService.set).toHaveBeenCalledWith('asset:AAPL', mockAsset, 300);
   });
@@ -1143,10 +1170,8 @@ describe('AssetService', () => {
 // Integration Tests
 describe('Asset API Integration', () => {
   it('should return asset data via API endpoint', async () => {
-    const response = await request(app)
-      .get('/api/assets/AAPL')
-      .expect(200);
-    
+    const response = await request(app).get('/api/assets/AAPL').expect(200);
+
     expect(response.body.success).toBe(true);
     expect(response.body.data.symbol).toBe('AAPL');
   });
@@ -1159,7 +1184,7 @@ test('user can view asset data on dashboard', async ({ page }) => {
   await page.selectOption('[data-testid="widget-type"]', 'asset');
   await page.fill('[data-testid="asset-symbol"]', 'AAPL');
   await page.click('[data-testid="add-widget-confirm"]');
-  
+
   await expect(page.locator('[data-testid="asset-widget-AAPL"]')).toBeVisible();
   await expect(page.locator('[data-testid="asset-price"]')).toContainText('$');
 });
@@ -1206,7 +1231,7 @@ describe('AssetService with Failover', () => {
       // Arrange
       const symbol = 'AAPL';
       const expectedAsset = { symbol, price: 150.00, change: 2.50 };
-      
+
       mockYahooFinanceAPI.getAsset.mockRejectedValue(new Error('Rate limit exceeded'));
       mockGoogleFinanceAPI.getAsset.mockResolvedValue(expectedAsset);
 
@@ -1240,11 +1265,11 @@ describe('AssetWidget Accessibility', () => {
 
   it('should support keyboard navigation', async () => {
     render(<AssetWidget symbol="AAPL" />);
-    
+
     // Test tab navigation
     await user.tab();
     expect(screen.getByRole('button', { name: /refresh/i })).toHaveFocus();
-    
+
     // Test enter key activation
     await user.keyboard('{Enter}');
     expect(mockRefreshFunction).toHaveBeenCalled();
@@ -1256,22 +1281,22 @@ describe('Dashboard Performance', () => {
   it('should load within 3 seconds', async () => {
     const startTime = performance.now();
     render(<Dashboard />);
-    
+
     await waitFor(() => {
       expect(screen.getByTestId('dashboard-loaded')).toBeInTheDocument();
     });
-    
+
     const loadTime = performance.now() - startTime;
     expect(loadTime).toBeLessThan(3000);
   });
 
   it('should maintain 60fps with virtualization', async () => {
     const { container } = render(<VirtualizedAssetList assets={largeAssetList} />);
-    
+
     // Simulate scrolling and measure frame rate
     const frameRates = await measureScrollPerformance(container);
     const averageFrameRate = frameRates.reduce((a, b) => a + b) / frameRates.length;
-    
+
     expect(averageFrameRate).toBeGreaterThanOrEqual(60);
   });
 });
@@ -1280,6 +1305,7 @@ describe('Dashboard Performance', () => {
 #### Comprehensive Test Coverage Requirements
 
 **Unit Tests (80% minimum coverage):**
+
 - All service methods with mocked dependencies
 - All utility functions with edge cases
 - All React components with various props
@@ -1287,6 +1313,7 @@ describe('Dashboard Performance', () => {
 - All validation schemas with invalid inputs
 
 **Integration Tests:**
+
 - API endpoint request/response contracts
 - Database operations with real database
 - Cache service with Redis and memory fallback
@@ -1294,6 +1321,7 @@ describe('Dashboard Performance', () => {
 - External API integration with mock servers
 
 **End-to-End Tests (Playwright):**
+
 - Complete user registration and login workflow
 - Dashboard creation and widget management
 - Real-time price updates and WebSocket functionality
@@ -1302,6 +1330,7 @@ describe('Dashboard Performance', () => {
 - Mobile responsive design validation
 
 **Performance Tests (Lighthouse):**
+
 - Initial page load under 3 seconds
 - Bundle size optimization validation
 - Memory usage monitoring
@@ -1309,6 +1338,7 @@ describe('Dashboard Performance', () => {
 - Core Web Vitals compliance
 
 **Security Tests:**
+
 - Input validation and sanitization
 - Authentication and authorization flows
 - Rate limiting enforcement

@@ -4,7 +4,7 @@ A comprehensive financial dashboard platform that enables users to monitor real-
 
 ## 🚀 Features
 
-- **Real-time Market Data**: Yahoo Finance (primary) + Google Finance (fallback) with automatic API key rotation
+- **Real-time Market Data**: Alpha Vantage (primary) + Twelve Data (secondary) + Finnhub (tertiary) with automatic API key rotation
 - **Owner-Configured Defaults**: Platform owners can set default dashboard layouts for new users
 - **Custom Dashboards**: Drag-and-drop widget management with responsive grid layouts
 - **WebSocket Updates**: Sub-second real-time price updates with automatic reconnection
@@ -16,6 +16,7 @@ A comprehensive financial dashboard platform that enables users to monitor real-
 ## 🛠️ Technology Stack
 
 ### Frontend
+
 - **React 18** + **TypeScript 5.x** + **Vite**
 - **Zustand** (global state) + **React Query** (server state)
 - **Tailwind CSS** + **Headless UI** (styling)
@@ -24,6 +25,7 @@ A comprehensive financial dashboard platform that enables users to monitor real-
 - **Socket.IO Client** (real-time updates)
 
 ### Backend
+
 - **Node.js 18+** + **Express.js** + **TypeScript**
 - **SQLite** (database) + **Redis** (caching)
 - **Zod** (validation) + **Winston** (logging)
@@ -31,6 +33,7 @@ A comprehensive financial dashboard platform that enables users to monitor real-
 - **JWT** (authentication)
 
 ### Testing & Quality
+
 - **Vitest** (frontend testing) + **Jest** (backend testing)
 - **Playwright** (E2E testing) + **Axe** (accessibility testing)
 - **ESLint** (zero warnings) + **Prettier** (formatting)
@@ -107,6 +110,7 @@ curl http://localhost:3001/api/system/health
 ## 🧪 Development Commands
 
 ### Quality Checks (Zero-Error Policy)
+
 ```bash
 npm run type-check         # TypeScript validation (zero errors)
 npm run lint              # ESLint validation (zero warnings)
@@ -115,6 +119,7 @@ npm run build             # Production build validation
 ```
 
 ### Testing
+
 ```bash
 npm test                  # Frontend unit tests (Vitest)
 cd server && npm test     # Backend tests (Jest)
@@ -124,6 +129,7 @@ npm run test:coverage     # Coverage reports (80% minimum)
 ```
 
 ### Development
+
 ```bash
 npm run dev               # Start frontend + backend
 npm run lint:fix          # Auto-fix ESLint issues
@@ -136,6 +142,7 @@ npm run clean             # Clean build artifacts
 ### Environment Variables
 
 **Backend (server/.env) - Required:**
+
 ```bash
 NODE_ENV=development
 PORT=3001
@@ -154,6 +161,7 @@ NEWS_API_KEY=your_key_here
 ```
 
 **Frontend (.env) - Optional:**
+
 ```bash
 VITE_API_BASE_URL=http://localhost:3001/api
 VITE_WS_URL=ws://localhost:3001
@@ -177,6 +185,7 @@ WS  /ws/market-data      # Real-time updates
 ## 📊 Quality Standards
 
 ### Code Quality Gates
+
 - ✅ **TypeScript**: Zero errors, strict mode enabled
 - ✅ **ESLint**: Zero warnings, accessibility rules enforced
 - ✅ **Prettier**: Auto-formatted code
@@ -185,6 +194,7 @@ WS  /ws/market-data      # Real-time updates
 - ✅ **Console**: Zero browser errors/warnings
 
 ### Accessibility (WCAG-AA)
+
 - ✅ Keyboard navigation support
 - ✅ Screen reader compatibility
 - ✅ Color contrast compliance
@@ -192,6 +202,7 @@ WS  /ws/market-data      # Real-time updates
 - ✅ Semantic HTML structure
 
 ### Performance
+
 - ✅ Code splitting and lazy loading
 - ✅ Multi-level caching strategy
 - ✅ Virtualization for large datasets
@@ -230,6 +241,7 @@ cd server && npm start
 5. **Document changes**: Update README and inline documentation
 
 ### Git Commit Standards
+
 ```bash
 feat: add real-time price updates for dashboard widgets
 fix: resolve chart rendering issue on mobile devices

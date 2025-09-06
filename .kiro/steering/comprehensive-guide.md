@@ -3,14 +3,14 @@ inclusion: always
 ---
 
 ---
-inclusion: always
----
+
+## inclusion: always
 
 # MarketPulse Development Guide
 
 ## Product Overview
 
-MarketPulse is a financial dashboard platform with owner-configured defaults and custom user watchlists. Features real-time market data from Yahoo/Google Finance, WebSocket updates, news integration, and WCAG-AA accessibility.
+MarketPulse is a financial dashboard platform with owner-configured defaults and custom user watchlists. Features real-time market data from Alpha Vantage/Twelve Data/Finnhub APIs, WebSocket updates, news integration, and WCAG-AA accessibility.
 
 ## Technology Stack
 
@@ -65,6 +65,7 @@ scripts/              # Build and deployment scripts
 ## Code Standards & Quality Gates
 
 ### Zero-Error Policy (Mandatory)
+
 - **TypeScript**: Zero errors, strict mode enabled, NEVER use `any` type
 - **ESLint**: Zero warnings, accessibility rules enforced
 - **Prettier**: Auto-formatted code (pre-commit hooks)
@@ -73,6 +74,7 @@ scripts/              # Build and deployment scripts
 - **Browser Console**: Zero errors/warnings
 
 ### Naming Conventions
+
 - Components: `PascalCase` (`AssetWidget.tsx`)
 - Hooks: `camelCase` with 'use' prefix (`useMarketData.ts`)
 - Services: `camelCase` (`marketDataService.ts`)
@@ -80,6 +82,7 @@ scripts/              # Build and deployment scripts
 - Constants: `UPPER_SNAKE_CASE`
 
 ### Code Patterns
+
 - **Single responsibility** per file/function/component
 - **Explicit return types** for all public functions
 - **Zod validation** for all API inputs
@@ -89,6 +92,7 @@ scripts/              # Build and deployment scripts
 ## Architecture Patterns
 
 ### Path Aliases (Configured in vite.config.ts & tsconfig.app.json)
+
 ```typescript
 import { Button } from '@/components/ui/Button';
 import { useMarketData } from '@/hooks/useMarketData';
@@ -98,21 +102,22 @@ import { Asset } from '@/types/Asset';
 ```
 
 ### Component Pattern (Required)
+
 ```typescript
 interface AssetWidgetProps {
   symbol: string;
   refreshInterval?: number;
 }
 
-export const AssetWidget: React.FC<AssetWidgetProps> = ({ 
-  symbol, 
-  refreshInterval = 30000 
+export const AssetWidget: React.FC<AssetWidgetProps> = ({
+  symbol,
+  refreshInterval = 30000
 }): React.JSX.Element => {
   const { data, error, isLoading } = useMarketData(symbol, refreshInterval);
-  
+
   if (error) return <ErrorBoundary error={error} />;
   if (isLoading) return <SkeletonLoader />;
-  
+
   return (
     <div className="asset-widget" data-testid="asset-widget">
       {/* Implementation */}
@@ -122,22 +127,25 @@ export const AssetWidget: React.FC<AssetWidgetProps> = ({
 ```
 
 ### API Response Format (Standardized)
+
 ```typescript
 interface ApiResponse<T> {
   data: T;
   success: boolean;
   error?: string;
   timestamp: number;
-  metadata?: { page?: number; limit?: number; total?: number; };
+  metadata?: { page?: number; limit?: number; total?: number };
 }
 ```
 
 ### State Management
+
 - **Zustand**: Global state (user preferences, theme)
 - **React Query**: Server state with caching
 - **Local state**: Component-specific with useState/useReducer
 
 ### File Enhancement Policy
+
 - **Improve existing files** instead of creating alternatives
 - **Never create** files with names like `enhanced*`, `*v2`, `*-new`
 - **Refactor in place** rather than duplicating
@@ -148,18 +156,21 @@ interface ApiResponse<T> {
 **CRITICAL**: Maintain pristine project structure ready for GitHub publication at ALL times.
 
 #### File Organization Rules:
+
 - **Production Code Only** in `src/`, `server/src/`, `tests/`, `scripts/`
 - **NO temporary files** in project directories
 - **NO implementation summaries** in production folders
 - **NO agent work files** outside `.kiro/` directory
 
 #### Context Documentation (REQUIRED):
+
 - **Task Context**: Store ALL implementation summaries in `.kiro/specs/market-pulse/context/`
 - **File Naming**: Use `task-{number}-{kebab-case-description}.md` format
 - **Content**: Include implementation details, test results, requirements mapping
 - **Timing**: Create context file IMMEDIATELY after task completion
 
 #### Prohibited Files in Project Directories:
+
 ```bash
 # NEVER create these in src/, server/, or root:
 IMPLEMENTATION_SUMMARY.md
@@ -173,6 +184,7 @@ agent-work-*.md
 ```
 
 #### Required Actions After Each Task:
+
 1. **Create Context File**: `.kiro/specs/market-pulse/context/task-{n}-{name}.md`
 2. **Document Implementation**: Comprehensive summary with requirements mapping
 3. **Clean Project Directory**: Remove ALL temporary files
@@ -180,15 +192,18 @@ agent-work-*.md
 5. **Commit Clean State**: Project ready for GitHub publication
 
 #### Context File Template:
+
 ```markdown
 # {Task Name} - Implementation Summary
 
 ## Task {Number}: {Task Name} - COMPLETED ✅
 
 ### Requirements Implemented:
+
 - Requirement mapping with ✅ status
 
 ### Implementation Details:
+
 - File locations and key features
 - Test coverage and validation
 - Architecture decisions
@@ -197,7 +212,8 @@ agent-work-*.md
 ```
 
 ### MarketPulse-Specific Rules
-- **Data Sources**: Yahoo Finance (primary), Google Finance (fallback)
+
+- **Data Sources**: Alpha Vantage (primary), Twelve Data (secondary), Finnhub (tertiary)
 - **Caching**: Redis → Memory cache fallback
 - **Rate Limiting**: Auto API key rotation on 429 responses
 - **UI**: WCAG-AA compliance, mobile-first responsive design
@@ -206,9 +222,11 @@ agent-work-*.md
 ## Development Workflow
 
 ### Slice-by-Slice Implementation (Mandatory)
+
 Build complete end-to-end features incrementally. Each slice must be fully tested and production-ready before commit.
 
 ### TDD Process (Required)
+
 1. **Types first** - Define TypeScript interfaces
 2. **Tests** - Write comprehensive tests BEFORE implementation
 3. **Implement** - Build complete end-to-end functionality
@@ -217,6 +235,7 @@ Build complete end-to-end features incrementally. Each slice must be fully teste
 6. **Commit** - Only when all quality gates pass
 
 ### Quality Gates (Before ANY Commit)
+
 ```bash
 npm run type-check    # ZERO TypeScript errors
 npm run lint         # ZERO ESLint warnings
@@ -229,6 +248,7 @@ npm run build       # Successful production build
 ```
 
 ### Git Commit Standards
+
 ```bash
 feat: add real-time price updates for dashboard widgets
 fix: resolve chart rendering issue on mobile devices
@@ -239,6 +259,7 @@ test: add unit tests for dashboard configuration
 ## Essential Commands
 
 ### Development
+
 ```bash
 npm run dev                    # Start both frontend (5173) and backend (3001)
 npm run dev:client             # Frontend only
@@ -252,6 +273,7 @@ npm run format:check           # Check formatting
 ```
 
 ### Testing
+
 ```bash
 ./scripts/test-all.sh          # Complete test suite
 npm test                       # Frontend unit tests (Vitest)
@@ -262,6 +284,7 @@ npm run test:performance       # Performance tests (Lighthouse)
 ```
 
 ### Build & Deploy
+
 ```bash
 npm run build                  # Frontend production build
 cd server && npm run build     # Backend build
@@ -272,24 +295,28 @@ cd server && npm run migrate   # Database migrations
 ## Implementation Guidelines
 
 ### TypeScript Requirements
+
 - **Strict mode enabled** - No implicit any, strict null checks
 - **NEVER use `any` type** - Use specific types or `unknown`
 - **Explicit return types** for all public functions
 - **Interfaces over types** for object shapes
 
 ### React Best Practices
+
 - **Functional components** with hooks only
 - **Custom hooks** for reusable logic
 - **Error boundaries** for component trees
 - **WCAG-AA accessibility** - ARIA labels, semantic HTML
 
 ### Backend Standards
+
 - **Zod validation** for all inputs
 - **Centralized error handling** with proper HTTP status codes
 - **Async/await** over promises
 - **Winston structured logging**
 
 ### Performance & Security
+
 - **Code splitting** with dynamic imports
 - **Lazy loading** for heavy components
 - **Multi-level caching** strategies
@@ -298,6 +325,7 @@ cd server && npm run migrate   # Database migrations
 ## Task Execution Guidelines
 
 ### Context Management (MANDATORY)
+
 - **ALWAYS create** `task-{number}-{description}.md` in `.kiro/specs/market-pulse/context/`
 - **NEVER create** implementation summaries in project directories
 - **Record**: objective, implementation details, test results, requirements mapping
@@ -305,12 +333,14 @@ cd server && npm run migrate   # Database migrations
 - **Clean up** any temporary files created during implementation
 
 ### File Organization During Development
+
 - **Work in production directories** for actual implementation
 - **Create context files** in `.kiro/specs/market-pulse/context/` for documentation
 - **Remove temporary files** before committing
 - **Maintain clean structure** throughout development process
 
 ### Execution Rules
+
 - Begin with **thorough code analysis** to identify exact locations
 - **Define clear exit criteria** before starting
 - Run **lint, build, deploy checks** after every change
@@ -319,12 +349,14 @@ cd server && npm run migrate   # Database migrations
 - **Create context documentation** immediately after completion
 
 ### Test-Driven Development (Mandatory)
+
 - Write **comprehensive tests BEFORE** implementing components
 - **Create/update test files** before writing component code
 - **Do NOT modify tests** to match failing code
 - **Ensure all tests pass** before proceeding
 
 ### Production Readiness Validation
+
 - Run **`./scripts/deploy.sh production`** successfully
 - **Application must load cleanly** in production
 - **Browser console must show zero errors**
@@ -333,6 +365,7 @@ cd server && npm run migrate   # Database migrations
 - **Project structure remains clean** and publication-ready
 
 ### Post-Task Cleanup Checklist
+
 - [ ] Context file created in `.kiro/specs/market-pulse/context/`
 - [ ] All temporary files removed from project directories
 - [ ] Implementation summary documented with requirements mapping
@@ -343,6 +376,7 @@ cd server && npm run migrate   # Database migrations
 ## Current Implementation Status
 
 ### ✅ Completed Features
+
 - **Frontend Core**: React 19, TypeScript, Tailwind CSS foundation
 - **Dashboard System**: Owner-configured defaults, custom user dashboards
 - **Widget Framework**: Asset, news, chart widgets with drag-and-drop
@@ -355,6 +389,7 @@ cd server && npm run migrate   # Database migrations
 - **UI Polish**: Framer Motion animations, loading states
 
 ### 🔄 In Progress
+
 - **Testing & QA**: Comprehensive test suite (633+ tests)
 - **Production Deployment**: Deployment scripts, monitoring
 - **Final Integration**: Code consolidation, quality assurance
@@ -362,6 +397,7 @@ cd server && npm run migrate   # Database migrations
 ## Environment Configuration
 
 ### Default Ports & Services
+
 - **Frontend**: `5173` (Vite dev server)
 - **Backend**: `3001` (Express API + WebSocket)
 - **Redis**: `6379` (optional, fallback to memory)
@@ -370,6 +406,7 @@ cd server && npm run migrate   # Database migrations
 ### Environment Variables
 
 **Backend (server/.env) - Required:**
+
 ```bash
 NODE_ENV=development
 PORT=3001
@@ -390,6 +427,7 @@ SESSION_SECRET=your_session_secret_here
 ```
 
 **Frontend (.env) - Optional:**
+
 ```bash
 VITE_API_BASE_URL=http://localhost:3001/api
 VITE_WS_URL=ws://localhost:3001
@@ -397,6 +435,7 @@ VITE_ENABLE_DEBUG=true
 ```
 
 ### API Endpoints
+
 ```bash
 # System
 GET /api/system/health
@@ -426,6 +465,7 @@ WS /ws/news
 ## Test Framework
 
 ### Test Execution
+
 ```bash
 ./scripts/test-all.sh              # Complete test suite
 ./scripts/test-phase.sh <phase>    # Individual phases
@@ -433,6 +473,7 @@ WS /ws/news
 ```
 
 ### Test Phases
+
 1. **setup** - Dependencies and environment
 2. **quality** - TypeScript, ESLint, Prettier
 3. **unit-tests** - Frontend and backend unit tests
@@ -443,6 +484,7 @@ WS /ws/news
 8. **log-validation** - Test verification
 
 ### Coverage Requirements
+
 - **80% minimum** for branches, functions, lines, statements
 - **10 second timeout** for tests and hooks
 - **Zero errors** required for all test phases
@@ -450,12 +492,14 @@ WS /ws/news
 ## Quick Reference
 
 ### Development URLs
+
 - **Frontend**: http://localhost:5173
 - **Backend API**: http://localhost:3001/api
 - **Health Check**: http://localhost:3001/api/system/health
 - **WebSocket**: ws://localhost:3001
 
 ### Key Commands
+
 ```bash
 npm run dev                    # Start frontend + backend
 npm run type-check             # TypeScript validation
@@ -467,6 +511,7 @@ npm test                       # All tests
 ```
 
 ### Key Directories
+
 - **Frontend**: `src/` (components, hooks, services, stores, types)
 - **Backend**: `server/src/` (controllers, models, services, middleware, routes)
 - **Tests**: `tests/` (e2e, accessibility, performance, integration)

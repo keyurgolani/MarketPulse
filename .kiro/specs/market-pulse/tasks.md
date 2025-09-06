@@ -74,8 +74,9 @@ The implementation progresses from a minimal Proof of Concept (POC) to complete 
 ### Phase 2: Core Features
 
 - [ ] 7. Market Data Integration
-  - Implement Yahoo Finance API client with error handling and rate limiting
-  - Create Google Finance API client as fallback with automatic failover logic
+  - Implement Alpha Vantage API client with error handling and rate limiting (primary source)
+  - Create Twelve Data API client as secondary fallback with automatic failover logic
+  - Create Finnhub API client as tertiary fallback with automatic failover logic
   - Set up multi-level caching service (Redis primary, memory fallback)
   - Create asset database tables and repository pattern for data persistence
   - Implement AssetService with cache-first data retrieval strategy
