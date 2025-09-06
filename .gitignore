@@ -44,6 +44,9 @@ server/.env.production.local
 *.sln
 *.sw?
 
+# Kiro configuration
+.kiro/settings/mcp.json
+
 # Testing
 coverage/
 .nyc_output/
