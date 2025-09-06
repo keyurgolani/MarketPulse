@@ -49,9 +49,9 @@ export interface AuthResponse {
 }
 
 export interface UpdateProfileData {
-  first_name?: string;
-  last_name?: string;
-  preferences?: UserPreferences;
+  first_name?: string | undefined;
+  last_name?: string | undefined;
+  preferences?: UserPreferences | undefined;
 }
 
 export interface ChangePasswordData {

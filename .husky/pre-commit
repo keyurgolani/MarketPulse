@@ -1,14 +1,26 @@
 #!/usr/bin/env sh
 . "$(dirname -- "$0")/_/husky.sh"
 
+echo "🔍 Running pre-commit checks..."
+
 # Run lint-staged for frontend
+echo "📝 Checking frontend code..."
 npx lint-staged
 
 # Run lint-staged for backend
+echo "📝 Checking backend code..."
 cd server && npx lint-staged && cd ..
 
 # Run type checking
+echo "🔍 Type checking frontend..."
 npm run type-check
+
+echo "🔍 Type checking backend..."
 cd server && npm run type-check && cd ..
+
+# Run quick tests
+echo "🧪 Running quick tests..."
+npm run test -- --run --reporter=basic
+cd server && npm run test -- --passWithNoTests && cd ..
 
 echo "✅ Pre-commit checks passed"

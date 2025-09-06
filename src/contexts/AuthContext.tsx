@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useReducer, useEffect, ReactNode } from 'react';
-import { authService, User, AuthTokens, LoginCredentials, RegisterData } from '@/services/authService';
+import { authService, User, LoginCredentials, RegisterData, UpdateProfileData } from '@/services/authService';
 
 // Auth state interface
 export interface AuthState {
@@ -164,7 +164,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   // Update profile function
   const updateProfile = async (data: Partial<User>): Promise<void> => {
     try {
-      const updatedUser = await authService.updateProfile(data);
+      const profileData: UpdateProfileData = {
+        first_name: data.first_name,
+        last_name: data.last_name,
+        preferences: typeof data.preferences === 'string' ? JSON.parse(data.preferences) : data.preferences
+      };
+      const updatedUser = await authService.updateProfile(profileData);
       dispatch({ type: 'UPDATE_USER', payload: updatedUser });
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Profile update failed';

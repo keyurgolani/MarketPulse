@@ -4,6 +4,7 @@ import { config } from 'dotenv';
 import { db } from '../config/database';
 import { MigrationRunner } from '../migrations/MigrationRunner';
 import { InitialSchemaMigration } from '../migrations/001_initial_schema';
+import { UpdateDashboardsSchemaMigration } from '../migrations/002_update_dashboards_schema';
 import { logger } from '../utils/logger';
 
 // Load environment variables
@@ -19,6 +20,7 @@ async function runMigrations(): Promise<void> {
     // Create migration runner and add migrations
     const migrationRunner = new MigrationRunner(db);
     migrationRunner.addMigration(new InitialSchemaMigration());
+    migrationRunner.addMigration(new UpdateDashboardsSchemaMigration());
 
     // Run migrations
     await migrationRunner.runMigrations();
@@ -46,6 +48,7 @@ if (command === 'status') {
       await db.connect();
       const migrationRunner = new MigrationRunner(db);
       migrationRunner.addMigration(new InitialSchemaMigration());
+      migrationRunner.addMigration(new UpdateDashboardsSchemaMigration());
       
       const status = await migrationRunner.getMigrationStatus();
       console.log('Migration Status:');
@@ -80,6 +83,7 @@ if (command === 'status') {
       await db.connect();
       const migrationRunner = new MigrationRunner(db);
       migrationRunner.addMigration(new InitialSchemaMigration());
+      migrationRunner.addMigration(new UpdateDashboardsSchemaMigration());
       
       const migrationId = process.argv[3]; // Optional specific migration ID
       await migrationRunner.rollbackMigration(migrationId);

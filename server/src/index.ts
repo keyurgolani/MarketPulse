@@ -22,6 +22,7 @@ import {
 // Import routes
 import systemRoutes from './routes/system';
 import authRoutes from './routes/auth';
+import dashboardRoutes from './routes/dashboard';
 
 // Load environment variables
 config();
@@ -94,6 +95,7 @@ app.use((_req, res, next) => {
 // API routes
 app.use('/api/system', systemRoutes);
 app.use('/api/auth', authRoutes);
+app.use('/api/dashboards', dashboardRoutes);
 
 // Root endpoint
 app.get('/', (_req, res) => {
@@ -121,6 +123,7 @@ app.get('/api', (_req, res) => {
         health: '/api/system/health',
         info: '/api/system/info',
         auth: '/api/auth',
+        dashboards: '/api/dashboards',
       },
     },
     timestamp: Date.now(),
