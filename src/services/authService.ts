@@ -72,8 +72,9 @@ class AuthService {
   private refreshToken: string | null = null;
 
   constructor() {
-    this.baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api';
-    
+    this.baseURL =
+      import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api';
+
     // Load tokens from localStorage on initialization
     this.loadTokensFromStorage();
   }
@@ -86,7 +87,9 @@ class AuthService {
       this.accessToken = localStorage.getItem('accessToken');
       this.refreshToken = localStorage.getItem('refreshToken');
     } catch (error) {
-      console.warn('Failed to load tokens from localStorage:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.warn('Failed to load tokens from localStorage:', error);
+      }
     }
   }
 
@@ -98,11 +101,13 @@ class AuthService {
       localStorage.setItem('accessToken', tokens.accessToken);
       localStorage.setItem('refreshToken', tokens.refreshToken);
       localStorage.setItem('tokenExpiresAt', tokens.expiresAt);
-      
+
       this.accessToken = tokens.accessToken;
       this.refreshToken = tokens.refreshToken;
     } catch (error) {
-      console.warn('Failed to save tokens to localStorage:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.warn('Failed to save tokens to localStorage:', error);
+      }
     }
   }
 
@@ -114,11 +119,13 @@ class AuthService {
       localStorage.removeItem('accessToken');
       localStorage.removeItem('refreshToken');
       localStorage.removeItem('tokenExpiresAt');
-      
+
       this.accessToken = null;
       this.refreshToken = null;
     } catch (error) {
-      console.warn('Failed to clear tokens from localStorage:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.warn('Failed to clear tokens from localStorage:', error);
+      }
     }
   }
 
@@ -145,7 +152,7 @@ class AuthService {
     options: RequestInit = {}
   ): Promise<ApiResponse<T>> {
     const url = `${this.baseURL}${endpoint}`;
-    
+
     const response = await fetch(url, {
       ...options,
       headers: {
@@ -158,19 +165,25 @@ class AuthService {
 
     if (!response.ok) {
       // If token is expired, try to refresh
-      if (response.status === 401 && this.refreshToken && endpoint !== '/auth/refresh') {
+      if (
+        response.status === 401 &&
+        this.refreshToken &&
+        endpoint !== '/auth/refresh'
+      ) {
         try {
           await this.refreshAccessToken();
           // Retry the original request with new token
           return this.makeRequest(endpoint, options);
-        } catch (refreshError) {
+        } catch {
           // Refresh failed, clear tokens and throw original error
           this.clearTokensFromStorage();
-          throw new Error(data.error || 'Authentication failed');
+          throw new Error(data.error ?? 'Authentication failed');
         }
       }
 
-      throw new Error(data.error || `HTTP ${response.status}: ${response.statusText}`);
+      throw new Error(
+        data.error ?? `HTTP ${response.status}: ${response.statusText}`
+      );
     }
 
     return data;
@@ -219,7 +232,9 @@ class AuthService {
         method: 'POST',
       });
     } catch (error) {
-      console.warn('Logout request failed:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.warn('Logout request failed:', error);
+      }
     } finally {
       this.clearTokensFromStorage();
     }
@@ -233,10 +248,13 @@ class AuthService {
       throw new Error('No refresh token available');
     }
 
-    const response = await this.makeRequest<{ tokens: AuthTokens }>('/auth/refresh', {
-      method: 'POST',
-      body: JSON.stringify({ refreshToken: this.refreshToken }),
-    });
+    const response = await this.makeRequest<{ tokens: AuthTokens }>(
+      '/auth/refresh',
+      {
+        method: 'POST',
+        body: JSON.stringify({ refreshToken: this.refreshToken }),
+      }
+    );
 
     if (response.success && response.data) {
       this.saveTokensToStorage(response.data.tokens);
@@ -297,7 +315,9 @@ class AuthService {
    * Get user sessions
    */
   async getSessions(): Promise<UserSession[]> {
-    const response = await this.makeRequest<{ sessions: UserSession[] }>('/auth/sessions');
+    const response = await this.makeRequest<{ sessions: UserSession[] }>(
+      '/auth/sessions'
+    );
 
     if (response.success && response.data) {
       return response.data.sessions;
@@ -340,7 +360,7 @@ class AuthService {
     try {
       const expiresAt = localStorage.getItem('tokenExpiresAt');
       if (!expiresAt) return true;
-      
+
       return new Date(expiresAt) <= new Date();
     } catch {
       return true;

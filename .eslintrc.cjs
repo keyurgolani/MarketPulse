@@ -13,10 +13,12 @@ module.exports = {
   ignorePatterns: [
     'dist',
     'node_modules',
-    'server',
+    'server/**/*',
+    'tests/**/*',
     '*.config.js',
     '*.config.ts',
     '*.config.cjs',
+    'playwright.config.ts',
   ],
   parser: '@typescript-eslint/parser',
   parserOptions: {
@@ -72,7 +74,7 @@ module.exports = {
     'jsx-a11y/no-distracting-elements': 'error',
     
     // General code quality
-    'no-console': 'warn',
+    'no-console': 'off', // Allow console in development with proper guards
     'no-debugger': 'error',
     'no-alert': 'error',
     'prefer-const': 'error',

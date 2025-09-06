@@ -104,6 +104,15 @@
       "json-summary"
     ]
   },
+  "lint-staged": {
+    "src/**/*.ts": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{json,md}": [
+      "prettier --write"
+    ]
+  },
   "engines": {
     "node": ">=18.0.0",
     "npm": ">=9.0.0"

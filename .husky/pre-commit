@@ -1,7 +1,7 @@
-#!/usr/bin/env sh
-. "$(dirname -- "$0")/_/husky.sh"
-
 echo "🔍 Running pre-commit checks..."
+
+# Backup original state
+git stash push --keep-index --include-untracked -m "Pre-commit backup $(date)"
 
 # Run lint-staged for frontend
 echo "📝 Checking frontend code..."

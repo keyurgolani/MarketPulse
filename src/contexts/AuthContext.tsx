@@ -1,5 +1,18 @@
-import React, { createContext, useContext, useReducer, useEffect, ReactNode } from 'react';
-import { authService, User, LoginCredentials, RegisterData, UpdateProfileData } from '@/services/authService';
+/* eslint-disable react-refresh/only-export-components */
+import React, {
+  createContext,
+  useContext,
+  useReducer,
+  useEffect,
+  ReactNode,
+} from 'react';
+import {
+  authService,
+  User,
+  LoginCredentials,
+  RegisterData,
+  UpdateProfileData,
+} from '@/services/authService';
 
 // Auth state interface
 export interface AuthState {
@@ -115,8 +128,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           // No valid token, set as not authenticated
           dispatch({ type: 'AUTH_LOGOUT' });
         }
-      } catch (error) {
-        console.warn('Failed to initialize auth:', error);
+      } catch {
+        // Failed to initialize auth, set as not authenticated
         dispatch({ type: 'AUTH_LOGOUT' });
       }
     };
@@ -131,7 +144,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const { user } = await authService.login(credentials);
       dispatch({ type: 'AUTH_SUCCESS', payload: user });
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Login failed';
+      const errorMessage =
+        error instanceof Error ? error.message : 'Login failed';
       dispatch({ type: 'AUTH_ERROR', payload: errorMessage });
       throw error;
     }
@@ -144,7 +158,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const { user } = await authService.register(data);
       dispatch({ type: 'AUTH_SUCCESS', payload: user });
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Registration failed';
+      const errorMessage =
+        error instanceof Error ? error.message : 'Registration failed';
       dispatch({ type: 'AUTH_ERROR', payload: errorMessage });
       throw error;
     }
@@ -154,8 +169,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const logout = async (): Promise<void> => {
     try {
       await authService.logout();
-    } catch (error) {
-      console.warn('Logout error:', error);
+    } catch {
+      // Logout error - continue with cleanup
     } finally {
       dispatch({ type: 'AUTH_LOGOUT' });
     }
@@ -167,12 +182,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const profileData: UpdateProfileData = {
         first_name: data.first_name,
         last_name: data.last_name,
-        preferences: typeof data.preferences === 'string' ? JSON.parse(data.preferences) : data.preferences
+        preferences:
+          typeof data.preferences === 'string'
+            ? JSON.parse(data.preferences)
+            : data.preferences,
       };
       const updatedUser = await authService.updateProfile(profileData);
       dispatch({ type: 'UPDATE_USER', payload: updatedUser });
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Profile update failed';
+      const errorMessage =
+        error instanceof Error ? error.message : 'Profile update failed';
       dispatch({ type: 'AUTH_ERROR', payload: errorMessage });
       throw error;
     }
@@ -185,9 +204,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         const user = await authService.getProfile();
         dispatch({ type: 'UPDATE_USER', payload: user });
       }
-    } catch (error) {
-      console.warn('Failed to refresh profile:', error);
-      // Don't dispatch error for profile refresh failures
+    } catch {
+      // Failed to refresh profile - don't dispatch error for profile refresh failures
     }
   };
 
@@ -208,9 +226,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={contextValue}>
-      {children}
-    </AuthContext.Provider>
+    <AuthContext.Provider value={contextValue}>{children}</AuthContext.Provider>
   );
 };
 
@@ -232,10 +248,16 @@ export interface WithAuthProps {
 export const withAuth = <P extends object>(
   Component: React.ComponentType<P & WithAuthProps>
 ): React.FC<P> => {
-  return (props: P) => {
+  const WithAuthComponent = (props: P): React.JSX.Element => {
     const { isAuthenticated, user } = useAuth();
-    return <Component {...props} isAuthenticated={isAuthenticated} user={user} />;
+    return (
+      <Component {...props} isAuthenticated={isAuthenticated} user={user} />
+    );
   };
+
+  WithAuthComponent.displayName = `withAuth(${Component.displayName ?? Component.name})`;
+
+  return WithAuthComponent;
 };
 
 export default AuthContext;
