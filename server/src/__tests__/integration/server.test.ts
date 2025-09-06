@@ -8,7 +8,7 @@ const createTestApp = () => {
   app.use(express.json());
   
   // Basic health endpoint
-  app.get('/health', async (req, res) => {
+  app.get('/health', async (_req, res) => {
     try {
       const dbHealth = await db.healthCheck();
       res.json({

@@ -21,6 +21,7 @@ import {
 
 // Import routes
 import systemRoutes from './routes/system';
+import authRoutes from './routes/auth';
 
 // Load environment variables
 config();
@@ -92,6 +93,7 @@ app.use((_req, res, next) => {
 
 // API routes
 app.use('/api/system', systemRoutes);
+app.use('/api/auth', authRoutes);
 
 // Root endpoint
 app.get('/', (_req, res) => {
@@ -118,6 +120,7 @@ app.get('/api', (_req, res) => {
         system: '/api/system',
         health: '/api/system/health',
         info: '/api/system/info',
+        auth: '/api/auth',
       },
     },
     timestamp: Date.now(),
