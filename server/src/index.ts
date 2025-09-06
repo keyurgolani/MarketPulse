@@ -1,15 +1,42 @@
 import express from 'express';
-import cors from 'cors';
 import helmet from 'helmet';
 import compression from 'compression';
 import { config } from 'dotenv';
+import { db } from './config/database';
+import { logger } from './utils/logger';
+import { SystemHealthService } from './services/SystemHealthService';
+
+// Import middleware
+import {
+  errorHandler,
+  requestLogger,
+  requestTiming,
+  requestId,
+  rateLimiter,
+  corsMiddleware,
+  preflightHandler,
+  corsErrorHandler,
+  sanitizeInput,
+} from './middleware';
+
+// Import routes
+import systemRoutes from './routes/system';
 
 // Load environment variables
 config();
 
 const app = express();
 const PORT = process.env.PORT ?? 3001;
-const CORS_ORIGIN = process.env.CORS_ORIGIN ?? 'http://localhost:5173';
+
+// Initialize health service
+const healthService = new SystemHealthService(db);
+
+// Trust proxy for accurate IP addresses
+app.set('trust proxy', 1);
+
+// Request timing and ID middleware (must be first)
+app.use(requestTiming);
+app.use(requestId);
 
 // Security middleware
 app.use(
@@ -27,15 +54,10 @@ app.use(
   })
 );
 
-// CORS configuration
-app.use(
-  cors({
-    origin: CORS_ORIGIN,
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
-  })
-);
+// CORS middleware with preflight handling
+app.use(preflightHandler);
+app.use(corsMiddleware);
+app.use(corsErrorHandler);
 
 // Compression middleware
 app.use(compression());
@@ -44,68 +66,145 @@ app.use(compression());
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// Health check endpoint
-app.get('/api/system/health', (_req, res) => {
+// Input sanitization
+app.use(sanitizeInput);
+
+// Request logging
+app.use(requestLogger);
+
+// Rate limiting (applied to all routes)
+app.use(rateLimiter);
+
+// Connection tracking middleware
+app.use((_req, res, next) => {
+  healthService.incrementConnections();
+  
+  res.on('finish', () => {
+    healthService.decrementConnections();
+  });
+  
+  res.on('close', () => {
+    healthService.decrementConnections();
+  });
+  
+  next();
+});
+
+// API routes
+app.use('/api/system', systemRoutes);
+
+// Root endpoint
+app.get('/', (_req, res) => {
   res.json({
     success: true,
     data: {
-      status: 'healthy',
+      name: 'MarketPulse API',
+      version: process.env.npm_package_version || '1.0.0',
+      status: 'running',
       timestamp: new Date().toISOString(),
-      uptime: process.uptime(),
-      version: '1.0.0',
-      environment: process.env.NODE_ENV ?? 'development',
     },
     timestamp: Date.now(),
   });
 });
 
-// System info endpoint
-app.get('/api/system/info', (_req, res) => {
+// API root endpoint
+app.get('/api', (_req, res) => {
   res.json({
     success: true,
     data: {
       name: 'MarketPulse API',
-      version: '1.0.0',
-      description: 'Financial dashboard platform backend API',
-      environment: process.env.NODE_ENV ?? 'development',
-      nodeVersion: process.version,
-      platform: process.platform,
-      architecture: process.arch,
+      version: process.env.npm_package_version || '1.0.0',
+      endpoints: {
+        system: '/api/system',
+        health: '/api/system/health',
+        info: '/api/system/info',
+      },
     },
     timestamp: Date.now(),
   });
 });
 
 // 404 handler
-app.use('*', (_req, res) => {
+app.use('*', (req, res) => {
+  logger.warn('404 - Endpoint not found', {
+    url: req.url,
+    method: req.method,
+    ip: req.ip,
+    userAgent: req.get('User-Agent'),
+  });
+  
   res.status(404).json({
     success: false,
     error: 'Endpoint not found',
+    code: 'NOT_FOUND',
     timestamp: Date.now(),
   });
 });
 
-// Global error handler
-app.use(
-  (
-    error: Error,
-    _req: express.Request,
-    res: express.Response,
-    _next: express.NextFunction
-  ): void => {
-    console.error('Unhandled error:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Internal server error',
-      timestamp: Date.now(),
-    });
-  }
-);
+// Global error handler (must be last)
+app.use(errorHandler);
 
-// Start server
-app.listen(PORT, () => {
-  console.log(`🚀 MarketPulse API server running on port ${PORT}`);
-  console.log(`📊 Environment: ${process.env.NODE_ENV ?? 'development'}`);
-  console.log(`🌐 CORS origin: ${CORS_ORIGIN}`);
-  console.log(`🔗 Health check: http://localhost:${PORT}/api/system/health`);
-});
+// Initialize database and start server
+const startServer = async (): Promise<void> => {
+  try {
+    // Connect to database
+    await db.connect();
+    logger.info('Database connected successfully');
+
+    // Start server
+    const server = app.listen(PORT, () => {
+      logger.info('MarketPulse API server started', {
+        port: PORT,
+        environment: process.env.NODE_ENV || 'development',
+        nodeVersion: process.version,
+        timestamp: new Date().toISOString(),
+      });
+      
+      console.log(`🚀 MarketPulse API server running on port ${PORT}`);
+      console.log(`📊 Environment: ${process.env.NODE_ENV || 'development'}`);
+      console.log(`🔗 Health check: http://localhost:${PORT}/api/system/health`);
+      console.log(`📋 API docs: http://localhost:${PORT}/api`);
+    });
+
+    // Graceful shutdown handling
+    const gracefulShutdown = async (signal: string): Promise<void> => {
+      logger.info(`Received ${signal}, starting graceful shutdown`);
+      
+      server.close(async () => {
+        logger.info('HTTP server closed');
+        
+        try {
+          await db.disconnect();
+          logger.info('Database disconnected');
+          process.exit(0);
+        } catch (error) {
+          logger.error('Error during shutdown', { error });
+          process.exit(1);
+        }
+      });
+    };
+
+    // Handle shutdown signals
+    process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+    process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+
+    // Handle uncaught exceptions
+    process.on('uncaughtException', (error) => {
+      logger.error('Uncaught Exception', { error: error.message, stack: error.stack });
+      process.exit(1);
+    });
+
+    // Handle unhandled promise rejections
+    process.on('unhandledRejection', (reason, promise) => {
+      logger.error('Unhandled Rejection', { reason, promise });
+      process.exit(1);
+    });
+
+  } catch (error) {
+    logger.error('Failed to start server', { error });
+    process.exit(1);
+  }
+};
+
+// Start the server
+startServer();
