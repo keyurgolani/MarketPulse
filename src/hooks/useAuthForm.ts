@@ -36,31 +36,41 @@ export interface FormSubmissionState {
 /**
  * Custom hook for login form management
  */
-export const useLoginForm = () => {
+export const useLoginForm = (): {
+  formData: LoginFormState;
+  errors: Record<string, string>;
+  isLoading: boolean;
+  handleChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  handleSubmit: (e: React.FormEvent) => Promise<void>;
+  clearErrors: () => void;
+} => {
   const { login, clearError } = useAuth();
-  
+
   const [formData, setFormData] = useState<LoginFormState>({
     email: '',
     password: '',
   });
-  
+
   const [submissionState, setSubmissionState] = useState<FormSubmissionState>({
     isSubmitting: false,
     errors: {},
   });
 
   // Update form field
-  const updateField = useCallback((field: keyof LoginFormState, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-    
-    // Clear field-specific error when user starts typing
-    if (submissionState.errors[field]) {
-      setSubmissionState(prev => ({
-        ...prev,
-        errors: { ...prev.errors, [field]: undefined },
-      }));
-    }
-  }, [submissionState.errors]);
+  const updateField = useCallback(
+    (field: keyof LoginFormState, value: string) => {
+      setFormData((prev) => ({ ...prev, [field]: value }));
+
+      // Clear field-specific error when user starts typing
+      if (submissionState.errors[field]) {
+        setSubmissionState((prev) => ({
+          ...prev,
+          errors: { ...prev.errors, [field]: undefined },
+        }));
+      }
+    },
+    [submissionState.errors]
+  );
 
   // Validate login form
   const validateForm = useCallback((): FormErrors => {
@@ -82,27 +92,28 @@ export const useLoginForm = () => {
   // Submit login form
   const submitForm = useCallback(async (): Promise<boolean> => {
     const errors = validateForm();
-    
+
     if (Object.keys(errors).length > 0) {
-      setSubmissionState(prev => ({ ...prev, errors }));
+      setSubmissionState((prev) => ({ ...prev, errors }));
       return false;
     }
 
-    setSubmissionState(prev => ({ ...prev, isSubmitting: true, errors: {} }));
+    setSubmissionState((prev) => ({ ...prev, isSubmitting: true, errors: {} }));
     clearError();
 
     try {
       await login(formData as LoginCredentials);
       return true;
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Login failed';
-      setSubmissionState(prev => ({
+      const errorMessage =
+        error instanceof Error ? error.message : 'Login failed';
+      setSubmissionState((prev) => ({
         ...prev,
         errors: { general: errorMessage },
       }));
       return false;
     } finally {
-      setSubmissionState(prev => ({ ...prev, isSubmitting: false }));
+      setSubmissionState((prev) => ({ ...prev, isSubmitting: false }));
     }
   }, [formData, validateForm, login, clearError]);
 
@@ -125,9 +136,16 @@ export const useLoginForm = () => {
 /**
  * Custom hook for register form management
  */
-export const useRegisterForm = () => {
+export const useRegisterForm = (): {
+  formData: RegisterFormState;
+  errors: Record<string, string>;
+  isLoading: boolean;
+  handleChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  handleSubmit: (e: React.FormEvent) => Promise<void>;
+  clearErrors: () => void;
+} => {
   const { register, clearError } = useAuth();
-  
+
   const [formData, setFormData] = useState<RegisterFormState>({
     email: '',
     password: '',
@@ -135,24 +153,27 @@ export const useRegisterForm = () => {
     first_name: '',
     last_name: '',
   });
-  
+
   const [submissionState, setSubmissionState] = useState<FormSubmissionState>({
     isSubmitting: false,
     errors: {},
   });
 
   // Update form field
-  const updateField = useCallback((field: keyof RegisterFormState, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-    
-    // Clear field-specific error when user starts typing
-    if (submissionState.errors[field]) {
-      setSubmissionState(prev => ({
-        ...prev,
-        errors: { ...prev.errors, [field]: undefined },
-      }));
-    }
-  }, [submissionState.errors]);
+  const updateField = useCallback(
+    (field: keyof RegisterFormState, value: string) => {
+      setFormData((prev) => ({ ...prev, [field]: value }));
+
+      // Clear field-specific error when user starts typing
+      if (submissionState.errors[field]) {
+        setSubmissionState((prev) => ({
+          ...prev,
+          errors: { ...prev.errors, [field]: undefined },
+        }));
+      }
+    },
+    [submissionState.errors]
+  );
 
   // Validate register form
   const validateForm = useCallback((): FormErrors => {
@@ -171,7 +192,8 @@ export const useRegisterForm = () => {
     } else if (formData.password.length < 8) {
       errors.password = 'Password must be at least 8 characters long';
     } else if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(formData.password)) {
-      errors.password = 'Password must contain at least one lowercase letter, one uppercase letter, and one number';
+      errors.password =
+        'Password must contain at least one lowercase letter, one uppercase letter, and one number';
     }
 
     // Confirm password validation
@@ -201,13 +223,13 @@ export const useRegisterForm = () => {
   // Submit register form
   const submitForm = useCallback(async (): Promise<boolean> => {
     const errors = validateForm();
-    
+
     if (Object.keys(errors).length > 0) {
-      setSubmissionState(prev => ({ ...prev, errors }));
+      setSubmissionState((prev) => ({ ...prev, errors }));
       return false;
     }
 
-    setSubmissionState(prev => ({ ...prev, isSubmitting: true, errors: {} }));
+    setSubmissionState((prev) => ({ ...prev, isSubmitting: true, errors: {} }));
     clearError();
 
     try {
@@ -217,18 +239,19 @@ export const useRegisterForm = () => {
         first_name: formData.first_name,
         last_name: formData.last_name,
       };
-      
+
       await register(registerData);
       return true;
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Registration failed';
-      setSubmissionState(prev => ({
+      const errorMessage =
+        error instanceof Error ? error.message : 'Registration failed';
+      setSubmissionState((prev) => ({
         ...prev,
         errors: { general: errorMessage },
       }));
       return false;
     } finally {
-      setSubmissionState(prev => ({ ...prev, isSubmitting: false }));
+      setSubmissionState((prev) => ({ ...prev, isSubmitting: false }));
     }
   }, [formData, validateForm, register, clearError]);
 

@@ -64,6 +64,24 @@ Object.defineProperty(window, 'sessionStorage', {
   value: sessionStorageMock,
 })
 
+// Mock react-router-dom
+vi.mock('react-router-dom', async () => {
+  const actual = await vi.importActual('react-router-dom')
+  return {
+    ...actual,
+    useNavigate: vi.fn(() => vi.fn()),
+    useLocation: vi.fn(() => ({
+      pathname: '/',
+      search: '',
+      hash: '',
+      state: null,
+      key: 'default',
+    })),
+    useParams: vi.fn(() => ({})),
+    useSearchParams: vi.fn(() => [new URLSearchParams(), vi.fn()]),
+  }
+})
+
 // Extend expect with custom matchers
 expect.extend({
   toBeAccessible: (received: HTMLElement): { message: () => string; pass: boolean } => {

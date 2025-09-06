@@ -21,16 +21,25 @@ module.exports = {
     {
       files: ['*.ts'],
       rules: {
-        // TypeScript strict rules - temporarily disabled for commit
-        '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
+        // TypeScript strict rules
+        '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
+        '@typescript-eslint/no-explicit-any': 'error',
+        '@typescript-eslint/explicit-function-return-type': 'error',
+        '@typescript-eslint/explicit-module-boundary-types': 'error',
+        '@typescript-eslint/no-non-null-assertion': 'error',
+        '@typescript-eslint/prefer-nullish-coalescing': 'error',
+        '@typescript-eslint/prefer-optional-chain': 'error',
+      },
+    },
+    {
+      files: ['**/*.test.*', '**/*.spec.*', 'src/__tests__/**/*'],
+      rules: {
+        // Relax some rules for test files
         '@typescript-eslint/no-explicit-any': 'warn',
-        '@typescript-eslint/explicit-function-return-type': 'warn',
-        '@typescript-eslint/explicit-module-boundary-types': 'warn',
+        '@typescript-eslint/explicit-function-return-type': 'off',
+        '@typescript-eslint/explicit-module-boundary-types': 'off',
         '@typescript-eslint/no-non-null-assertion': 'warn',
-        '@typescript-eslint/prefer-nullish-coalescing': 'warn',
-        '@typescript-eslint/prefer-optional-chain': 'warn',
-        '@typescript-eslint/no-namespace': 'warn',
-        '@typescript-eslint/no-require-imports': 'warn',
+        '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
       },
     },
   ],

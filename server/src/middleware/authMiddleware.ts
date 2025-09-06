@@ -6,6 +6,7 @@ import { logger } from '../utils/logger';
 
 // Extend Express Request interface to include user
 declare global {
+  // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace Express {
     interface Request {
       user?: User;
@@ -22,7 +23,25 @@ export interface AuthenticatedRequest extends Request {
 /**
  * Authentication middleware factory
  */
-export const createAuthMiddleware = (db: Database) => {
+export const createAuthMiddleware = (
+  db: Database
+): {
+  authenticate: (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => Promise<void>;
+  requireAuth: (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => Promise<void>;
+  optionalAuth: (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => Promise<void>;
+} => {
   const authService = new AuthService(db);
 
   /**
@@ -56,9 +75,11 @@ export const createAuthMiddleware = (db: Database) => {
       if (tokenParts.length !== 3) {
         throw new Error('Invalid token format');
       }
-      const payload = JSON.parse(
-        Buffer.from(tokenParts[1]!, 'base64').toString()
-      );
+      const payloadPart = tokenParts[1];
+      if (!payloadPart) {
+        throw new Error('Invalid token format - missing payload');
+      }
+      const payload = JSON.parse(Buffer.from(payloadPart, 'base64').toString());
 
       // Attach user and session to request
       req.user = user;
@@ -113,9 +134,11 @@ export const createAuthMiddleware = (db: Database) => {
       if (tokenParts.length !== 3) {
         throw new Error('Invalid token format');
       }
-      const payload = JSON.parse(
-        Buffer.from(tokenParts[1]!, 'base64').toString()
-      );
+      const payloadPart = tokenParts[1];
+      if (!payloadPart) {
+        throw new Error('Invalid token format - missing payload');
+      }
+      const payload = JSON.parse(Buffer.from(payloadPart, 'base64').toString());
 
       req.user = user;
       req.sessionId = payload.sessionId;
@@ -139,11 +162,11 @@ export const createAuthMiddleware = (db: Database) => {
   /**
    * Middleware to check if user is authenticated (for TypeScript type safety)
    */
-  const requireAuth = (
+  const requireAuth = async (
     req: Request,
     res: Response,
     next: NextFunction
-  ): void => {
+  ): Promise<void> => {
     if (!req.user) {
       res.status(401).json({
         success: false,
@@ -157,76 +180,10 @@ export const createAuthMiddleware = (db: Database) => {
     next();
   };
 
-  /**
-   * Middleware to check user permissions/roles (for future use)
-   */
-  const requireRole = (roles: string[]) => {
-    return (req: Request, res: Response, next: NextFunction): void => {
-      if (!req.user) {
-        res.status(401).json({
-          success: false,
-          error: 'Authentication required',
-          code: 'AUTH_REQUIRED',
-          timestamp: Date.now(),
-        });
-        return;
-      }
-
-      // For now, all authenticated users have access
-      // In the future, implement role-based access control
-      logger.debug('Role check passed', {
-        userId: req.user.id,
-        requiredRoles: roles,
-      });
-
-      next();
-    };
-  };
-
-  /**
-   * Middleware to ensure user can only access their own resources
-   */
-  const requireOwnership = (userIdParam: string = 'userId') => {
-    return (req: Request, res: Response, next: NextFunction): void => {
-      if (!req.user) {
-        res.status(401).json({
-          success: false,
-          error: 'Authentication required',
-          code: 'AUTH_REQUIRED',
-          timestamp: Date.now(),
-        });
-        return;
-      }
-
-      const resourceUserId = req.params[userIdParam] || req.body[userIdParam];
-
-      if (resourceUserId && resourceUserId !== req.user.id) {
-        logger.warn('Unauthorized access attempt', {
-          userId: req.user.id,
-          attemptedUserId: resourceUserId,
-          url: req.url,
-          method: req.method,
-        });
-
-        res.status(403).json({
-          success: false,
-          error: 'Access denied - insufficient permissions',
-          code: 'ACCESS_DENIED',
-          timestamp: Date.now(),
-        });
-        return;
-      }
-
-      next();
-    };
-  };
-
   return {
     authenticate,
-    optionalAuthenticate,
     requireAuth,
-    requireRole,
-    requireOwnership,
+    optionalAuth: optionalAuthenticate,
   };
 };
 

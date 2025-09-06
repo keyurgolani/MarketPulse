@@ -105,7 +105,7 @@ app.get('/', (_req, res) => {
     success: true,
     data: {
       name: 'MarketPulse API',
-      version: process.env.npm_package_version || '1.0.0',
+      version: process.env.npm_package_version ?? '1.0.0',
       status: 'running',
       timestamp: new Date().toISOString(),
     },
@@ -119,7 +119,7 @@ app.get('/api', (_req, res) => {
     success: true,
     data: {
       name: 'MarketPulse API',
-      version: process.env.npm_package_version || '1.0.0',
+      version: process.env.npm_package_version ?? '1.0.0',
       endpoints: {
         system: '/api/system',
         health: '/api/system/health',
@@ -164,13 +164,13 @@ const startServer = async (): Promise<void> => {
     const server = app.listen(PORT, () => {
       logger.info('MarketPulse API server started', {
         port: PORT,
-        environment: process.env.NODE_ENV || 'development',
+        environment: process.env.NODE_ENV ?? 'development',
         nodeVersion: process.version,
         timestamp: new Date().toISOString(),
       });
 
       console.log(`🚀 MarketPulse API server running on port ${PORT}`);
-      console.log(`📊 Environment: ${process.env.NODE_ENV || 'development'}`);
+      console.log(`📊 Environment: ${process.env.NODE_ENV ?? 'development'}`);
       console.log(
         `🔗 Health check: http://localhost:${PORT}/api/system/health`
       );

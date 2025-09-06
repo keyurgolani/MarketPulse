@@ -22,18 +22,19 @@ const colors = {
 winston.addColors(colors);
 
 // Define which transports the logger must use
-const transports = [
+const transports: winston.transport[] = [
   // Console transport
   new winston.transports.Console({
     format: winston.format.combine(
       winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss:ms' }),
       winston.format.colorize({ all: true }),
       winston.format.printf(
-        (info) => `${info.timestamp} ${info.level}: ${info.message}${
-          info.metadata && Object.keys(info.metadata).length > 0 
-            ? ' ' + JSON.stringify(info.metadata) 
-            : ''
-        }`
+        (info) =>
+          `${info.timestamp} ${info.level}: ${info.message}${
+            info.metadata && Object.keys(info.metadata).length > 0
+              ? ' ' + JSON.stringify(info.metadata)
+              : ''
+          }`
       )
     ),
   }),
@@ -49,20 +50,22 @@ if (process.env.NODE_ENV === 'production') {
         winston.format.timestamp(),
         winston.format.json()
       ),
-    }) as any,
+    }),
     new winston.transports.File({
       filename: 'logs/combined.log',
       format: winston.format.combine(
         winston.format.timestamp(),
         winston.format.json()
       ),
-    }) as any
+    })
   );
 }
 
 // Create the logger
 export const logger = winston.createLogger({
-  level: process.env.LOG_LEVEL ?? (process.env.NODE_ENV === 'development' ? 'debug' : 'info'),
+  level:
+    process.env.LOG_LEVEL ??
+    (process.env.NODE_ENV === 'development' ? 'debug' : 'info'),
   levels,
   format: winston.format.combine(
     winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss:ms' }),

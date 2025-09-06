@@ -1,17 +1,18 @@
 import React from 'react';
 import { renderHook } from '@testing-library/react';
+import { vi } from 'vitest';
 import { useAuth } from '../useAuth';
 import { AuthProvider } from '@/contexts/AuthContext';
 
 // Mock the auth service
-jest.mock('@/services/authService', () => ({
+vi.mock('@/services/authService', () => ({
   authService: {
-    isAuthenticated: jest.fn(() => false),
-    isTokenExpired: jest.fn(() => true),
-    getProfile: jest.fn(),
-    login: jest.fn(),
-    register: jest.fn(),
-    logout: jest.fn(),
+    isAuthenticated: vi.fn(() => false),
+    isTokenExpired: vi.fn(() => true),
+    getProfile: vi.fn(),
+    login: vi.fn(),
+    register: vi.fn(),
+    logout: vi.fn(),
   },
 }));
 
@@ -22,7 +23,7 @@ describe('useAuth', () => {
 
   it('should throw error when used outside AuthProvider', () => {
     // Suppress console.error for this test
-    const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
     expect(() => {
       renderHook(() => useAuth());

@@ -14,17 +14,17 @@ module.exports = {
     'dist',
     'node_modules',
     'server/**/*',
-    'tests/**/*',
     '*.config.js',
     '*.config.ts',
     '*.config.cjs',
     'playwright.config.ts',
+    'lighthouserc.js',
   ],
   parser: '@typescript-eslint/parser',
   parserOptions: {
     ecmaVersion: 'latest',
     sourceType: 'module',
-    project: './tsconfig.app.json',
+    project: ['./tsconfig.app.json', './tsconfig.test.json'],
     ecmaFeatures: {
       jsx: true,
     },
@@ -48,6 +48,16 @@ module.exports = {
         '@typescript-eslint/no-non-null-assertion': 'error',
         '@typescript-eslint/prefer-nullish-coalescing': 'error',
         '@typescript-eslint/prefer-optional-chain': 'error',
+      },
+    },
+    {
+      files: ['**/*.test.*', '**/*.spec.*', 'tests/**/*'],
+      rules: {
+        // Relax some rules for test files
+        '@typescript-eslint/no-explicit-any': 'warn',
+        '@typescript-eslint/explicit-function-return-type': 'off',
+        '@typescript-eslint/explicit-module-boundary-types': 'off',
+        '@typescript-eslint/no-non-null-assertion': 'warn',
       },
     },
   ],

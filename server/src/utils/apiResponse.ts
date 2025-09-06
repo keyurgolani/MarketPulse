@@ -1,7 +1,7 @@
 import { Response } from 'express';
 
 // Standard API response interface
-export interface ApiResponse<T = any> {
+export interface ApiResponse<T = unknown> {
   success: boolean;
   data?: T;
   error?: string;
@@ -76,7 +76,7 @@ export const paginatedResponse = <T>(
 ): Response => {
   const { page, limit, total } = pagination;
   const totalPages = Math.ceil(total / limit);
-  
+
   const metadata: PaginationMetadata = {
     page,
     limit,

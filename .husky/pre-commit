@@ -19,9 +19,8 @@ echo "🔍 Type checking backend..."
 cd server && npm run type-check && cd ..
 
 # Run quick tests
-echo "🧪 Running quick tests..."
-# Temporarily skip frontend tests due to React Router mocking issues
-# npm run test -- --passWithNoTests
+echo "🧪 Running tests..."
+npm run test -- --passWithNoTests
 cd server && npm run test && cd ..
 
 echo "✅ Pre-commit checks passed"

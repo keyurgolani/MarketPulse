@@ -18,21 +18,15 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   // Show loading spinner while checking authentication
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        {fallback || <LoadingSpinner size="lg" />}
+      <div className='min-h-screen flex items-center justify-center'>
+        {fallback ?? <LoadingSpinner size='lg' />}
       </div>
     );
   }
 
   // Redirect to login if not authenticated
   if (!isAuthenticated) {
-    return (
-      <Navigate
-        to="/login"
-        state={{ from: location }}
-        replace
-      />
-    );
+    return <Navigate to='/login' state={{ from: location }} replace />;
   }
 
   // Render protected content

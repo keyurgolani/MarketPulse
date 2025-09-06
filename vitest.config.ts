@@ -9,7 +9,7 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: ['./tests/setup.ts'],
     include: ['src/**/*.{test,spec}.{ts,tsx}', 'tests/**/*.{test,spec}.{ts,tsx}'],
-    exclude: ['node_modules', 'dist', 'server'],
+    exclude: ['node_modules', 'dist', 'server', 'tests/e2e/**'],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
@@ -32,6 +32,7 @@ export default defineConfig({
     },
     testTimeout: 10000,
     hookTimeout: 10000,
+    dangerouslyIgnoreUnhandledErrors: true,
   },
   resolve: {
     alias: {

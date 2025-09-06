@@ -14,7 +14,11 @@ export class AuthController {
   /**
    * Register a new user
    */
-  register = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  register = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> => {
     try {
       const { email, password, first_name, last_name } = req.body;
 
@@ -27,7 +31,14 @@ export class AuthController {
       });
 
       // Remove sensitive data from response
-      const { password_hash, ...userResponse } = user;
+      const userResponse = {
+        id: user.id,
+        email: user.email,
+        first_name: user.first_name,
+        last_name: user.last_name,
+        created_at: user.created_at,
+        updated_at: user.updated_at,
+      };
 
       logger.info('User registered successfully', {
         userId: user.id,
@@ -49,7 +60,8 @@ export class AuthController {
         timestamp: Date.now(),
       });
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
       logger.error('Registration failed', {
         email: req.body.email,
         error: errorMessage,
@@ -73,15 +85,29 @@ export class AuthController {
   /**
    * Login user
    */
-  login = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  login = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> => {
     try {
       const { email, password } = req.body;
 
       // Login user and get tokens
-      const { user, tokens } = await this.authService.login({ email, password });
+      const { user, tokens } = await this.authService.login({
+        email,
+        password,
+      });
 
       // Remove sensitive data from response
-      const { password_hash, ...userResponse } = user;
+      const userResponse = {
+        id: user.id,
+        email: user.email,
+        first_name: user.first_name,
+        last_name: user.last_name,
+        created_at: user.created_at,
+        updated_at: user.updated_at,
+      };
 
       logger.info('User logged in successfully', {
         userId: user.id,
@@ -103,7 +129,8 @@ export class AuthController {
         timestamp: Date.now(),
       });
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
       logger.error('Login failed', {
         email: req.body.email,
         error: errorMessage,
@@ -127,7 +154,11 @@ export class AuthController {
   /**
    * Logout user
    */
-  logout = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> => {
+  logout = async (
+    req: AuthenticatedRequest,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> => {
     try {
       await this.authService.logout(req.sessionId);
 
@@ -143,7 +174,8 @@ export class AuthController {
         timestamp: Date.now(),
       });
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
       logger.error('Logout failed', {
         userId: req.user?.id,
         sessionId: req.sessionId,
@@ -158,7 +190,11 @@ export class AuthController {
   /**
    * Refresh access token
    */
-  refreshToken = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  refreshToken = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> => {
     try {
       const { refreshToken } = req.body;
 
@@ -192,13 +228,17 @@ export class AuthController {
         timestamp: Date.now(),
       });
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
       logger.error('Token refresh failed', {
         error: errorMessage,
         ip: req.ip,
       });
 
-      if (errorMessage.includes('Invalid') || errorMessage.includes('expired')) {
+      if (
+        errorMessage.includes('Invalid') ||
+        errorMessage.includes('expired')
+      ) {
         res.status(401).json({
           success: false,
           error: 'Invalid or expired refresh token',
@@ -215,10 +255,21 @@ export class AuthController {
   /**
    * Get current user profile
    */
-  getProfile = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> => {
+  getProfile = async (
+    req: AuthenticatedRequest,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> => {
     try {
       // Remove sensitive data from response
-      const { password_hash, ...userResponse } = req.user;
+      const userResponse = {
+        id: req.user.id,
+        email: req.user.email,
+        first_name: req.user.first_name,
+        last_name: req.user.last_name,
+        created_at: req.user.created_at,
+        updated_at: req.user.updated_at,
+      };
 
       res.json({
         success: true,
@@ -228,7 +279,8 @@ export class AuthController {
         timestamp: Date.now(),
       });
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
       logger.error('Get profile failed', {
         userId: req.user?.id,
         error: errorMessage,
@@ -241,16 +293,23 @@ export class AuthController {
   /**
    * Update user profile
    */
-  updateProfile = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> => {
+  updateProfile = async (
+    req: AuthenticatedRequest,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> => {
     try {
       const { first_name, last_name, preferences } = req.body;
 
       // Update user profile
-      const updatedUser = await this.authService.userRepository.update(req.user.id, {
-        first_name,
-        last_name,
-        preferences,
-      });
+      const updatedUser = await this.authService.userRepository.update(
+        req.user.id,
+        {
+          first_name,
+          last_name,
+          preferences,
+        }
+      );
 
       if (!updatedUser) {
         res.status(404).json({
@@ -263,7 +322,14 @@ export class AuthController {
       }
 
       // Remove sensitive data from response
-      const { password_hash, ...userResponse } = updatedUser;
+      const userResponse = {
+        id: updatedUser.id,
+        email: updatedUser.email,
+        first_name: updatedUser.first_name,
+        last_name: updatedUser.last_name,
+        created_at: updatedUser.created_at,
+        updated_at: updatedUser.updated_at,
+      };
 
       logger.info('User profile updated successfully', {
         userId: req.user.id,
@@ -279,7 +345,8 @@ export class AuthController {
         timestamp: Date.now(),
       });
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
       logger.error('Profile update failed', {
         userId: req.user?.id,
         error: errorMessage,
@@ -293,15 +360,20 @@ export class AuthController {
   /**
    * Change user password
    */
-  changePassword = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> => {
+  changePassword = async (
+    req: AuthenticatedRequest,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> => {
     try {
       const { currentPassword, newPassword } = req.body;
 
       // Verify current password
-      const isCurrentPasswordValid = await this.authService.userRepository.verifyPassword(
-        req.user.id,
-        currentPassword
-      );
+      const isCurrentPasswordValid =
+        await this.authService.userRepository.verifyPassword(
+          req.user.id,
+          currentPassword
+        );
 
       if (!isCurrentPasswordValid) {
         res.status(400).json({
@@ -314,7 +386,10 @@ export class AuthController {
       }
 
       // Update password
-      await this.authService.userRepository.updatePassword(req.user.id, newPassword);
+      await this.authService.userRepository.updatePassword(
+        req.user.id,
+        newPassword
+      );
 
       // Invalidate all existing sessions for security
       await this.authService.invalidateAllUserSessions(req.user.id);
@@ -330,7 +405,8 @@ export class AuthController {
         timestamp: Date.now(),
       });
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
       logger.error('Password change failed', {
         userId: req.user?.id,
         error: errorMessage,
@@ -344,12 +420,16 @@ export class AuthController {
   /**
    * Get user sessions
    */
-  getSessions = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> => {
+  getSessions = async (
+    req: AuthenticatedRequest,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> => {
     try {
       const sessions = await this.authService.getUserSessions(req.user.id);
 
       // Remove sensitive token hashes from response
-      const safeSessions = sessions.map(session => ({
+      const safeSessions = sessions.map((session) => ({
         id: session.id,
         created_at: session.created_at,
         expires_at: session.expires_at,
@@ -364,7 +444,8 @@ export class AuthController {
         timestamp: Date.now(),
       });
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
       logger.error('Get sessions failed', {
         userId: req.user?.id,
         error: errorMessage,
@@ -377,7 +458,11 @@ export class AuthController {
   /**
    * Logout from all sessions
    */
-  logoutAll = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> => {
+  logoutAll = async (
+    req: AuthenticatedRequest,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> => {
     try {
       await this.authService.invalidateAllUserSessions(req.user.id);
 
@@ -392,7 +477,8 @@ export class AuthController {
         timestamp: Date.now(),
       });
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
       logger.error('Logout all failed', {
         userId: req.user?.id,
         error: errorMessage,
