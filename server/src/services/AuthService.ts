@@ -1,9 +1,10 @@
-import jwt from 'jsonwebtoken';
+import * as jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import { v4 as uuidv4 } from 'uuid';
 import { UserRepository } from '../repositories/UserRepository';
 import { Database } from '../config/database';
 import { User, UserSession } from '../types/database';
+import { UserSessionRow } from '../types/database';
 import { logger } from '../utils/logger';
 
 export interface JWTPayload {
@@ -43,12 +44,13 @@ export class AuthService {
   constructor(db: Database) {
     this.db = db;
     this.userRepository = new UserRepository(db);
-    
+
     // JWT configuration
-    this.jwtSecret = process.env.JWT_SECRET || 'your-secret-key';
-    this.jwtRefreshSecret = process.env.JWT_REFRESH_SECRET || 'your-refresh-secret-key';
-    this.accessTokenExpiry = process.env.JWT_ACCESS_EXPIRY || '15m';
-    this.refreshTokenExpiry = process.env.JWT_REFRESH_EXPIRY || '7d';
+    this.jwtSecret = process.env.JWT_SECRET ?? 'your-secret-key';
+    this.jwtRefreshSecret =
+      process.env.JWT_REFRESH_SECRET ?? 'your-refresh-secret-key';
+    this.accessTokenExpiry = process.env.JWT_ACCESS_EXPIRY ?? '15m';
+    this.refreshTokenExpiry = process.env.JWT_REFRESH_EXPIRY ?? '7d';
 
     if (!process.env.JWT_SECRET) {
       logger.warn('JWT_SECRET not set in environment variables, using default');
@@ -58,7 +60,9 @@ export class AuthService {
   /**
    * Register a new user
    */
-  async register(data: RegisterData): Promise<{ user: User; tokens: AuthTokens }> {
+  async register(
+    data: RegisterData
+  ): Promise<{ user: User; tokens: AuthTokens }> {
     try {
       // Check if user already exists
       const existingUser = await this.userRepository.findByEmail(data.email);
@@ -77,9 +81,9 @@ export class AuthService {
       // Generate tokens
       const tokens = await this.generateTokens(user);
 
-      logger.info('User registered successfully', { 
-        userId: user.id, 
-        email: user.email 
+      logger.info('User registered successfully', {
+        userId: user.id,
+        email: user.email,
       });
 
       return { user, tokens };
@@ -92,7 +96,9 @@ export class AuthService {
   /**
    * Login user with email and password
    */
-  async login(credentials: LoginCredentials): Promise<{ user: User; tokens: AuthTokens }> {
+  async login(
+    credentials: LoginCredentials
+  ): Promise<{ user: User; tokens: AuthTokens }> {
     try {
       // Verify credentials
       const user = await this.userRepository.verifyPasswordByEmail(
@@ -107,9 +113,9 @@ export class AuthService {
       // Generate tokens
       const tokens = await this.generateTokens(user);
 
-      logger.info('User logged in successfully', { 
-        userId: user.id, 
-        email: user.email 
+      logger.info('User logged in successfully', {
+        userId: user.id,
+        email: user.email,
       });
 
       return { user, tokens };
@@ -138,8 +144,11 @@ export class AuthService {
   async refreshToken(refreshToken: string): Promise<AuthTokens> {
     try {
       // Verify refresh token
-      const payload = jwt.verify(refreshToken, this.jwtRefreshSecret) as JWTPayload;
-      
+      const payload = jwt.verify(
+        refreshToken,
+        this.jwtRefreshSecret
+      ) as JWTPayload;
+
       // Check if session exists and is valid
       const session = await this.getSession(payload.sessionId);
       if (!session || new Date(session.expires_at) < new Date()) {
@@ -155,9 +164,9 @@ export class AuthService {
       // Generate new tokens
       const tokens = await this.generateTokens(user, payload.sessionId);
 
-      logger.info('Token refreshed successfully', { 
-        userId: user.id, 
-        sessionId: payload.sessionId 
+      logger.info('Token refreshed successfully', {
+        userId: user.id,
+        sessionId: payload.sessionId,
       });
 
       return tokens;
@@ -174,7 +183,7 @@ export class AuthService {
     try {
       // Verify JWT token
       const payload = jwt.verify(token, this.jwtSecret) as JWTPayload;
-      
+
       // Check if session exists and is valid
       const session = await this.getSession(payload.sessionId);
       if (!session || new Date(session.expires_at) < new Date()) {
@@ -189,7 +198,8 @@ export class AuthService {
 
       return user;
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
       logger.debug('Token verification failed', { error: errorMessage });
       throw error;
     }
@@ -198,9 +208,12 @@ export class AuthService {
   /**
    * Generate access and refresh tokens
    */
-  private async generateTokens(user: User, existingSessionId?: string): Promise<AuthTokens> {
-    const sessionId = existingSessionId || uuidv4();
-    
+  private async generateTokens(
+    user: User,
+    existingSessionId?: string
+  ): Promise<AuthTokens> {
+    const sessionId = existingSessionId ?? uuidv4();
+
     // Create JWT payload
     const payload: Omit<JWTPayload, 'iat' | 'exp'> = {
       userId: user.id,
@@ -209,18 +222,14 @@ export class AuthService {
     };
 
     // Generate access token
-    const accessToken = (jwt.sign as any)(
-      payload, 
-      this.jwtSecret, 
-      { expiresIn: this.accessTokenExpiry }
-    );
+    const accessToken = jwt.sign(payload, this.jwtSecret, {
+      expiresIn: this.accessTokenExpiry,
+    } as jwt.SignOptions) as string;
 
     // Generate refresh token
-    const refreshToken = (jwt.sign as any)(
-      payload, 
-      this.jwtRefreshSecret, 
-      { expiresIn: this.refreshTokenExpiry }
-    );
+    const refreshToken = jwt.sign(payload, this.jwtRefreshSecret, {
+      expiresIn: this.refreshTokenExpiry,
+    } as jwt.SignOptions) as string;
 
     // Calculate expiry date
     const expiresAt = new Date();
@@ -250,7 +259,7 @@ export class AuthService {
     expiresAt: Date
   ): Promise<void> {
     const hashedToken = await bcrypt.hash(tokenHash, 10);
-    
+
     await this.db.run(
       `INSERT INTO user_sessions (id, user_id, token_hash, expires_at) 
        VALUES (?, ?, ?, ?)`,
@@ -267,7 +276,7 @@ export class AuthService {
     expiresAt: Date
   ): Promise<void> {
     const hashedToken = await bcrypt.hash(tokenHash, 10);
-    
+
     await this.db.run(
       `UPDATE user_sessions 
        SET token_hash = ?, expires_at = ?, updated_at = CURRENT_TIMESTAMP 
@@ -280,22 +289,19 @@ export class AuthService {
    * Get session by ID
    */
   private async getSession(sessionId: string): Promise<UserSession | null> {
-    const result = await this.db.get(
+    const result = await this.db.get<UserSessionRow>(
       'SELECT * FROM user_sessions WHERE id = ?',
       [sessionId]
     );
-    
-    return result || null;
+
+    return result ?? null;
   }
 
   /**
    * Invalidate session
    */
   private async invalidateSession(sessionId: string): Promise<void> {
-    await this.db.run(
-      'DELETE FROM user_sessions WHERE id = ?',
-      [sessionId]
-    );
+    await this.db.run('DELETE FROM user_sessions WHERE id = ?', [sessionId]);
   }
 
   /**
@@ -307,7 +313,7 @@ export class AuthService {
         'DELETE FROM user_sessions WHERE expires_at < ?',
         [new Date().toISOString()]
       );
-      
+
       if (result.changes && result.changes > 0) {
         logger.info('Cleaned up expired sessions', { count: result.changes });
       }
@@ -320,25 +326,22 @@ export class AuthService {
    * Get all active sessions for a user
    */
   async getUserSessions(userId: string): Promise<UserSession[]> {
-    const results = await this.db.all(
+    const results = await this.db.all<UserSessionRow>(
       `SELECT * FROM user_sessions 
        WHERE user_id = ? AND expires_at > ? 
        ORDER BY created_at DESC`,
       [userId, new Date().toISOString()]
     );
-    
-    return results || [];
+
+    return results ?? [];
   }
 
   /**
    * Invalidate all sessions for a user
    */
   async invalidateAllUserSessions(userId: string): Promise<void> {
-    await this.db.run(
-      'DELETE FROM user_sessions WHERE user_id = ?',
-      [userId]
-    );
-    
+    await this.db.run('DELETE FROM user_sessions WHERE user_id = ?', [userId]);
+
     logger.info('Invalidated all user sessions', { userId });
   }
 }

@@ -36,7 +36,8 @@ export class MigrationRunner {
   }
 
   private async getExecutedMigrations(): Promise<MigrationRecord[]> {
-    const sql = 'SELECT id, name, executed_at FROM migrations ORDER BY executed_at ASC';
+    const sql =
+      'SELECT id, name, executed_at FROM migrations ORDER BY executed_at ASC';
     return await this.db.all<MigrationRecord>(sql);
   }
 
@@ -53,14 +54,16 @@ export class MigrationRunner {
   async getPendingMigrations(): Promise<Migration[]> {
     await this.ensureMigrationsTable();
     const executed = await this.getExecutedMigrations();
-    const executedIds = new Set(executed.map(m => m.id));
-    
-    return this.migrations.filter(migration => !executedIds.has(migration.id));
+    const executedIds = new Set(executed.map((m) => m.id));
+
+    return this.migrations.filter(
+      (migration) => !executedIds.has(migration.id)
+    );
   }
 
   async runMigrations(): Promise<void> {
     const pending = await this.getPendingMigrations();
-    
+
     if (pending.length === 0) {
       logger.info('No pending migrations to run');
       return;
@@ -70,13 +73,13 @@ export class MigrationRunner {
 
     for (const migration of pending) {
       logger.info(`Running migration: ${migration.name} (${migration.id})`);
-      
+
       try {
         await this.db.transaction(async () => {
           await migration.up(this.db);
           await this.recordMigration(migration);
         });
-        
+
         logger.info(`Migration completed: ${migration.name}`);
       } catch (error) {
         logger.error(`Migration failed: ${migration.name}`, { error });
@@ -90,22 +93,22 @@ export class MigrationRunner {
   async rollbackMigration(migrationId?: string): Promise<void> {
     await this.ensureMigrationsTable();
     const executed = await this.getExecutedMigrations();
-    
+
     if (executed.length === 0) {
       logger.info('No migrations to rollback');
       return;
     }
 
     // If no specific migration ID provided, rollback the last one
-    const targetMigration = migrationId 
-      ? executed.find(m => m.id === migrationId)
+    const targetMigration = migrationId
+      ? executed.find((m) => m.id === migrationId)
       : executed[executed.length - 1];
 
     if (!targetMigration) {
       throw new Error(`Migration not found: ${migrationId}`);
     }
 
-    const migration = this.migrations.find(m => m.id === targetMigration.id);
+    const migration = this.migrations.find((m) => m.id === targetMigration.id);
     if (!migration) {
       throw new Error(`Migration definition not found: ${targetMigration.id}`);
     }
@@ -117,7 +120,7 @@ export class MigrationRunner {
         await migration.down(this.db);
         await this.removeMigrationRecord(migration.id);
       });
-      
+
       logger.info(`Migration rollback completed: ${migration.name}`);
     } catch (error) {
       logger.error(`Migration rollback failed: ${migration.name}`, { error });

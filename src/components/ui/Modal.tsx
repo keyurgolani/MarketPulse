@@ -30,12 +30,12 @@ export const Modal: React.FC<ModalProps> = ({
   useEffect(() => {
     if (isOpen) {
       previousActiveElement.current = document.activeElement as HTMLElement;
-      
+
       // Focus the modal container
       const focusableElements = modalRef.current?.querySelectorAll(
         'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
       );
-      
+
       if (focusableElements && focusableElements.length > 0) {
         (focusableElements[0] as HTMLElement).focus();
       }
@@ -74,8 +74,6 @@ export const Modal: React.FC<ModalProps> = ({
     };
   }, [isOpen]);
 
-
-
   const handleOverlayClick = (event: React.MouseEvent): void => {
     if (closeOnOverlayClick && event.target === event.currentTarget) {
       onClose();
@@ -92,7 +90,9 @@ export const Modal: React.FC<ModalProps> = ({
     if (!focusableElements || focusableElements.length === 0) return;
 
     const firstElement = focusableElements[0] as HTMLElement;
-    const lastElement = focusableElements[focusableElements.length - 1] as HTMLElement;
+    const lastElement = focusableElements[
+      focusableElements.length - 1
+    ] as HTMLElement;
 
     if (event.shiftKey) {
       if (document.activeElement === firstElement) {
@@ -119,29 +119,29 @@ export const Modal: React.FC<ModalProps> = ({
 
   const modalContent = (
     <div
-      className="fixed inset-0 z-50 overflow-y-auto"
+      className='fixed inset-0 z-50 overflow-y-auto'
       aria-labelledby={title ? 'modal-title' : undefined}
-      aria-modal="true"
-      role="dialog"
+      aria-modal='true'
+      role='dialog'
     >
       <div
-        className="flex min-h-full items-center justify-center p-4 text-center sm:p-0"
-        role="presentation"
+        className='flex min-h-full items-center justify-center p-4 text-center sm:p-0'
+        role='presentation'
       >
         <div
-          className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity dark:bg-gray-900 dark:bg-opacity-75"
-          aria-hidden="true"
+          className='fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity dark:bg-gray-900 dark:bg-opacity-75'
+          aria-hidden='true'
           onClick={handleOverlayClick}
           onKeyDown={(e): void => {
             if (e.key === 'Enter' || e.key === ' ') {
               handleOverlayClick(e as unknown as React.MouseEvent);
             }
           }}
-          role="button"
+          role='button'
           tabIndex={0}
-          aria-label="Close modal"
+          aria-label='Close modal'
         />
-        
+
         {/* eslint-disable-next-line jsx-a11y/no-static-element-interactions */}
         <div
           ref={modalRef}
@@ -154,42 +154,40 @@ export const Modal: React.FC<ModalProps> = ({
           onKeyDown={handleKeyDown}
         >
           {title && (
-            <div className="border-b border-gray-200 dark:border-gray-700 px-6 py-4">
-              <div className="flex items-center justify-between">
+            <div className='border-b border-gray-200 dark:border-gray-700 px-6 py-4'>
+              <div className='flex items-center justify-between'>
                 <h3
-                  id="modal-title"
-                  className="text-lg font-semibold leading-6 text-gray-900 dark:text-gray-100"
+                  id='modal-title'
+                  className='text-lg font-semibold leading-6 text-gray-900 dark:text-gray-100'
                 >
                   {title}
                 </h3>
                 <button
-                  type="button"
-                  className="rounded-md text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:text-gray-500 dark:hover:text-gray-400"
+                  type='button'
+                  className='rounded-md text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:text-gray-500 dark:hover:text-gray-400'
                   onClick={onClose}
-                  aria-label="Close modal"
+                  aria-label='Close modal'
                 >
                   <svg
-                    className="h-6 w-6"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    strokeWidth="1.5"
-                    stroke="currentColor"
-                    aria-hidden="true"
+                    className='h-6 w-6'
+                    fill='none'
+                    viewBox='0 0 24 24'
+                    strokeWidth='1.5'
+                    stroke='currentColor'
+                    aria-hidden='true'
                   >
                     <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M6 18L18 6M6 6l12 12"
+                      strokeLinecap='round'
+                      strokeLinejoin='round'
+                      d='M6 18L18 6M6 6l12 12'
                     />
                   </svg>
                 </button>
               </div>
             </div>
           )}
-          
-          <div className="px-6 py-4">
-            {children}
-          </div>
+
+          <div className='px-6 py-4'>{children}</div>
         </div>
       </div>
     </div>

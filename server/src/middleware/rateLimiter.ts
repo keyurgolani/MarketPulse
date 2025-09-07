@@ -37,7 +37,10 @@ class MemoryRateLimitStore {
     }
   }
 
-  increment(key: string, windowMs: number): { count: number; resetTime: number } {
+  increment(
+    key: string,
+    windowMs: number
+  ): { count: number; resetTime: number } {
     const now = Date.now();
     const resetTime = now + windowMs;
 
@@ -73,7 +76,7 @@ const rateLimitStore = new MemoryRateLimitStore();
 
 // Default key generator - uses user ID if available, otherwise IP
 const defaultKeyGenerator = (req: Request): string => {
-  const userId = (req as any).user?.id;
+  const userId = (req as Request & { user?: { id: string } }).user?.id;
   if (userId) {
     return `user:${userId}`;
   }
@@ -92,33 +95,50 @@ export const createRateLimiter = (config: RateLimitConfig) => {
 
   return (req: Request, res: Response, next: NextFunction): void => {
     const key = keyGenerator(req);
-    const current = rateLimitStore.increment(key, windowMs);
 
-    // Set rate limit headers
-    res.setHeader('X-RateLimit-Limit', maxRequests);
-    res.setHeader('X-RateLimit-Remaining', Math.max(0, maxRequests - current.count));
-    res.setHeader('X-RateLimit-Reset', Math.ceil(current.resetTime / 1000));
+    // Get current count without incrementing yet
+    const existing = rateLimitStore.get(key);
+    const currentCount = existing ? existing.count : 0;
 
-    // Check if rate limit exceeded
-    if (current.count > maxRequests) {
+    // Check if we would exceed the limit (only if we're not skipping requests)
+    if (
+      !skipSuccessfulRequests &&
+      !skipFailedRequests &&
+      currentCount >= maxRequests
+    ) {
       logger.warn('Rate limit exceeded', {
         key,
-        count: current.count,
+        count: currentCount,
         limit: maxRequests,
-        resetTime: new Date(current.resetTime).toISOString(),
+        resetTime: existing
+          ? new Date(existing.resetTime).toISOString()
+          : 'N/A',
         url: req.url,
         method: req.method,
         userAgent: req.get('User-Agent'),
       });
 
-      throw new RateLimitError(`Rate limit exceeded. Try again in ${Math.ceil((current.resetTime - Date.now()) / 1000)} seconds.`);
+      throw new RateLimitError(
+        `Rate limit exceeded. Try again in ${Math.ceil(existing ? (existing.resetTime - Date.now()) / 1000 : 60)} seconds.`
+      );
     }
 
-    // Track response to potentially skip counting
+    // Increment the count
+    const current = rateLimitStore.increment(key, windowMs);
+
+    // Set rate limit headers
+    res.setHeader('X-RateLimit-Limit', maxRequests);
+    res.setHeader(
+      'X-RateLimit-Remaining',
+      Math.max(0, maxRequests - current.count)
+    );
+    res.setHeader('X-RateLimit-Reset', Math.ceil(current.resetTime / 1000));
+
+    // If we're skipping requests, set up response tracking
     if (skipSuccessfulRequests || skipFailedRequests) {
       const originalEnd = res.end;
-      res.end = function(chunk?: any, encoding?: any): Response {
-        const shouldSkip = 
+      res.end = function (...args: unknown[]): Response {
+        const shouldSkip =
           (skipSuccessfulRequests && res.statusCode < 400) ||
           (skipFailedRequests && res.statusCode >= 400);
 
@@ -128,10 +148,43 @@ export const createRateLimiter = (config: RateLimitConfig) => {
           if (entry && entry.count > 0) {
             entry.count--;
           }
+        } else {
+          // Check rate limit for requests we're not skipping
+          if (current.count > maxRequests) {
+            logger.warn('Rate limit exceeded', {
+              key,
+              count: current.count,
+              limit: maxRequests,
+              resetTime: new Date(current.resetTime).toISOString(),
+              url: req.url,
+              method: req.method,
+              userAgent: req.get('User-Agent'),
+            });
+          }
         }
 
-        return originalEnd.call(this, chunk, encoding);
+        return (originalEnd as (...args: unknown[]) => Response).apply(
+          this,
+          args
+        );
       };
+    } else {
+      // For non-skipping rate limiters, check limit after incrementing
+      if (current.count > maxRequests) {
+        logger.warn('Rate limit exceeded', {
+          key,
+          count: current.count,
+          limit: maxRequests,
+          resetTime: new Date(current.resetTime).toISOString(),
+          url: req.url,
+          method: req.method,
+          userAgent: req.get('User-Agent'),
+        });
+
+        throw new RateLimitError(
+          `Rate limit exceeded. Try again in ${Math.ceil((current.resetTime - Date.now()) / 1000)} seconds.`
+        );
+      }
     }
 
     next();

@@ -1,7 +1,15 @@
-import { BaseRepository, PaginationOptions, PaginatedResult } from './BaseRepository';
+import {
+  BaseRepository,
+  PaginationOptions,
+  PaginatedResult,
+} from './BaseRepository';
 import { Database } from '../config/database';
 import { Asset, AssetPrice } from '../types/database';
-import { CreateAssetSchema, UpdateAssetSchema, CreateAssetPriceSchema } from '../schemas/validation';
+import {
+  CreateAssetSchema,
+  UpdateAssetSchema,
+  CreateAssetPriceSchema,
+} from '../schemas/validation';
 import { z } from 'zod';
 import { logger } from '../utils/logger';
 
@@ -9,7 +17,11 @@ export type CreateAssetData = z.infer<typeof CreateAssetSchema>;
 export type UpdateAssetData = z.infer<typeof UpdateAssetSchema>;
 export type CreateAssetPriceData = z.infer<typeof CreateAssetPriceSchema>;
 
-export class AssetRepository extends BaseRepository<Asset, any, any> {
+export class AssetRepository extends BaseRepository<
+  Asset,
+  CreateAssetData,
+  UpdateAssetData
+> {
   constructor(db: Database) {
     super(db, 'assets');
   }
@@ -20,7 +32,7 @@ export class AssetRepository extends BaseRepository<Asset, any, any> {
 
   async findBySymbols(symbols: string[]): Promise<Asset[]> {
     if (symbols.length === 0) return [];
-    
+
     try {
       const placeholders = symbols.map(() => '?').join(', ');
       const sql = `SELECT * FROM ${this.tableName} WHERE symbol IN (${placeholders})`;
@@ -35,7 +47,9 @@ export class AssetRepository extends BaseRepository<Asset, any, any> {
     return super.findAll(options);
   }
 
-  override async findAllPaginated(options: PaginationOptions): Promise<PaginatedResult<Asset>> {
+  override async findAllPaginated(
+    options: PaginationOptions
+  ): Promise<PaginatedResult<Asset>> {
     return super.findAllPaginated(options);
   }
 
@@ -60,14 +74,17 @@ export class AssetRepository extends BaseRepository<Asset, any, any> {
     }
   }
 
-  override async update(symbol: string, data: UpdateAssetData): Promise<Asset | null> {
+  override async update(
+    symbol: string,
+    data: UpdateAssetData
+  ): Promise<Asset | null> {
     try {
       // Validate input data
       const validatedData = UpdateAssetSchema.parse(data);
 
       // Prepare update data
-      const updateData: any = {};
-      
+      const updateData: Partial<Asset> = {};
+
       if (validatedData.name !== undefined) {
         updateData.name = validatedData.name;
       }
@@ -91,10 +108,13 @@ export class AssetRepository extends BaseRepository<Asset, any, any> {
   async upsert(data: CreateAssetData): Promise<Asset> {
     try {
       const existing = await this.findBySymbol(data.symbol);
-      
+
       if (existing) {
         const updated = await this.update(data.symbol, data);
-        return updated!;
+        if (!updated) {
+          throw new Error('Failed to update asset');
+        }
+        return updated;
       } else {
         return await this.create(data);
       }
@@ -112,7 +132,10 @@ export class AssetRepository extends BaseRepository<Asset, any, any> {
     return super.exists(symbol);
   }
 
-  async searchAssets(query: string, options?: PaginationOptions): Promise<Asset[]> {
+  async searchAssets(
+    query: string,
+    options?: PaginationOptions
+  ): Promise<Asset[]> {
     try {
       const searchTerm = `%${query.toUpperCase()}%`;
       return await super.findWhere(
@@ -126,8 +149,15 @@ export class AssetRepository extends BaseRepository<Asset, any, any> {
     }
   }
 
-  async findBySector(sector: string, options?: PaginationOptions): Promise<Asset[]> {
-    return super.findWhere('UPPER(sector) = ?', [sector.toUpperCase()], options);
+  async findBySector(
+    sector: string,
+    options?: PaginationOptions
+  ): Promise<Asset[]> {
+    return super.findWhere(
+      'UPPER(sector) = ?',
+      [sector.toUpperCase()],
+      options
+    );
   }
 
   async getPopularAssets(limit: number = 20): Promise<Asset[]> {
@@ -149,7 +179,8 @@ export class AssetRepository extends BaseRepository<Asset, any, any> {
 
   async updateLastUpdated(symbol: string): Promise<void> {
     try {
-      const sql = 'UPDATE assets SET last_updated = CURRENT_TIMESTAMP WHERE symbol = ?';
+      const sql =
+        'UPDATE assets SET last_updated = CURRENT_TIMESTAMP WHERE symbol = ?';
       await this.db.run(sql, [symbol]);
     } catch (error) {
       logger.error('Error updating asset last_updated', { symbol, error });
@@ -167,7 +198,7 @@ export class AssetRepository extends BaseRepository<Asset, any, any> {
         INSERT INTO asset_prices (symbol, price, change_amount, change_percent, volume)
         VALUES (?, ?, ?, ?, ?)
       `;
-      
+
       const result = await this.db.run(sql, [
         validatedData.symbol.toUpperCase(),
         validatedData.price,
@@ -210,14 +241,14 @@ export class AssetRepository extends BaseRepository<Asset, any, any> {
   }
 
   async getPriceHistory(
-    symbol: string, 
-    fromDate?: string, 
-    toDate?: string, 
+    symbol: string,
+    fromDate?: string,
+    toDate?: string,
     options?: PaginationOptions
   ): Promise<AssetPrice[]> {
     try {
       let sql = 'SELECT * FROM asset_prices WHERE symbol = ?';
-      const params: any[] = [symbol.toUpperCase()];
+      const params: (string | number)[] = [symbol.toUpperCase()];
 
       if (fromDate) {
         sql += ' AND timestamp >= ?';
@@ -239,7 +270,12 @@ export class AssetRepository extends BaseRepository<Asset, any, any> {
 
       return await this.db.all<AssetPrice>(sql, params);
     } catch (error) {
-      logger.error('Error getting asset price history', { symbol, fromDate, toDate, error });
+      logger.error('Error getting asset price history', {
+        symbol,
+        fromDate,
+        toDate,
+        error,
+      });
       throw error;
     }
   }
@@ -248,9 +284,9 @@ export class AssetRepository extends BaseRepository<Asset, any, any> {
     if (symbols.length === 0) return [];
 
     try {
-      const upperSymbols = symbols.map(s => s.toUpperCase());
+      const upperSymbols = symbols.map((s) => s.toUpperCase());
       const placeholders = upperSymbols.map(() => '?').join(', ');
-      
+
       const sql = `
         SELECT ap1.* FROM asset_prices ap1
         INNER JOIN (
@@ -260,18 +296,24 @@ export class AssetRepository extends BaseRepository<Asset, any, any> {
           GROUP BY symbol
         ) ap2 ON ap1.symbol = ap2.symbol AND ap1.timestamp = ap2.max_timestamp
       `;
-      
+
       return await this.db.all<AssetPrice>(sql, upperSymbols);
     } catch (error) {
-      logger.error('Error getting latest prices for symbols', { symbols, error });
+      logger.error('Error getting latest prices for symbols', {
+        symbols,
+        error,
+      });
       throw error;
     }
   }
 
-  async deletePriceHistory(symbol: string, olderThan?: string): Promise<number> {
+  async deletePriceHistory(
+    symbol: string,
+    olderThan?: string
+  ): Promise<number> {
     try {
       let sql = 'DELETE FROM asset_prices WHERE symbol = ?';
-      const params: any[] = [symbol.toUpperCase()];
+      const params: string[] = [symbol.toUpperCase()];
 
       if (olderThan) {
         sql += ' AND timestamp < ?';
@@ -281,7 +323,11 @@ export class AssetRepository extends BaseRepository<Asset, any, any> {
       const result = await this.db.run(sql, params);
       return result.changes ?? 0;
     } catch (error) {
-      logger.error('Error deleting asset price history', { symbol, olderThan, error });
+      logger.error('Error deleting asset price history', {
+        symbol,
+        olderThan,
+        error,
+      });
       throw error;
     }
   }

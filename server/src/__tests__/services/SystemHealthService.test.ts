@@ -27,16 +27,16 @@ describe('SystemHealthService', () => {
   let mockWriteFile: jest.Mock;
   let mockUnlink: jest.Mock;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     healthService = new SystemHealthService(mockDatabase);
-    
+
     // Reset mocks
     jest.clearAllMocks();
-    
+
     // Get mocked functions
-    const fs = require('fs/promises');
-    mockWriteFile = fs.writeFile;
-    mockUnlink = fs.unlink;
+    const { writeFile, unlink } = jest.mocked(await import('fs/promises'));
+    mockWriteFile = writeFile;
+    mockUnlink = unlink;
   });
 
   describe('getSystemHealth', () => {
@@ -46,13 +46,13 @@ describe('SystemHealthService', () => {
         status: 'healthy',
         responseTime: 10,
       });
-      
+
       // Mock successful disk operations
       mockWriteFile.mockResolvedValue(undefined);
       mockUnlink.mockResolvedValue(undefined);
-      
+
       const health = await healthService.getSystemHealth();
-      
+
       expect(health.status).toBe('healthy');
       expect(health.services.database.status).toBe('healthy');
       expect(health.services.memory.status).toBe('healthy');
@@ -71,13 +71,13 @@ describe('SystemHealthService', () => {
         responseTime: 5000,
         error: 'Connection failed',
       });
-      
+
       // Mock successful disk operations
       mockWriteFile.mockResolvedValue(undefined);
       mockUnlink.mockResolvedValue(undefined);
-      
+
       const health = await healthService.getSystemHealth();
-      
+
       expect(health.status).toBe('unhealthy');
       expect(health.services.database.status).toBe('unhealthy');
       expect(health.services.database.error).toBe('Connection failed');
@@ -89,26 +89,26 @@ describe('SystemHealthService', () => {
         status: 'healthy',
         responseTime: 10,
       });
-      
+
       // Mock successful disk operations
       mockWriteFile.mockResolvedValue(undefined);
       mockUnlink.mockResolvedValue(undefined);
-      
+
       // Mock high memory usage
       const originalMemoryUsage = process.memoryUsage;
-      process.memoryUsage = jest.fn().mockReturnValue({
+      process.memoryUsage = jest.fn(() => ({
         heapUsed: 800 * 1024 * 1024, // 800MB
         heapTotal: 1000 * 1024 * 1024, // 1GB (80% usage)
         rss: 900 * 1024 * 1024,
         external: 50 * 1024 * 1024,
         arrayBuffers: 10 * 1024 * 1024,
-      }) as any;
-      
+      })) as unknown as NodeJS.MemoryUsageFn;
+
       const health = await healthService.getSystemHealth();
-      
+
       expect(health.status).toBe('degraded');
       expect(health.services.memory.status).toBe('degraded');
-      
+
       // Restore original function
       process.memoryUsage = originalMemoryUsage;
     });
@@ -119,12 +119,12 @@ describe('SystemHealthService', () => {
         status: 'healthy',
         responseTime: 10,
       });
-      
+
       // Mock failed disk operations
       mockWriteFile.mockRejectedValue(new Error('Disk full'));
-      
+
       const health = await healthService.getSystemHealth();
-      
+
       expect(health.status).toBe('unhealthy');
       expect(health.services.disk.status).toBe('unhealthy');
       expect(health.services.disk.error).toBe('Disk full');
@@ -137,36 +137,38 @@ describe('SystemHealthService', () => {
         status: 'healthy',
         responseTime: 15,
       });
-      
+
       const health = await healthService.getSystemHealth();
-      
+
       expect(health.services.database.status).toBe('healthy');
       expect(health.services.database.responseTime).toBe(15);
-      expect(health.services.database.details.connected).toBe(true);
+      expect(health.services.database.details?.connected).toBe(true);
     });
 
     it('should return unhealthy status for failed database check', async () => {
-      (mockDatabase.healthCheck as jest.Mock).mockRejectedValue(new Error('Database error'));
-      
+      (mockDatabase.healthCheck as jest.Mock).mockRejectedValue(
+        new Error('Database error')
+      );
+
       const health = await healthService.getSystemHealth();
-      
+
       expect(health.services.database.status).toBe('unhealthy');
       expect(health.services.database.error).toBe('Database error');
-      expect(health.services.database.details.connected).toBe(false);
+      expect(health.services.database.details?.connected).toBe(false);
     });
   });
 
   describe('checkMemory', () => {
     it('should return healthy status for normal memory usage', async () => {
       const originalMemoryUsage = process.memoryUsage;
-      process.memoryUsage = jest.fn().mockReturnValue({
+      process.memoryUsage = jest.fn(() => ({
         heapUsed: 500 * 1024 * 1024, // 500MB
         heapTotal: 1000 * 1024 * 1024, // 1GB (50% usage)
         rss: 600 * 1024 * 1024,
         external: 50 * 1024 * 1024,
         arrayBuffers: 10 * 1024 * 1024,
-      }) as any;
-      
+      })) as unknown as NodeJS.MemoryUsageFn;
+
       // Mock other services as healthy
       (mockDatabase.healthCheck as jest.Mock).mockResolvedValue({
         status: 'healthy',
@@ -174,25 +176,25 @@ describe('SystemHealthService', () => {
       });
       mockWriteFile.mockResolvedValue(undefined);
       mockUnlink.mockResolvedValue(undefined);
-      
+
       const health = await healthService.getSystemHealth();
-      
+
       expect(health.services.memory.status).toBe('healthy');
-      expect(health.services.memory.details.percentage).toBe(50);
-      
+      expect(health.services.memory.details?.percentage).toBe(50);
+
       process.memoryUsage = originalMemoryUsage;
     });
 
     it('should return degraded status for high memory usage', async () => {
       const originalMemoryUsage = process.memoryUsage;
-      process.memoryUsage = jest.fn().mockReturnValue({
+      process.memoryUsage = jest.fn(() => ({
         heapUsed: 800 * 1024 * 1024, // 800MB
         heapTotal: 1000 * 1024 * 1024, // 1GB (80% usage)
         rss: 900 * 1024 * 1024,
         external: 50 * 1024 * 1024,
         arrayBuffers: 10 * 1024 * 1024,
-      }) as any;
-      
+      })) as unknown as NodeJS.MemoryUsageFn;
+
       // Mock other services as healthy
       (mockDatabase.healthCheck as jest.Mock).mockResolvedValue({
         status: 'healthy',
@@ -200,24 +202,24 @@ describe('SystemHealthService', () => {
       });
       mockWriteFile.mockResolvedValue(undefined);
       mockUnlink.mockResolvedValue(undefined);
-      
+
       const health = await healthService.getSystemHealth();
-      
+
       expect(health.services.memory.status).toBe('degraded');
-      
+
       process.memoryUsage = originalMemoryUsage;
     });
 
     it('should return unhealthy status for very high memory usage', async () => {
       const originalMemoryUsage = process.memoryUsage;
-      process.memoryUsage = jest.fn().mockReturnValue({
+      process.memoryUsage = jest.fn(() => ({
         heapUsed: 950 * 1024 * 1024, // 950MB
         heapTotal: 1000 * 1024 * 1024, // 1GB (95% usage)
         rss: 980 * 1024 * 1024,
         external: 50 * 1024 * 1024,
         arrayBuffers: 10 * 1024 * 1024,
-      }) as any;
-      
+      })) as unknown as NodeJS.MemoryUsageFn;
+
       // Mock other services as healthy
       (mockDatabase.healthCheck as jest.Mock).mockResolvedValue({
         status: 'healthy',
@@ -225,11 +227,11 @@ describe('SystemHealthService', () => {
       });
       mockWriteFile.mockResolvedValue(undefined);
       mockUnlink.mockResolvedValue(undefined);
-      
+
       const health = await healthService.getSystemHealth();
-      
+
       expect(health.services.memory.status).toBe('unhealthy');
-      
+
       process.memoryUsage = originalMemoryUsage;
     });
   });
@@ -238,58 +240,58 @@ describe('SystemHealthService', () => {
     it('should return healthy status for successful disk operations', async () => {
       mockWriteFile.mockResolvedValue(undefined);
       mockUnlink.mockResolvedValue(undefined);
-      
+
       // Mock other services as healthy
       (mockDatabase.healthCheck as jest.Mock).mockResolvedValue({
         status: 'healthy',
         responseTime: 10,
       });
-      
+
       const health = await healthService.getSystemHealth();
-      
+
       expect(health.services.disk.status).toBe('healthy');
-      expect(health.services.disk.details.writable).toBe(true);
+      expect(health.services.disk.details?.writable).toBe(true);
       expect(mockWriteFile).toHaveBeenCalled();
       expect(mockUnlink).toHaveBeenCalled();
     });
 
     it('should return unhealthy status for failed disk operations', async () => {
       mockWriteFile.mockRejectedValue(new Error('Permission denied'));
-      
+
       // Mock other services as healthy
       (mockDatabase.healthCheck as jest.Mock).mockResolvedValue({
         status: 'healthy',
         responseTime: 10,
       });
-      
+
       const health = await healthService.getSystemHealth();
-      
+
       expect(health.services.disk.status).toBe('unhealthy');
       expect(health.services.disk.error).toBe('Permission denied');
-      expect(health.services.disk.details.writable).toBe(false);
+      expect(health.services.disk.details?.writable).toBe(false);
     });
   });
 
   describe('connection tracking', () => {
     it('should track active connections correctly', () => {
       expect(healthService.getActiveConnections()).toBe(0);
-      
+
       healthService.incrementConnections();
       expect(healthService.getActiveConnections()).toBe(1);
-      
+
       healthService.incrementConnections();
       expect(healthService.getActiveConnections()).toBe(2);
-      
+
       healthService.decrementConnections();
       expect(healthService.getActiveConnections()).toBe(1);
-      
+
       healthService.decrementConnections();
       expect(healthService.getActiveConnections()).toBe(0);
     });
 
     it('should not go below zero connections', () => {
       expect(healthService.getActiveConnections()).toBe(0);
-      
+
       healthService.decrementConnections();
       expect(healthService.getActiveConnections()).toBe(0);
     });
@@ -304,10 +306,23 @@ describe('SystemHealthService', () => {
       });
       mockWriteFile.mockResolvedValue(undefined);
       mockUnlink.mockResolvedValue(undefined);
-      
+
+      // Mock normal memory usage
+      const originalMemoryUsage = process.memoryUsage;
+      process.memoryUsage = jest.fn(() => ({
+        heapUsed: 500 * 1024 * 1024, // 500MB
+        heapTotal: 1000 * 1024 * 1024, // 1GB (50% usage)
+        rss: 600 * 1024 * 1024,
+        external: 50 * 1024 * 1024,
+        arrayBuffers: 10 * 1024 * 1024,
+      })) as unknown as NodeJS.MemoryUsageFn;
+
       const isHealthy = await healthService.isHealthy();
-      
+
       expect(isHealthy).toBe(true);
+
+      // Restore original function
+      process.memoryUsage = originalMemoryUsage;
     });
 
     it('should return false when system is unhealthy', async () => {
@@ -319,17 +334,19 @@ describe('SystemHealthService', () => {
       });
       mockWriteFile.mockResolvedValue(undefined);
       mockUnlink.mockResolvedValue(undefined);
-      
+
       const isHealthy = await healthService.isHealthy();
-      
+
       expect(isHealthy).toBe(false);
     });
 
     it('should return false when health check throws error', async () => {
-      (mockDatabase.healthCheck as jest.Mock).mockRejectedValue(new Error('Health check failed'));
-      
+      (mockDatabase.healthCheck as jest.Mock).mockRejectedValue(
+        new Error('Health check failed')
+      );
+
       const isHealthy = await healthService.isHealthy();
-      
+
       expect(isHealthy).toBe(false);
     });
   });

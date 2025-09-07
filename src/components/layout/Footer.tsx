@@ -17,7 +17,7 @@ export const Footer: React.FC<FooterProps> = ({
         className
       )}
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8'>
         {children}
       </div>
     </footer>
@@ -38,13 +38,11 @@ export const FooterSection: React.FC<FooterSectionProps> = ({
   return (
     <div className={clsx('space-y-4', className)}>
       {title && (
-        <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 uppercase tracking-wider">
+        <h3 className='text-sm font-semibold text-gray-900 dark:text-gray-100 uppercase tracking-wider'>
           {title}
         </h3>
       )}
-      <div className="space-y-2">
-        {children}
-      </div>
+      <div className='space-y-2'>{children}</div>
     </div>
   );
 };
@@ -76,17 +74,17 @@ export const FooterLink: React.FC<FooterLinkProps> = ({
       {children}
       {external && (
         <svg
-          className="inline-block ml-1 h-3 w-3"
-          fill="none"
-          viewBox="0 0 24 24"
-          strokeWidth="1.5"
-          stroke="currentColor"
-          aria-hidden="true"
+          className='inline-block ml-1 h-3 w-3'
+          fill='none'
+          viewBox='0 0 24 24'
+          strokeWidth='1.5'
+          stroke='currentColor'
+          aria-hidden='true'
         >
           <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25"
+            strokeLinecap='round'
+            strokeLinejoin='round'
+            d='M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25'
           />
         </svg>
       )}
@@ -112,7 +110,7 @@ export const FooterCopyright: React.FC<FooterCopyrightProps> = ({
         className
       )}
     >
-      <p className="text-sm text-gray-500 dark:text-gray-400 text-center">
+      <p className='text-sm text-gray-500 dark:text-gray-400 text-center'>
         © {year} {company}. All rights reserved.
       </p>
     </div>
@@ -140,14 +138,12 @@ export const FooterSocialLinks: React.FC<FooterSocialLinksProps> = ({
         <a
           key={link.name}
           href={link.href}
-          className="text-gray-400 hover:text-gray-500 dark:text-gray-500 dark:hover:text-gray-400 transition-colors duration-200"
-          target="_blank"
-          rel="noopener noreferrer"
+          className='text-gray-400 hover:text-gray-500 dark:text-gray-500 dark:hover:text-gray-400 transition-colors duration-200'
+          target='_blank'
+          rel='noopener noreferrer'
           aria-label={`Follow us on ${link.name}`}
         >
-          <div className="h-5 w-5">
-            {link.icon}
-          </div>
+          <div className='h-5 w-5'>{link.icon}</div>
         </a>
       ))}
     </div>

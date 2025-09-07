@@ -43,29 +43,29 @@ const command = process.argv[2];
 
 if (command === 'status') {
   // Show migration status
-  (async () => {
+  (async (): Promise<void> => {
     try {
       await db.connect();
       const migrationRunner = new MigrationRunner(db);
       migrationRunner.addMigration(new InitialSchemaMigration());
       migrationRunner.addMigration(new UpdateDashboardsSchemaMigration());
-      
+
       const status = await migrationRunner.getMigrationStatus();
       console.log('Migration Status:');
       console.log(`Total migrations: ${status.total}`);
       console.log(`Executed: ${status.executed}`);
       console.log(`Pending: ${status.pending}`);
-      
+
       if (status.executedMigrations.length > 0) {
         console.log('\nExecuted migrations:');
-        status.executedMigrations.forEach(m => {
+        status.executedMigrations.forEach((m) => {
           console.log(`  - ${m.name} (${m.id}) - ${m.executed_at}`);
         });
       }
-      
+
       if (status.pendingMigrations.length > 0) {
         console.log('\nPending migrations:');
-        status.pendingMigrations.forEach(m => {
+        status.pendingMigrations.forEach((m) => {
           console.log(`  - ${m.name} (${m.id})`);
         });
       }
@@ -78,16 +78,16 @@ if (command === 'status') {
   })();
 } else if (command === 'rollback') {
   // Rollback last migration
-  (async () => {
+  (async (): Promise<void> => {
     try {
       await db.connect();
       const migrationRunner = new MigrationRunner(db);
       migrationRunner.addMigration(new InitialSchemaMigration());
       migrationRunner.addMigration(new UpdateDashboardsSchemaMigration());
-      
+
       const migrationId = process.argv[3]; // Optional specific migration ID
       await migrationRunner.rollbackMigration(migrationId);
-      
+
       logger.info('Migration rollback completed');
     } catch (error) {
       logger.error('Migration rollback failed', { error });

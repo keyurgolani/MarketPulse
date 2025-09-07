@@ -72,7 +72,7 @@ export class TwelveDataClient {
 
     this.client = axios.create({
       baseURL: this.baseURL,
-      timeout: parseInt(process.env.API_TIMEOUT || '10000'),
+      timeout: parseInt(process.env.API_TIMEOUT ?? '10000'),
       headers: {
         'User-Agent': 'MarketPulse/1.0',
         'Content-Type': 'application/json',
@@ -86,7 +86,9 @@ export class TwelveDataClient {
     this.client.interceptors.request.use(
       (config) => {
         const startTime = Date.now();
-        (config as any).metadata = { startTime };
+        (
+          config as typeof config & { metadata: { startTime: number } }
+        ).metadata = { startTime };
         return config;
       },
       (error) => {
@@ -99,7 +101,12 @@ export class TwelveDataClient {
       (response) => {
         const endTime = Date.now();
         const duration =
-          endTime - ((response.config as any).metadata?.startTime || endTime);
+          endTime -
+          ((
+            response.config as typeof response.config & {
+              metadata?: { startTime: number };
+            }
+          ).metadata?.startTime ?? endTime);
 
         logger.info('Twelve Data API request completed', {
           url: response.config.url,
@@ -112,7 +119,7 @@ export class TwelveDataClient {
       async (error) => {
         const endTime = Date.now();
         const duration =
-          endTime - (error.config?.metadata?.startTime || endTime);
+          endTime - (error.config?.metadata?.startTime ?? endTime);
 
         logger.error('Twelve Data API error', {
           url: error.config?.url,
@@ -151,7 +158,7 @@ export class TwelveDataClient {
   }
 
   private getCurrentApiKey(): string {
-    return this.apiKeys[this.currentKeyIndex] || this.apiKeys[0] || '';
+    return this.apiKeys[this.currentKeyIndex] ?? this.apiKeys[0] ?? '';
   }
 
   async getAsset(symbol: string): Promise<Asset> {
@@ -173,12 +180,14 @@ export class TwelveDataClient {
       const quote = response.data;
 
       return {
+        id: '', // Will be set by database
         symbol: quote.symbol,
-        name: quote.name || quote.symbol,
-        sector: undefined,
-        market_cap: undefined,
+        name: quote.name ?? quote.symbol,
+        type: 'stock',
         description: `${quote.exchange} - ${quote.currency}`,
         last_updated: new Date().toISOString(),
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
       };
     } catch (error) {
       logger.error('Error fetching asset from Twelve Data', {
@@ -239,16 +248,18 @@ export class TwelveDataClient {
         throw new Error(`Twelve Data API error: ${response.data.message}`);
       }
 
-      const results = response.data.data || [];
+      const results = response.data.data ?? [];
 
       return results.map(
         (result): Asset => ({
+          id: '', // Will be set by database
           symbol: result.symbol,
           name: result.instrument_name,
-          sector: undefined,
-          market_cap: undefined,
+          type: result.instrument_type ?? 'stock',
           description: `${result.instrument_type} - ${result.exchange} (${result.country})`,
           last_updated: new Date().toISOString(),
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
         })
       );
     } catch (error) {

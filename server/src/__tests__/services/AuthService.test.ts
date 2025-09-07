@@ -3,6 +3,7 @@ import { UserRepository } from '../../repositories/UserRepository';
 import { Database } from '../../config/database';
 import { User } from '../../types/database';
 import jwt from 'jsonwebtoken';
+import sqlite3 from 'sqlite3';
 
 // Mock dependencies
 jest.mock('../../repositories/UserRepository');
@@ -21,6 +22,7 @@ describe('AuthService', () => {
     first_name: 'John',
     last_name: 'Doe',
     created_at: '2024-01-01T00:00:00Z',
+    updated_at: '2024-01-01T00:00:00Z',
   };
 
   beforeEach(() => {
@@ -39,14 +41,21 @@ describe('AuthService', () => {
       connect: jest.fn(),
       disconnect: jest.fn(),
       exec: jest.fn(),
-    } as any;
+      transaction: jest.fn(),
+      healthCheck: jest.fn(),
+      getConnection: jest.fn(),
+    } as unknown as jest.Mocked<Database>;
 
     // Create mock user repository
-    mockUserRepository = new UserRepository(mockDb) as jest.Mocked<UserRepository>;
+    mockUserRepository = new UserRepository(
+      mockDb
+    ) as jest.Mocked<UserRepository>;
 
     // Create auth service
     authService = new AuthService(mockDb);
-    (authService as any).userRepository = mockUserRepository;
+    (
+      authService as AuthService & { userRepository: UserRepository }
+    ).userRepository = mockUserRepository;
   });
 
   afterEach(() => {
@@ -66,14 +75,19 @@ describe('AuthService', () => {
 
       mockUserRepository.findByEmail.mockResolvedValue(null);
       mockUserRepository.create.mockResolvedValue(mockUser);
-      mockDb.run.mockResolvedValue({ changes: 1 } as any);
+      mockDb.run.mockResolvedValue({
+        changes: 1,
+        lastID: 1,
+      } as sqlite3.RunResult);
       (jwt.sign as jest.Mock).mockReturnValue('mock-token');
 
       // Act
       const result = await authService.register(registerData);
 
       // Assert
-      expect(mockUserRepository.findByEmail).toHaveBeenCalledWith(registerData.email);
+      expect(mockUserRepository.findByEmail).toHaveBeenCalledWith(
+        registerData.email
+      );
       expect(mockUserRepository.create).toHaveBeenCalledWith(registerData);
       expect(result.user).toEqual(mockUser);
       expect(result.tokens).toBeDefined();
@@ -105,7 +119,10 @@ describe('AuthService', () => {
       };
 
       mockUserRepository.verifyPasswordByEmail.mockResolvedValue(mockUser);
-      mockDb.run.mockResolvedValue({ changes: 1 } as any);
+      mockDb.run.mockResolvedValue({
+        changes: 1,
+        lastID: 1,
+      } as sqlite3.RunResult);
       (jwt.sign as jest.Mock).mockReturnValue('mock-token');
 
       // Act
@@ -199,7 +216,10 @@ describe('AuthService', () => {
     it('should logout user successfully', async () => {
       // Arrange
       const sessionId = 'session-123';
-      mockDb.run.mockResolvedValue({ changes: 1 } as any);
+      mockDb.run.mockResolvedValue({
+        changes: 1,
+        lastID: 1,
+      } as sqlite3.RunResult);
 
       // Act
       await authService.logout(sessionId);
@@ -228,14 +248,20 @@ describe('AuthService', () => {
         expires_at: new Date(Date.now() + 86400000).toISOString(),
       });
       mockUserRepository.findById.mockResolvedValue(mockUser);
-      mockDb.run.mockResolvedValue({ changes: 1 } as any);
+      mockDb.run.mockResolvedValue({
+        changes: 1,
+        lastID: 1,
+      } as sqlite3.RunResult);
       (jwt.sign as jest.Mock).mockReturnValue('new-token');
 
       // Act
       const result = await authService.refreshToken(refreshToken);
 
       // Assert
-      expect(jwt.verify).toHaveBeenCalledWith(refreshToken, 'test-refresh-secret');
+      expect(jwt.verify).toHaveBeenCalledWith(
+        refreshToken,
+        'test-refresh-secret'
+      );
       expect(result.accessToken).toBe('new-token');
     });
 
@@ -254,7 +280,10 @@ describe('AuthService', () => {
   describe('cleanupExpiredSessions', () => {
     it('should cleanup expired sessions', async () => {
       // Arrange
-      mockDb.run.mockResolvedValue({ changes: 5 } as any);
+      mockDb.run.mockResolvedValue({
+        changes: 5,
+        lastID: 1,
+      } as sqlite3.RunResult);
 
       // Act
       await authService.cleanupExpiredSessions();
@@ -272,8 +301,16 @@ describe('AuthService', () => {
       // Arrange
       const userId = 'user-123';
       const sessions = [
-        { id: 'session-1', user_id: userId, expires_at: '2024-12-31T23:59:59Z' },
-        { id: 'session-2', user_id: userId, expires_at: '2024-12-31T23:59:59Z' },
+        {
+          id: 'session-1',
+          user_id: userId,
+          expires_at: '2024-12-31T23:59:59Z',
+        },
+        {
+          id: 'session-2',
+          user_id: userId,
+          expires_at: '2024-12-31T23:59:59Z',
+        },
       ];
 
       mockDb.all.mockResolvedValue(sessions);
@@ -294,7 +331,10 @@ describe('AuthService', () => {
     it('should invalidate all user sessions', async () => {
       // Arrange
       const userId = 'user-123';
-      mockDb.run.mockResolvedValue({ changes: 3 } as any);
+      mockDb.run.mockResolvedValue({
+        changes: 3,
+        lastID: 1,
+      } as sqlite3.RunResult);
 
       // Act
       await authService.invalidateAllUserSessions(userId);

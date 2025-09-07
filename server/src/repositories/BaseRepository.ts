@@ -18,7 +18,11 @@ export interface PaginatedResult<T> {
   };
 }
 
-export abstract class BaseRepository<T, CreateT = Partial<T>, UpdateT = Partial<T>> {
+export abstract class BaseRepository<
+  T,
+  CreateT = Partial<T>,
+  UpdateT = Partial<T>,
+> {
   protected db: Database;
   protected tableName: string;
 
@@ -41,7 +45,7 @@ export abstract class BaseRepository<T, CreateT = Partial<T>, UpdateT = Partial<
   protected async findAll(options?: PaginationOptions): Promise<T[]> {
     try {
       let sql = `SELECT * FROM ${this.tableName}`;
-      const params: any[] = [];
+      const params: number[] = [];
 
       if (options) {
         const offset = (options.page - 1) * options.limit;
@@ -56,7 +60,9 @@ export abstract class BaseRepository<T, CreateT = Partial<T>, UpdateT = Partial<
     }
   }
 
-  protected async findAllPaginated(options: PaginationOptions): Promise<PaginatedResult<T>> {
+  protected async findAllPaginated(
+    options: PaginationOptions
+  ): Promise<PaginatedResult<T>> {
     try {
       // Get total count
       const countSql = `SELECT COUNT(*) as count FROM ${this.tableName}`;
@@ -92,37 +98,45 @@ export abstract class BaseRepository<T, CreateT = Partial<T>, UpdateT = Partial<
       const keys = Object.keys(data as object);
       const values = Object.values(data as object);
       const placeholders = keys.map(() => '?').join(', ');
-      
+
       const sql = `
         INSERT INTO ${this.tableName} (${keys.join(', ')})
         VALUES (${placeholders})
       `;
 
       const result = await this.db.run(sql, values);
-      
+
       // For tables with auto-increment IDs
-      if (typeof (data as any).id === 'undefined' && result.lastID) {
-        return await this.findById(result.lastID) as T;
+      if (
+        typeof (data as Record<string, unknown>).id === 'undefined' &&
+        result.lastID
+      ) {
+        return (await this.findById(result.lastID)) as T;
       }
-      
+
       // For tables with provided IDs
-      return await this.findById((data as any).id) as T;
+      return (await this.findById(
+        (data as Record<string, unknown>).id as string | number
+      )) as T;
     } catch (error) {
       logger.error(`Error creating ${this.tableName}`, { data, error });
       throw error;
     }
   }
 
-  protected async update(id: string | number, data: UpdateT): Promise<T | null> {
+  protected async update(
+    id: string | number,
+    data: UpdateT
+  ): Promise<T | null> {
     try {
       const keys = Object.keys(data as object);
       const values = Object.values(data as object);
-      
+
       if (keys.length === 0) {
         return await this.findById(id);
       }
 
-      const setClause = keys.map(key => `${key} = ?`).join(', ');
+      const setClause = keys.map((key) => `${key} = ?`).join(', ');
       const sql = `
         UPDATE ${this.tableName} 
         SET ${setClause}, updated_at = CURRENT_TIMESTAMP
@@ -154,15 +168,21 @@ export abstract class BaseRepository<T, CreateT = Partial<T>, UpdateT = Partial<
       const result = await this.db.get(sql, [id]);
       return result !== undefined;
     } catch (error) {
-      logger.error(`Error checking existence in ${this.tableName}`, { id, error });
+      logger.error(`Error checking existence in ${this.tableName}`, {
+        id,
+        error,
+      });
       throw error;
     }
   }
 
-  protected async count(whereClause?: string, params?: any[]): Promise<number> {
+  protected async count(
+    whereClause?: string,
+    params?: (string | number | boolean | null)[]
+  ): Promise<number> {
     try {
       let sql = `SELECT COUNT(*) as count FROM ${this.tableName}`;
-      
+
       if (whereClause) {
         sql += ` WHERE ${whereClause}`;
       }
@@ -170,15 +190,23 @@ export abstract class BaseRepository<T, CreateT = Partial<T>, UpdateT = Partial<
       const result = await this.db.get<{ count: number }>(sql, params);
       return result?.count ?? 0;
     } catch (error) {
-      logger.error(`Error counting ${this.tableName}`, { whereClause, params, error });
+      logger.error(`Error counting ${this.tableName}`, {
+        whereClause,
+        params,
+        error,
+      });
       throw error;
     }
   }
 
-  protected async findWhere(whereClause: string, params: any[] = [], options?: PaginationOptions): Promise<T[]> {
+  protected async findWhere(
+    whereClause: string,
+    params: (string | number | boolean | null)[] = [],
+    options?: PaginationOptions
+  ): Promise<T[]> {
     try {
       let sql = `SELECT * FROM ${this.tableName} WHERE ${whereClause}`;
-      
+
       if (options) {
         const offset = (options.page - 1) * options.limit;
         sql += ` LIMIT ? OFFSET ?`;
@@ -187,18 +215,29 @@ export abstract class BaseRepository<T, CreateT = Partial<T>, UpdateT = Partial<
 
       return await this.db.all<T>(sql, params);
     } catch (error) {
-      logger.error(`Error finding ${this.tableName} with where clause`, { whereClause, params, error });
+      logger.error(`Error finding ${this.tableName} with where clause`, {
+        whereClause,
+        params,
+        error,
+      });
       throw error;
     }
   }
 
-  protected async findOneWhere(whereClause: string, params: any[] = []): Promise<T | null> {
+  protected async findOneWhere(
+    whereClause: string,
+    params: (string | number | boolean | null)[] = []
+  ): Promise<T | null> {
     try {
       const sql = `SELECT * FROM ${this.tableName} WHERE ${whereClause} LIMIT 1`;
       const result = await this.db.get<T>(sql, params);
       return result ?? null;
     } catch (error) {
-      logger.error(`Error finding one ${this.tableName} with where clause`, { whereClause, params, error });
+      logger.error(`Error finding one ${this.tableName} with where clause`, {
+        whereClause,
+        params,
+        error,
+      });
       throw error;
     }
   }

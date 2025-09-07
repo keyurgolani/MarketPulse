@@ -4,5 +4,11 @@
     "types": ["vitest/globals", "@testing-library/jest-dom"]
   },
   "include": ["src/**/*", "tests/**/*", "**/*.test.*", "**/*.spec.*"],
-  "exclude": ["node_modules", "dist", "server"]
+  "exclude": [
+    "node_modules",
+    "dist",
+    "server",
+    "tests/e2e",
+    "tests/global-setup.ts"
+  ]
 }

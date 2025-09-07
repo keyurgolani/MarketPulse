@@ -59,9 +59,10 @@ export const LoginForm: React.FC<LoginFormProps> = ({
             </label>
             <Input
               id='login-email'
+              name='email'
               type='email'
               value={formData.email}
-              onChange={(e) => updateField('email', e.target.value)}
+              onChange={updateField}
               placeholder='Enter your email'
               error={errors.email}
               disabled={isSubmitting}
@@ -89,9 +90,10 @@ export const LoginForm: React.FC<LoginFormProps> = ({
             </label>
             <Input
               id='login-password'
+              name='password'
               type='password'
               value={formData.password}
-              onChange={(e) => updateField('password', e.target.value)}
+              onChange={updateField}
               placeholder='Enter your password'
               error={errors.password}
               disabled={isSubmitting}

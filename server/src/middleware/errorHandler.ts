@@ -1,10 +1,11 @@
 import { Request, Response, NextFunction } from 'express';
+import { ZodError } from 'zod';
 import { logger } from '../utils/logger';
 
 export interface ApiError extends Error {
   statusCode?: number;
   code?: string;
-  details?: any;
+  details?: unknown;
 }
 
 export class ServiceError extends Error implements ApiError {
@@ -12,7 +13,7 @@ export class ServiceError extends Error implements ApiError {
     message: string,
     public statusCode: number = 500,
     public code: string = 'SERVICE_ERROR',
-    public details?: any
+    public details?: unknown
   ) {
     super(message);
     this.name = 'ServiceError';
@@ -20,7 +21,7 @@ export class ServiceError extends Error implements ApiError {
 }
 
 export class ValidationError extends ServiceError {
-  constructor(message: string, details?: any) {
+  constructor(message: string, details?: unknown) {
     super(message, 400, 'VALIDATION_ERROR', details);
     this.name = 'ValidationError';
   }
@@ -68,7 +69,7 @@ export const errorHandler = (
     method: req.method,
     userAgent: req.get('User-Agent'),
     ip: req.ip,
-    userId: (req as any).user?.id,
+    userId: (req as Request & { user?: { id: string } }).user?.id,
     timestamp: new Date().toISOString(),
   });
 
@@ -90,7 +91,7 @@ export const errorHandler = (
       success: false,
       error: 'Validation failed',
       code: 'VALIDATION_ERROR',
-      details: (error as any).errors,
+      details: (error as ZodError).errors,
       timestamp: Date.now(),
     });
     return;
@@ -121,7 +122,10 @@ export const errorHandler = (
   // Handle unhandled errors
   res.status(500).json({
     success: false,
-    error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error',
+    error:
+      process.env.NODE_ENV === 'development'
+        ? error.message
+        : 'Internal server error',
     code: 'INTERNAL_ERROR',
     timestamp: Date.now(),
   });
@@ -129,7 +133,11 @@ export const errorHandler = (
 
 // Async error wrapper for route handlers
 export const asyncHandler = (
-  fn: (req: Request, res: Response, next: NextFunction) => Promise<any>
+  fn: (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => Promise<Response | void>
 ) => {
   return (req: Request, res: Response, next: NextFunction): void => {
     Promise.resolve(fn(req, res, next)).catch(next);

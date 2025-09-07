@@ -6,7 +6,7 @@ export interface ServiceStatus {
   responseTime: number;
   error?: string;
   lastCheck: string;
-  details?: any;
+  details?: Record<string, unknown>;
 }
 
 export interface SystemHealth {
@@ -53,7 +53,11 @@ export class SystemHealthService {
     ]);
 
     // Determine overall system status
-    const services = { database: databaseStatus, memory: memoryStatus, disk: diskStatus };
+    const services = {
+      database: databaseStatus,
+      memory: memoryStatus,
+      disk: diskStatus,
+    };
     const overallStatus = this.determineOverallStatus(services);
 
     // Get system metrics
@@ -63,8 +67,8 @@ export class SystemHealthService {
       status: overallStatus,
       timestamp,
       uptime,
-      version: process.env.npm_package_version || '1.0.0',
-      environment: process.env.NODE_ENV || 'development',
+      version: process.env.npm_package_version ?? '1.0.0',
+      environment: process.env.NODE_ENV ?? 'development',
       services,
       metrics,
     };
@@ -72,10 +76,10 @@ export class SystemHealthService {
 
   private async checkDatabase(): Promise<ServiceStatus> {
     const startTime = Date.now();
-    
+
     try {
       const result = await this.db.healthCheck();
-      
+
       return {
         status: result.status === 'healthy' ? 'healthy' : 'unhealthy',
         responseTime: result.responseTime,
@@ -87,10 +91,11 @@ export class SystemHealthService {
       };
     } catch (error) {
       const responseTime = Date.now() - startTime;
-      const errorMessage = error instanceof Error ? error.message : 'Unknown database error';
-      
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown database error';
+
       logger.error('Database health check failed', { error: errorMessage });
-      
+
       return {
         status: 'unhealthy',
         responseTime,
@@ -105,17 +110,21 @@ export class SystemHealthService {
 
   private async checkMemory(): Promise<ServiceStatus> {
     const startTime = Date.now();
-    
+
     try {
       const memUsage = process.memoryUsage();
       const totalMemory = memUsage.heapTotal;
       const usedMemory = memUsage.heapUsed;
       const memoryPercentage = (usedMemory / totalMemory) * 100;
-      
+
       // Consider memory unhealthy if usage is above 90%
-      const status = memoryPercentage > 90 ? 'unhealthy' : 
-                   memoryPercentage > 75 ? 'degraded' : 'healthy';
-      
+      const status =
+        memoryPercentage > 90
+          ? 'unhealthy'
+          : memoryPercentage > 75
+            ? 'degraded'
+            : 'healthy';
+
       return {
         status,
         responseTime: Date.now() - startTime,
@@ -129,8 +138,9 @@ export class SystemHealthService {
         },
       };
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown memory error';
-      
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown memory error';
+
       return {
         status: 'unhealthy',
         responseTime: Date.now() - startTime,
@@ -142,18 +152,18 @@ export class SystemHealthService {
 
   private async checkDisk(): Promise<ServiceStatus> {
     const startTime = Date.now();
-    
+
     try {
       // Basic disk check - ensure we can write to temp directory
       const fs = await import('fs/promises');
       const path = await import('path');
       const os = await import('os');
-      
+
       const tempFile = path.join(os.tmpdir(), `health-check-${Date.now()}.tmp`);
-      
+
       await fs.writeFile(tempFile, 'health check');
       await fs.unlink(tempFile);
-      
+
       return {
         status: 'healthy',
         responseTime: Date.now() - startTime,
@@ -163,8 +173,9 @@ export class SystemHealthService {
         },
       };
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown disk error';
-      
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown disk error';
+
       return {
         status: 'unhealthy',
         responseTime: Date.now() - startTime,
@@ -177,28 +188,34 @@ export class SystemHealthService {
     }
   }
 
-  private determineOverallStatus(services: Record<string, ServiceStatus>): 'healthy' | 'unhealthy' | 'degraded' {
-    const statuses = Object.values(services).map(service => service.status);
-    
+  private determineOverallStatus(
+    services: Record<string, ServiceStatus>
+  ): 'healthy' | 'unhealthy' | 'degraded' {
+    const statuses = Object.values(services).map((service) => service.status);
+
     if (statuses.includes('unhealthy')) {
       return 'unhealthy';
     }
-    
+
     if (statuses.includes('degraded')) {
       return 'degraded';
     }
-    
+
     return 'healthy';
   }
 
-  private getSystemMetrics() {
+  private getSystemMetrics(): {
+    memoryUsage: { used: number; total: number; percentage: number };
+    activeConnections: number;
+  } {
     const memUsage = process.memoryUsage();
-    
+
     return {
       memoryUsage: {
         used: memUsage.heapUsed,
         total: memUsage.heapTotal,
-        percentage: Math.round((memUsage.heapUsed / memUsage.heapTotal) * 10000) / 100,
+        percentage:
+          Math.round((memUsage.heapUsed / memUsage.heapTotal) * 10000) / 100,
       },
       activeConnections: this.activeConnections,
     };

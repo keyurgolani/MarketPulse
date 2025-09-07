@@ -2,7 +2,7 @@ import { AlphaVantageClient } from '../../services/external/AlphaVantageClient';
 
 describe('API Diagnostics', () => {
   const ALPHA_VANTAGE_API_KEY =
-    process.env.ALPHA_VANTAGE_API_KEY || 'VIUN6D4E64ATOGSBH';
+    process.env.ALPHA_VANTAGE_API_KEY ?? 'VIUN6D4E64ATOGSBH';
 
   it('should diagnose Alpha Vantage search API response', async () => {
     if (!ALPHA_VANTAGE_API_KEY) {

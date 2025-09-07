@@ -3,23 +3,32 @@ import { z } from 'zod';
 import { logger } from '../utils/logger';
 import { db } from '../config/database';
 import { v4 as uuidv4 } from 'uuid';
+import { DashboardRow } from '../types/database';
 
 // Validation schemas
 const createDashboardSchema = z.object({
   name: z.string().min(1).max(100),
   description: z.string().optional(),
-  layout: z.array(z.object({
-    i: z.string(),
-    x: z.number(),
-    y: z.number(),
-    w: z.number(),
-    h: z.number(),
-  })).optional(),
-  widgets: z.array(z.object({
-    id: z.string(),
-    type: z.string(),
-    config: z.record(z.any()),
-  })).optional(),
+  layout: z
+    .array(
+      z.object({
+        i: z.string(),
+        x: z.number(),
+        y: z.number(),
+        w: z.number(),
+        h: z.number(),
+      })
+    )
+    .optional(),
+  widgets: z
+    .array(
+      z.object({
+        id: z.string(),
+        type: z.string(),
+        config: z.record(z.any()),
+      })
+    )
+    .optional(),
 });
 
 const updateDashboardSchema = createDashboardSchema.partial();
@@ -31,7 +40,7 @@ export class DashboardController {
   static async getDashboards(req: Request, res: Response): Promise<void> {
     try {
       const userId = req.user?.id;
-      
+
       if (!userId) {
         res.status(401).json({
           success: false,
@@ -42,7 +51,7 @@ export class DashboardController {
         return;
       }
 
-      const dashboards = await db.all(
+      const dashboards = await db.all<DashboardRow>(
         `SELECT id, name, description, layout, widgets, is_default, created_at, updated_at 
          FROM dashboards 
          WHERE user_id = ? 
@@ -51,7 +60,7 @@ export class DashboardController {
       );
 
       // Parse JSON fields
-      const parsedDashboards = dashboards.map(dashboard => ({
+      const parsedDashboards = dashboards.map((dashboard) => ({
         ...dashboard,
         layout: dashboard.layout ? JSON.parse(dashboard.layout) : [],
         widgets: dashboard.widgets ? JSON.parse(dashboard.widgets) : [],
@@ -69,7 +78,10 @@ export class DashboardController {
         timestamp: Date.now(),
       });
     } catch (error) {
-      logger.error('Error retrieving dashboards', { error, userId: req.user?.id });
+      logger.error('Error retrieving dashboards', {
+        error,
+        userId: req.user?.id,
+      });
       res.status(500).json({
         success: false,
         error: 'Failed to retrieve dashboards',
@@ -97,7 +109,7 @@ export class DashboardController {
         return;
       }
 
-      const dashboard = await db.get(
+      const dashboard = await db.get<DashboardRow>(
         `SELECT id, name, description, layout, widgets, is_default, created_at, updated_at 
          FROM dashboards 
          WHERE id = ? AND user_id = ?`,
@@ -133,7 +145,11 @@ export class DashboardController {
         timestamp: Date.now(),
       });
     } catch (error) {
-      logger.error('Error retrieving dashboard', { error, dashboardId: req.params.id, userId: req.user?.id });
+      logger.error('Error retrieving dashboard', {
+        error,
+        dashboardId: req.params.id,
+        userId: req.user?.id,
+      });
       res.status(500).json({
         success: false,
         error: 'Failed to retrieve dashboard',
@@ -172,7 +188,12 @@ export class DashboardController {
         return;
       }
 
-      const { name, description, layout = [], widgets = [] } = validationResult.data;
+      const {
+        name,
+        description,
+        layout = [],
+        widgets = [],
+      } = validationResult.data;
       const dashboardId = uuidv4();
       const now = new Date().toISOString();
 
@@ -183,7 +204,7 @@ export class DashboardController {
           dashboardId,
           userId,
           name,
-          description || null,
+          description ?? null,
           JSON.stringify(layout),
           JSON.stringify(widgets),
           0, // Not default by default
@@ -244,6 +265,16 @@ export class DashboardController {
         return;
       }
 
+      if (!id) {
+        res.status(400).json({
+          success: false,
+          error: 'Dashboard ID is required',
+          code: 'VALIDATION_ERROR',
+          timestamp: Date.now(),
+        });
+        return;
+      }
+
       const validationResult = updateDashboardSchema.safeParse(req.body);
       if (!validationResult.success) {
         res.status(400).json({
@@ -274,7 +305,7 @@ export class DashboardController {
 
       const updateData = validationResult.data;
       const updateFields: string[] = [];
-      const updateValues: any[] = [];
+      const updateValues: (string | number | boolean)[] = [];
 
       if (updateData.name !== undefined) {
         updateFields.push('name = ?');
@@ -316,17 +347,31 @@ export class DashboardController {
       );
 
       // Fetch updated dashboard
-      const updatedDashboard = await db.get(
+      const updatedDashboard = await db.get<DashboardRow>(
         `SELECT id, name, description, layout, widgets, is_default, created_at, updated_at 
          FROM dashboards 
          WHERE id = ? AND user_id = ?`,
         [id, userId]
       );
 
+      if (!updatedDashboard) {
+        res.status(404).json({
+          success: false,
+          error: 'Dashboard not found after update',
+          code: 'NOT_FOUND',
+          timestamp: Date.now(),
+        });
+        return;
+      }
+
       const parsedDashboard = {
         ...updatedDashboard,
-        layout: updatedDashboard.layout ? JSON.parse(updatedDashboard.layout) : [],
-        widgets: updatedDashboard.widgets ? JSON.parse(updatedDashboard.widgets) : [],
+        layout: updatedDashboard.layout
+          ? JSON.parse(updatedDashboard.layout)
+          : [],
+        widgets: updatedDashboard.widgets
+          ? JSON.parse(updatedDashboard.widgets)
+          : [],
         is_default: Boolean(updatedDashboard.is_default),
       };
 
@@ -342,7 +387,11 @@ export class DashboardController {
         timestamp: Date.now(),
       });
     } catch (error) {
-      logger.error('Error updating dashboard', { error, dashboardId: req.params.id, userId: req.user?.id });
+      logger.error('Error updating dashboard', {
+        error,
+        dashboardId: req.params.id,
+        userId: req.user?.id,
+      });
       res.status(500).json({
         success: false,
         error: 'Failed to update dashboard',
@@ -371,10 +420,12 @@ export class DashboardController {
       }
 
       // Check if dashboard exists and belongs to user
-      const existingDashboard = await db.get(
-        'SELECT id, is_default FROM dashboards WHERE id = ? AND user_id = ?',
-        [id, userId]
-      );
+      const existingDashboard = await db.get<
+        Pick<DashboardRow, 'id' | 'is_default'>
+      >('SELECT id, is_default FROM dashboards WHERE id = ? AND user_id = ?', [
+        id,
+        userId,
+      ]);
 
       if (!existingDashboard) {
         res.status(404).json({
@@ -397,7 +448,10 @@ export class DashboardController {
         return;
       }
 
-      await db.run('DELETE FROM dashboards WHERE id = ? AND user_id = ?', [id, userId]);
+      await db.run('DELETE FROM dashboards WHERE id = ? AND user_id = ?', [
+        id,
+        userId,
+      ]);
 
       logger.info('Dashboard deleted successfully', {
         userId,
@@ -410,7 +464,11 @@ export class DashboardController {
         timestamp: Date.now(),
       });
     } catch (error) {
-      logger.error('Error deleting dashboard', { error, dashboardId: req.params.id, userId: req.user?.id });
+      logger.error('Error deleting dashboard', {
+        error,
+        dashboardId: req.params.id,
+        userId: req.user?.id,
+      });
       res.status(500).json({
         success: false,
         error: 'Failed to delete dashboard',

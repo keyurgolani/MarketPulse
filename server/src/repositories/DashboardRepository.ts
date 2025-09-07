@@ -16,7 +16,11 @@ import { logger } from '../utils/logger';
 export type CreateDashboardData = z.infer<typeof CreateDashboardSchema>;
 export type UpdateDashboardData = z.infer<typeof UpdateDashboardSchema>;
 
-export class DashboardRepository extends BaseRepository<Dashboard, any, any> {
+export class DashboardRepository extends BaseRepository<
+  Dashboard,
+  CreateDashboardData,
+  UpdateDashboardData
+> {
   constructor(db: Database) {
     super(db, 'dashboards');
   }
@@ -113,8 +117,13 @@ export class DashboardRepository extends BaseRepository<Dashboard, any, any> {
       // Validate input data
       const validatedData = UpdateDashboardSchema.parse(data);
 
-      // Prepare update data
-      const updateData: any = {};
+      // Prepare update data for database (matching Dashboard schema)
+      const updateData: Partial<{
+        name?: string;
+        description?: string;
+        is_default?: boolean;
+        layout_config?: string;
+      }> = {};
 
       if (validatedData.name !== undefined) {
         updateData.name = validatedData.name;
@@ -129,7 +138,7 @@ export class DashboardRepository extends BaseRepository<Dashboard, any, any> {
         updateData.layout_config = JSON.stringify(validatedData.layout);
       }
 
-      return await super.update(id, updateData);
+      return await super.update(id, updateData as UpdateDashboardData);
     } catch (error) {
       logger.error('Error updating dashboard', { id, data, error });
       throw error;
@@ -143,7 +152,7 @@ export class DashboardRepository extends BaseRepository<Dashboard, any, any> {
     try {
       return await super.update(id, {
         layout_config: JSON.stringify(layout),
-      } as any);
+      } as UpdateDashboardData);
     } catch (error) {
       logger.error('Error updating dashboard layout', { id, layout, error });
       throw error;
@@ -162,7 +171,9 @@ export class DashboardRepository extends BaseRepository<Dashboard, any, any> {
       );
 
       // Then set the specified dashboard as default
-      return await super.update(dashboardId, { is_default: true } as any);
+      return await super.update(dashboardId, {
+        is_default: true,
+      } as UpdateDashboardData);
     } catch (error) {
       logger.error('Error setting dashboard as default', {
         userId,

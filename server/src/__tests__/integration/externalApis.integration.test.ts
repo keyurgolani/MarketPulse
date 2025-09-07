@@ -27,7 +27,7 @@ describe('External API Integration Tests', () => {
     let client: AlphaVantageClient;
 
     beforeAll(() => {
-      if (skipIfNoApiKeys() || !ALPHA_VANTAGE_API_KEY) return;
+      if (skipIfNoApiKeys() ?? !ALPHA_VANTAGE_API_KEY) return;
       client = new AlphaVantageClient(ALPHA_VANTAGE_API_KEY);
     });
 
@@ -129,7 +129,7 @@ describe('External API Integration Tests', () => {
     let client: TwelveDataClient;
 
     beforeAll(() => {
-      if (skipIfNoApiKeys() || !TWELVE_DATA_API_KEY) return;
+      if (skipIfNoApiKeys() ?? !TWELVE_DATA_API_KEY) return;
       client = new TwelveDataClient(TWELVE_DATA_API_KEY);
     });
 
@@ -194,7 +194,7 @@ describe('External API Integration Tests', () => {
     let client: FinnhubClient;
 
     beforeAll(() => {
-      if (skipIfNoApiKeys() || !FINNHUB_API_KEY) return;
+      if (skipIfNoApiKeys() ?? !FINNHUB_API_KEY) return;
       client = new FinnhubClient(FINNHUB_API_KEY);
     });
 
@@ -316,8 +316,8 @@ export const runIntegrationTests = async () => {
   console.log('');
 
   const hasApiKeys = !!(
-    process.env.ALPHA_VANTAGE_API_KEY ||
-    process.env.TWELVE_DATA_API_KEY ||
+    process.env.ALPHA_VANTAGE_API_KEY ??
+    process.env.TWELVE_DATA_API_KEY ??
     process.env.FINNHUB_API_KEY
   );
 

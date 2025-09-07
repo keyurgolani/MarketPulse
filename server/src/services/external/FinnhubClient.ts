@@ -55,7 +55,7 @@ export class FinnhubClient {
 
     this.client = axios.create({
       baseURL: this.baseURL,
-      timeout: parseInt(process.env.API_TIMEOUT || '10000'),
+      timeout: parseInt(process.env.API_TIMEOUT ?? '10000'),
       headers: {
         'User-Agent': 'MarketPulse/1.0',
         'X-Finnhub-Token': this.getCurrentApiKey(),
@@ -69,7 +69,9 @@ export class FinnhubClient {
     this.client.interceptors.request.use(
       (config) => {
         const startTime = Date.now();
-        (config as any).metadata = { startTime };
+        (
+          config as typeof config & { metadata: { startTime: number } }
+        ).metadata = { startTime };
         // Update token header with current API key
         config.headers['X-Finnhub-Token'] = this.getCurrentApiKey();
         return config;
@@ -84,7 +86,12 @@ export class FinnhubClient {
       (response) => {
         const endTime = Date.now();
         const duration =
-          endTime - ((response.config as any).metadata?.startTime || endTime);
+          endTime -
+          ((
+            response.config as typeof response.config & {
+              metadata?: { startTime: number };
+            }
+          ).metadata?.startTime ?? endTime);
 
         logger.info('Finnhub API request completed', {
           url: response.config.url,
@@ -97,7 +104,7 @@ export class FinnhubClient {
       async (error) => {
         const endTime = Date.now();
         const duration =
-          endTime - (error.config?.metadata?.startTime || endTime);
+          endTime - (error.config?.metadata?.startTime ?? endTime);
 
         logger.error('Finnhub API error', {
           url: error.config?.url,
@@ -135,7 +142,7 @@ export class FinnhubClient {
   }
 
   private getCurrentApiKey(): string {
-    return this.apiKeys[this.currentKeyIndex] || this.apiKeys[0] || '';
+    return this.apiKeys[this.currentKeyIndex] ?? this.apiKeys[0] ?? '';
   }
 
   async getAsset(symbol: string): Promise<Asset> {
@@ -161,7 +168,9 @@ export class FinnhubClient {
 
       // Handle error responses
       if ('error' in quote) {
-        throw new Error(`Finnhub API error: ${(quote as any).error}`);
+        throw new Error(
+          `Finnhub API error: ${(quote as { error: string }).error}`
+        );
       }
 
       let profile: FinnhubCompanyProfile | null = null;
@@ -170,16 +179,20 @@ export class FinnhubClient {
       }
 
       return {
+        id: '', // Will be set by database
         symbol: symbol.toUpperCase(),
-        name: profile?.name || symbol.toUpperCase(),
-        sector: profile?.finnhubIndustry,
-        market_cap: profile?.marketCapitalization
-          ? profile.marketCapitalization * 1000000
-          : undefined,
-        description: profile
-          ? `${profile.exchange} - ${profile.country}`
-          : undefined,
+        name: profile?.name ?? symbol.toUpperCase(),
+        type: 'stock',
+        ...(profile?.finnhubIndustry && { sector: profile.finnhubIndustry }),
+        ...(profile?.marketCapitalization && {
+          market_cap: profile.marketCapitalization * 1000000,
+        }),
+        ...(profile && {
+          description: `${profile.exchange} - ${profile.country}`,
+        }),
         last_updated: new Date().toISOString(),
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
       };
     } catch (error) {
       logger.error('Error fetching asset from Finnhub', {
@@ -212,7 +225,6 @@ export class FinnhubClient {
         price: typedQuote.c,
         change_amount: typedQuote.d,
         change_percent: typedQuote.dp,
-        volume: undefined, // Finnhub doesn't provide volume in quote endpoint
         timestamp: new Date().toISOString(),
       };
     } catch (error) {
@@ -240,16 +252,18 @@ export class FinnhubClient {
       }
 
       const typedResult = searchResult as FinnhubSearchResponse;
-      const results = typedResult.result || [];
+      const results = typedResult.result ?? [];
 
       return results.map(
         (result): Asset => ({
+          id: '', // Will be set by database
           symbol: result.symbol,
           name: result.description,
-          sector: undefined,
-          market_cap: undefined,
+          type: result.type ?? 'stock',
           description: `${result.type} - ${result.displaySymbol}`,
           last_updated: new Date().toISOString(),
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
         })
       );
     } catch (error) {

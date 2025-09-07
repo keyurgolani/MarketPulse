@@ -1,5 +1,5 @@
 import request from 'supertest';
-import express from 'express';
+import express, { Request, Response, NextFunction } from 'express';
 
 // Mock the AssetService before importing the controller
 const mockAssetService = {
@@ -28,6 +28,9 @@ describe('AssetController', () => {
   const mockUser = {
     id: 'user-123',
     email: 'test@example.com',
+    password_hash: 'hashed_password',
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
   };
 
   const mockAsset = {
@@ -53,10 +56,12 @@ describe('AssetController', () => {
     jest.clearAllMocks();
 
     // Mock auth middleware to add user to request
-    mockAuthMiddleware.mockImplementation((req: any, _res: any, next: any) => {
-      req.user = mockUser;
-      next();
-    });
+    mockAuthMiddleware.mockImplementation(
+      (req: Request, _res: Response, next: NextFunction) => {
+        req.user = mockUser;
+        next();
+      }
+    );
 
     // Create Express app
     app = express();

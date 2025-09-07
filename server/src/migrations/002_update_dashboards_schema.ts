@@ -1,5 +1,6 @@
 import { BaseMigration } from './Migration';
 import { Database } from '../config/database';
+import { UserRow, DashboardRow } from '../types/database';
 
 export class UpdateDashboardsSchemaMigration extends BaseMigration {
   id = '002';
@@ -10,7 +11,7 @@ export class UpdateDashboardsSchemaMigration extends BaseMigration {
     await db.exec(`
       ALTER TABLE dashboards ADD COLUMN layout TEXT DEFAULT '[]';
     `);
-    
+
     await db.exec(`
       ALTER TABLE dashboards ADD COLUMN widgets TEXT DEFAULT '[]';
     `);
@@ -23,10 +24,10 @@ export class UpdateDashboardsSchemaMigration extends BaseMigration {
     `);
 
     // Create a default dashboard for existing users
-    const users = await db.all('SELECT id FROM users');
-    
+    const users = await db.all<Pick<UserRow, 'id'>>('SELECT id FROM users');
+
     for (const user of users) {
-      const existingDashboard = await db.get(
+      const existingDashboard = await db.get<Pick<DashboardRow, 'id'>>(
         'SELECT id FROM dashboards WHERE user_id = ? AND is_default = 1',
         [user.id]
       );
@@ -38,37 +39,40 @@ export class UpdateDashboardsSchemaMigration extends BaseMigration {
           { i: 'watchlist', x: 0, y: 4, w: 6, h: 6 },
           { i: 'news-feed', x: 6, y: 4, w: 6, h: 6 },
         ]);
-        
+
         const defaultWidgets = JSON.stringify([
           {
             id: 'market-overview',
             type: 'market-summary',
-            config: { title: 'Market Overview' }
+            config: { title: 'Market Overview' },
           },
           {
             id: 'watchlist',
             type: 'watchlist',
-            config: { title: 'My Watchlist', limit: 10 }
+            config: { title: 'My Watchlist', limit: 10 },
           },
           {
             id: 'news-feed',
             type: 'news',
-            config: { title: 'Latest News', limit: 5 }
-          }
+            config: { title: 'Latest News', limit: 5 },
+          },
         ]);
 
-        await db.run(`
+        await db.run(
+          `
           INSERT INTO dashboards (id, user_id, name, description, is_default, layout, widgets, created_at, updated_at)
           VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
-        `, [
-          dashboardId,
-          user.id,
-          'My Dashboard',
-          'Default dashboard with market overview, watchlist, and news',
-          1,
-          defaultLayout,
-          defaultWidgets
-        ]);
+        `,
+          [
+            dashboardId,
+            user.id,
+            'My Dashboard',
+            'Default dashboard with market overview, watchlist, and news',
+            1,
+            defaultLayout,
+            defaultWidgets,
+          ]
+        );
       }
     }
   }

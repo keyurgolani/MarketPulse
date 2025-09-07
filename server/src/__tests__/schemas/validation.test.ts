@@ -314,7 +314,7 @@ describe('Validation Schemas', () => {
       const validPrice = {
         symbol: 'AAPL',
         price: 150.25,
-        change_amount: 2.50,
+        change_amount: 2.5,
         change_percent: 1.69,
         volume: 50000000,
       };

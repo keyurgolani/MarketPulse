@@ -1,5 +1,5 @@
 import { AlphaVantageClient } from '../../../services/external/AlphaVantageClient';
-import axios from 'axios';
+import axios, { AxiosInstance } from 'axios';
 
 // Mock axios
 jest.mock('axios');
@@ -7,7 +7,7 @@ const mockedAxios = axios as jest.Mocked<typeof axios>;
 
 describe('AlphaVantageClient', () => {
   let client: AlphaVantageClient;
-  let mockAxiosInstance: any;
+  let mockAxiosInstance: jest.Mocked<AxiosInstance>;
   const mockApiKey = 'test-api-key';
 
   beforeEach(() => {
@@ -20,7 +20,7 @@ describe('AlphaVantageClient', () => {
         request: { use: jest.fn() },
         response: { use: jest.fn() },
       },
-    };
+    } as unknown as jest.Mocked<AxiosInstance>;
 
     mockedAxios.create.mockReturnValue(mockAxiosInstance);
 
@@ -53,12 +53,16 @@ describe('AlphaVantageClient', () => {
       const result = await client.getAsset('AAPL');
 
       expect(result).toEqual({
+        id: expect.any(String),
         symbol: 'AAPL',
         name: 'AAPL',
+        type: 'stock',
         sector: undefined,
         market_cap: undefined,
         description: undefined,
         last_updated: expect.any(String),
+        created_at: expect.any(String),
+        updated_at: expect.any(String),
       });
 
       expect(mockAxiosInstance.get).toHaveBeenCalledWith('', {
@@ -177,12 +181,16 @@ describe('AlphaVantageClient', () => {
 
       expect(result).toEqual([
         {
+          id: expect.any(String),
           symbol: 'AAPL',
           name: 'Apple Inc.',
+          type: 'Equity',
           sector: undefined,
           market_cap: undefined,
           description: 'Equity - United States',
           last_updated: expect.any(String),
+          created_at: expect.any(String),
+          updated_at: expect.any(String),
         },
       ]);
 

@@ -1,6 +1,6 @@
-import { chromium, FullConfig } from '@playwright/test';
+import { chromium } from '@playwright/test';
 
-async function globalSetup(config: FullConfig) {
+async function globalSetup() {
   console.log('🚀 Starting global test setup...');
   
   // Launch browser for setup
@@ -20,7 +20,7 @@ async function globalSetup(config: FullConfig) {
           backendReady = true;
           break;
         }
-      } catch (error) {
+      } catch {
         // Server not ready yet
       }
       await page.waitForTimeout(1000);
@@ -39,7 +39,7 @@ async function globalSetup(config: FullConfig) {
           frontendReady = true;
           break;
         }
-      } catch (error) {
+      } catch {
         // Server not ready yet
       }
       await page.waitForTimeout(1000);

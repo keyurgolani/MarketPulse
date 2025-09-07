@@ -20,7 +20,7 @@ export const Navigation: React.FC<NavigationProps> = ({
   return (
     <nav
       className={clsx(orientationClasses[orientation], className)}
-      role="navigation"
+      role='navigation'
     >
       {children}
     </nav>
@@ -50,8 +50,10 @@ export const NavigationItem: React.FC<NavigationItemProps> = ({
   ];
 
   const stateClasses = {
-    active: 'bg-primary-100 text-primary-700 dark:bg-primary-900 dark:text-primary-300',
-    inactive: 'text-gray-600 hover:text-gray-900 hover:bg-gray-100 dark:text-gray-300 dark:hover:text-gray-100 dark:hover:bg-gray-700',
+    active:
+      'bg-primary-100 text-primary-700 dark:bg-primary-900 dark:text-primary-300',
+    inactive:
+      'text-gray-600 hover:text-gray-900 hover:bg-gray-100 dark:text-gray-300 dark:hover:text-gray-100 dark:hover:bg-gray-700',
     disabled: 'text-gray-400 cursor-not-allowed dark:text-gray-600',
   };
 
@@ -78,7 +80,7 @@ export const NavigationItem: React.FC<NavigationItemProps> = ({
 
   return (
     <button
-      type="button"
+      type='button'
       className={classes}
       disabled={disabled}
       aria-current={isActive ? 'page' : undefined}
@@ -109,9 +111,7 @@ export const MobileNavigation: React.FC<MobileNavigationProps> = ({
         className
       )}
     >
-      <div className="px-2 pt-2 pb-3 space-y-1">
-        {children}
-      </div>
+      <div className='px-2 pt-2 pb-3 space-y-1'>{children}</div>
     </div>
   );
 };
@@ -132,32 +132,29 @@ export const Breadcrumb: React.FC<BreadcrumbProps> = ({
   className,
 }): React.JSX.Element => {
   return (
-    <nav
-      className={clsx('flex', className)}
-      aria-label="Breadcrumb"
-    >
-      <ol className="flex items-center space-x-2">
+    <nav className={clsx('flex', className)} aria-label='Breadcrumb'>
+      <ol className='flex items-center space-x-2'>
         {items.map((item, index) => (
-          <li key={index} className="flex items-center">
+          <li key={index} className='flex items-center'>
             {index > 0 && (
               <svg
-                className="flex-shrink-0 h-4 w-4 text-gray-400 mx-2"
-                fill="currentColor"
-                viewBox="0 0 20 20"
-                aria-hidden="true"
+                className='flex-shrink-0 h-4 w-4 text-gray-400 mx-2'
+                fill='currentColor'
+                viewBox='0 0 20 20'
+                aria-hidden='true'
               >
                 <path
-                  fillRule="evenodd"
-                  d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z"
-                  clipRule="evenodd"
+                  fillRule='evenodd'
+                  d='M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z'
+                  clipRule='evenodd'
                 />
               </svg>
             )}
-            
+
             {item.href && !item.isActive ? (
               <a
                 href={item.href}
-                className="text-sm font-medium text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
+                className='text-sm font-medium text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
               >
                 {item.label}
               </a>

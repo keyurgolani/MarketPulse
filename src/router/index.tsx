@@ -11,11 +11,11 @@ export const AppRouter: React.FC = (): React.JSX.Element => {
       <AuthProvider>
         <Routes>
           {/* Public routes */}
-          <Route path="/login" element={<Login />} />
-          
+          <Route path='/login' element={<Login />} />
+
           {/* Protected routes */}
           <Route
-            path="/"
+            path='/'
             element={
               <ProtectedRoute>
                 <Layout>
@@ -25,7 +25,7 @@ export const AppRouter: React.FC = (): React.JSX.Element => {
             }
           />
           <Route
-            path="/markets"
+            path='/markets'
             element={
               <ProtectedRoute>
                 <Layout>
@@ -35,7 +35,7 @@ export const AppRouter: React.FC = (): React.JSX.Element => {
             }
           />
           <Route
-            path="/news"
+            path='/news'
             element={
               <ProtectedRoute>
                 <Layout>
@@ -45,7 +45,7 @@ export const AppRouter: React.FC = (): React.JSX.Element => {
             }
           />
           <Route
-            path="/watchlist"
+            path='/watchlist'
             element={
               <ProtectedRoute>
                 <Layout>
@@ -54,9 +54,9 @@ export const AppRouter: React.FC = (): React.JSX.Element => {
               </ProtectedRoute>
             }
           />
-          
+
           {/* 404 route */}
-          <Route path="*" element={<NotFound />} />
+          <Route path='*' element={<NotFound />} />
         </Routes>
       </AuthProvider>
     </BrowserRouter>

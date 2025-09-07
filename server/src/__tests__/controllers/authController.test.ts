@@ -4,6 +4,7 @@ import { AuthController } from '../../controllers/authController';
 import { AuthService } from '../../services/AuthService';
 import { Database } from '../../config/database';
 import { User } from '../../types/database';
+import { AuthenticatedRequest } from '../../middleware/authMiddleware';
 
 // Mock dependencies
 jest.mock('../../services/AuthService');
@@ -22,6 +23,7 @@ describe('AuthController', () => {
     first_name: 'John',
     last_name: 'Doe',
     created_at: '2024-01-01T00:00:00Z',
+    updated_at: '2024-01-01T00:00:00Z',
   };
 
   const mockTokens = {
@@ -46,16 +48,15 @@ describe('AuthController', () => {
       verifyToken: jest.fn(),
       getUserSessions: jest.fn(),
       invalidateAllUserSessions: jest.fn(),
-      userRepository: {
-        update: jest.fn(),
-        verifyPassword: jest.fn(),
-        updatePassword: jest.fn(),
-      },
-    } as any;
+      cleanupExpiredSessions: jest.fn(),
+      userRepository: {} as unknown,
+    } as unknown as jest.Mocked<AuthService>;
 
     // Create controller
     authController = new AuthController(mockDb);
-    (authController as any).authService = mockAuthService;
+    (
+      authController as unknown as { authService: jest.Mocked<AuthService> }
+    ).authService = mockAuthService;
 
     // Create Express app
     app = express();
@@ -67,12 +68,13 @@ describe('AuthController', () => {
     app.post('/logout', (req, res, next) => {
       req.user = mockUser;
       req.sessionId = 'session-123';
-      authController.logout(req as any, res, next);
+      authController.logout(req as AuthenticatedRequest, res, next);
     });
     app.post('/refresh', authController.refreshToken);
     app.get('/profile', (req, res, next) => {
       req.user = mockUser;
-      authController.getProfile(req as any, res, next);
+      req.sessionId = 'session-123';
+      authController.getProfile(req as AuthenticatedRequest, res, next);
     });
   });
 
@@ -92,9 +94,7 @@ describe('AuthController', () => {
       });
 
       // Act
-      const response = await request(app)
-        .post('/register')
-        .send(registerData);
+      const response = await request(app).post('/register').send(registerData);
 
       // Assert
       expect(response.status).toBe(201);
@@ -116,9 +116,7 @@ describe('AuthController', () => {
       );
 
       // Act
-      const response = await request(app)
-        .post('/register')
-        .send(registerData);
+      const response = await request(app).post('/register').send(registerData);
 
       // Assert
       expect(response.status).toBe(409);
@@ -141,9 +139,7 @@ describe('AuthController', () => {
       });
 
       // Act
-      const response = await request(app)
-        .post('/login')
-        .send(loginData);
+      const response = await request(app).post('/login').send(loginData);
 
       // Assert
       expect(response.status).toBe(200);
@@ -165,9 +161,7 @@ describe('AuthController', () => {
       );
 
       // Act
-      const response = await request(app)
-        .post('/login')
-        .send(loginData);
+      const response = await request(app).post('/login').send(loginData);
 
       // Assert
       expect(response.status).toBe(401);
@@ -182,8 +176,7 @@ describe('AuthController', () => {
       mockAuthService.logout.mockResolvedValue();
 
       // Act
-      const response = await request(app)
-        .post('/logout');
+      const response = await request(app).post('/logout');
 
       // Assert
       expect(response.status).toBe(200);
@@ -202,9 +195,7 @@ describe('AuthController', () => {
       mockAuthService.refreshToken.mockResolvedValue(mockTokens);
 
       // Act
-      const response = await request(app)
-        .post('/refresh')
-        .send(refreshData);
+      const response = await request(app).post('/refresh').send(refreshData);
 
       // Assert
       expect(response.status).toBe(200);
@@ -214,9 +205,7 @@ describe('AuthController', () => {
 
     it('should return 400 if refresh token is missing', async () => {
       // Act
-      const response = await request(app)
-        .post('/refresh')
-        .send({});
+      const response = await request(app).post('/refresh').send({});
 
       // Assert
       expect(response.status).toBe(400);
@@ -235,9 +224,7 @@ describe('AuthController', () => {
       );
 
       // Act
-      const response = await request(app)
-        .post('/refresh')
-        .send(refreshData);
+      const response = await request(app).post('/refresh').send(refreshData);
 
       // Assert
       expect(response.status).toBe(401);
@@ -249,8 +236,7 @@ describe('AuthController', () => {
   describe('GET /profile', () => {
     it('should get user profile successfully', async () => {
       // Act
-      const response = await request(app)
-        .get('/profile');
+      const response = await request(app).get('/profile');
 
       // Assert
       expect(response.status).toBe(200);

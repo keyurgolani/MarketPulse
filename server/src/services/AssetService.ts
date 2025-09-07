@@ -49,9 +49,9 @@ export class AssetService {
     this.cacheService = cacheService;
 
     this.cacheTtl = {
-      assetData: config.cache?.ttl?.assetData || 3600, // 1 hour
-      priceData: config.cache?.ttl?.priceData || 30, // 30 seconds
-      searchResults: config.cache?.ttl?.searchResults || 300, // 5 minutes
+      assetData: config.cache?.ttl?.assetData ?? 3600, // 1 hour
+      priceData: config.cache?.ttl?.priceData ?? 30, // 30 seconds
+      searchResults: config.cache?.ttl?.searchResults ?? 300, // 5 minutes
     };
 
     this.initializeProviders(config.providers);
@@ -62,8 +62,8 @@ export class AssetService {
   ): void {
     // Initialize Alpha Vantage (Primary)
     const alphaVantageKeys =
-      providersConfig?.alphaVantage ||
-      process.env.ALPHA_VANTAGE_API_KEY ||
+      providersConfig?.alphaVantage ??
+      process.env.ALPHA_VANTAGE_API_KEY ??
       process.env.ALPHA_VANTAGE_API_KEYS?.split(',');
 
     if (alphaVantageKeys) {
@@ -73,8 +73,8 @@ export class AssetService {
 
     // Initialize Twelve Data (Secondary)
     const twelveDataKeys =
-      providersConfig?.twelveData ||
-      process.env.TWELVE_DATA_API_KEY ||
+      providersConfig?.twelveData ??
+      process.env.TWELVE_DATA_API_KEY ??
       process.env.TWELVE_DATA_API_KEYS?.split(',');
 
     if (twelveDataKeys) {
@@ -84,8 +84,8 @@ export class AssetService {
 
     // Initialize Finnhub (Tertiary)
     const finnhubKeys =
-      providersConfig?.finnhub ||
-      process.env.FINNHUB_API_KEY ||
+      providersConfig?.finnhub ??
+      process.env.FINNHUB_API_KEY ??
       process.env.FINNHUB_API_KEYS?.split(',');
 
     if (finnhubKeys) {
@@ -119,7 +119,7 @@ export class AssetService {
       // 2. Try database
       const dbAsset = await this.assetRepository.findBySymbol(normalizedSymbol);
       if (
-        dbAsset &&
+        dbAsset?.last_updated &&
         this.isRecentData(dbAsset.last_updated, this.cacheTtl.assetData)
       ) {
         await this.cacheService.set(cacheKey, dbAsset, this.cacheTtl.assetData);
@@ -180,7 +180,7 @@ export class AssetService {
       const dbPrice =
         await this.assetRepository.getLatestPrice(normalizedSymbol);
       if (
-        dbPrice &&
+        dbPrice?.timestamp &&
         this.isRecentData(dbPrice.timestamp, this.cacheTtl.priceData)
       ) {
         await this.cacheService.set(cacheKey, dbPrice, this.cacheTtl.priceData);
@@ -194,7 +194,9 @@ export class AssetService {
       const price = await this.fetchPriceFromProviders(normalizedSymbol);
 
       // 4. Store in database and cache
-      const savedPrice = await this.assetRepository.createPrice(price);
+      const priceWithSymbol = { ...price, symbol: normalizedSymbol };
+      const savedPrice =
+        await this.assetRepository.createPrice(priceWithSymbol);
       await this.cacheService.set(
         cacheKey,
         savedPrice,
@@ -252,7 +254,10 @@ export class AssetService {
     const staleSymbols: string[] = [];
 
     for (const asset of dbAssets) {
-      if (this.isRecentData(asset.last_updated, this.cacheTtl.assetData)) {
+      if (
+        asset.last_updated &&
+        this.isRecentData(asset.last_updated, this.cacheTtl.assetData)
+      ) {
         recentDbAssets.push(asset);
         // Cache the recent data
         await this.cacheService.set(
@@ -285,7 +290,7 @@ export class AssetService {
 
       const fetchedAssets = await Promise.all(fetchPromises);
       const validAssets = fetchedAssets.filter(
-        (asset): asset is Asset => asset !== null
+        (asset: Asset | null): asset is Asset => asset !== null
       );
       results.push(...validAssets);
     }

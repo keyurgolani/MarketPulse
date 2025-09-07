@@ -14,7 +14,11 @@ import { logger } from '../utils/logger';
 export type CreateUserData = z.infer<typeof CreateUserSchema>;
 export type UpdateUserData = z.infer<typeof UpdateUserSchema>;
 
-export class UserRepository extends BaseRepository<User, any, any> {
+export class UserRepository extends BaseRepository<
+  User,
+  CreateUserData,
+  UpdateUserData
+> {
   constructor(db: Database) {
     super(db, 'users');
   }
@@ -49,7 +53,7 @@ export class UserRepository extends BaseRepository<User, any, any> {
         saltRounds
       );
 
-      // Prepare user data
+      // Prepare user data for database (matching User schema)
       const userData = {
         id: uuidv4(),
         email: validatedData.email,
@@ -61,7 +65,7 @@ export class UserRepository extends BaseRepository<User, any, any> {
           : undefined,
       };
 
-      return await super.create(userData as any);
+      return await super.create(userData as unknown as CreateUserData);
     } catch (error) {
       logger.error('Error creating user', { email: data.email, error });
       throw error;
@@ -76,8 +80,12 @@ export class UserRepository extends BaseRepository<User, any, any> {
       // Validate input data
       const validatedData = UpdateUserSchema.parse(data);
 
-      // Prepare update data
-      const updateData: any = {};
+      // Prepare update data for database (matching User schema)
+      const updateData: Partial<{
+        first_name?: string;
+        last_name?: string;
+        preferences?: string;
+      }> = {};
 
       if (validatedData.first_name !== undefined) {
         updateData.first_name = validatedData.first_name;
@@ -89,7 +97,7 @@ export class UserRepository extends BaseRepository<User, any, any> {
         updateData.preferences = JSON.stringify(validatedData.preferences);
       }
 
-      return await super.update(id, updateData);
+      return await super.update(id, updateData as unknown as UpdateUserData);
     } catch (error) {
       logger.error('Error updating user', { id, error });
       throw error;
@@ -101,7 +109,7 @@ export class UserRepository extends BaseRepository<User, any, any> {
       const saltRounds = 12;
       const password_hash = await bcrypt.hash(newPassword, saltRounds);
 
-      return await super.update(id, { password_hash } as any);
+      return await super.update(id, { password_hash } as UpdateUserData);
     } catch (error) {
       logger.error('Error updating user password', { id, error });
       throw error;
@@ -161,7 +169,7 @@ export class UserRepository extends BaseRepository<User, any, any> {
     try {
       return await super.update(id, {
         preferences: JSON.stringify(preferences),
-      } as any);
+      } as unknown as UpdateUserData);
     } catch (error) {
       logger.error('Error updating user preferences', { id, error });
       throw error;

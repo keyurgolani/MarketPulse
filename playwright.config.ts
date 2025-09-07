@@ -29,6 +29,8 @@ export default defineConfig({
     screenshot: 'only-on-failure',
     /* Record video on failure */
     video: 'retain-on-failure',
+    /* Run in headless mode when CI is set */
+    headless: !!process.env.CI,
   },
 
   /* Configure projects for major browsers */
@@ -71,8 +73,8 @@ export default defineConfig({
   ],
 
   /* Global setup and teardown */
-  globalSetup: require.resolve('./tests/global-setup.ts'),
-  globalTeardown: require.resolve('./tests/global-teardown.ts'),
+  globalSetup: './tests/global-setup.ts',
+  globalTeardown: './tests/global-teardown.ts',
 
   /* Test timeout */
   timeout: 30000,

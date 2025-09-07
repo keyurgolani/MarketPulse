@@ -1,7 +1,8 @@
 import React from 'react';
 import { clsx } from 'clsx';
 
-export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
+export interface InputProps
+  extends React.InputHTMLAttributes<HTMLInputElement> {
   label?: string;
   error?: string | undefined;
   helperText?: string;
@@ -34,26 +35,28 @@ export const Input: React.FC<InputProps> = ({
         !error,
       'ring-danger-300 focus:ring-danger-600 dark:ring-danger-600 dark:focus:ring-danger-400':
         error,
-      'bg-white text-gray-900 dark:bg-gray-800 dark:text-gray-100': !props.disabled,
-      'bg-gray-50 text-gray-500 dark:bg-gray-700 dark:text-gray-400': props.disabled,
+      'bg-white text-gray-900 dark:bg-gray-800 dark:text-gray-100':
+        !props.disabled,
+      'bg-gray-50 text-gray-500 dark:bg-gray-700 dark:text-gray-400':
+        props.disabled,
     },
     className
   );
 
   return (
-    <div className="w-full">
+    <div className='w-full'>
       {label && (
         <label
           htmlFor={inputId}
-          className="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-100 mb-2"
+          className='block text-sm font-medium leading-6 text-gray-900 dark:text-gray-100 mb-2'
         >
           {label}
         </label>
       )}
-      <div className="relative">
+      <div className='relative'>
         {leftIcon && (
-          <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-            <div className="h-5 w-5 text-gray-400" aria-hidden="true">
+          <div className='pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3'>
+            <div className='h-5 w-5 text-gray-400' aria-hidden='true'>
               {leftIcon}
             </div>
           </div>
@@ -66,8 +69,8 @@ export const Input: React.FC<InputProps> = ({
           {...props}
         />
         {rightIcon && (
-          <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
-            <div className="h-5 w-5 text-gray-400" aria-hidden="true">
+          <div className='pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3'>
+            <div className='h-5 w-5 text-gray-400' aria-hidden='true'>
               {rightIcon}
             </div>
           </div>
@@ -76,8 +79,8 @@ export const Input: React.FC<InputProps> = ({
       {error && (
         <p
           id={errorId}
-          className="mt-2 text-sm text-danger-600 dark:text-danger-400"
-          role="alert"
+          className='mt-2 text-sm text-danger-600 dark:text-danger-400'
+          role='alert'
         >
           {error}
         </p>
@@ -85,7 +88,7 @@ export const Input: React.FC<InputProps> = ({
       {helperText && !error && (
         <p
           id={helperTextId}
-          className="mt-2 text-sm text-gray-500 dark:text-gray-400"
+          className='mt-2 text-sm text-gray-500 dark:text-gray-400'
         >
           {helperText}
         </p>

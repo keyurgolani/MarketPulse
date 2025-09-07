@@ -134,12 +134,14 @@ export const CreateWidgetSchema = z.object({
 export const UpdateWidgetSchema = z.object({
   type: z.enum(['asset', 'news', 'chart', 'summary']).optional(),
   position: WidgetPositionSchema.optional(),
-  config: z.union([
-    AssetWidgetConfigSchema,
-    NewsWidgetConfigSchema,
-    ChartWidgetConfigSchema,
-    SummaryWidgetConfigSchema,
-  ]).optional(),
+  config: z
+    .union([
+      AssetWidgetConfigSchema,
+      NewsWidgetConfigSchema,
+      ChartWidgetConfigSchema,
+      SummaryWidgetConfigSchema,
+    ])
+    .optional(),
 });
 
 // Asset schemas
@@ -324,7 +326,10 @@ export const AssetQuerySchema = z.object({
 });
 
 export const NewsQuerySchema = z.object({
-  asset: z.string().regex(/^[A-Z]{1,5}$/).optional(),
+  asset: z
+    .string()
+    .regex(/^[A-Z]{1,5}$/)
+    .optional(),
   source: z.string().max(100).optional(),
   sentiment: z.enum(['positive', 'negative', 'neutral']).optional(),
   from_date: z.string().datetime().optional(),

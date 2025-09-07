@@ -29,7 +29,7 @@ describe('UserRepository', () => {
 
   afterAll(async () => {
     await db.disconnect();
-    
+
     // Clean up test database
     if (fs.existsSync(testDbPath)) {
       fs.unlinkSync(testDbPath);
@@ -85,8 +85,8 @@ describe('UserRepository', () => {
 
       const user = await userRepository.create(userData);
       expect(user.preferences).toBeDefined();
-      
-      const parsedPreferences = JSON.parse(user.preferences!);
+
+      const parsedPreferences = JSON.parse(user.preferences ?? '{}');
       expect(parsedPreferences.theme).toBe('dark');
       expect(parsedPreferences.refreshInterval).toBe(30000);
     });
@@ -132,8 +132,8 @@ describe('UserRepository', () => {
       const foundUser = await userRepository.findById(createdUser.id);
 
       expect(foundUser).toBeDefined();
-      expect(foundUser!.id).toBe(createdUser.id);
-      expect(foundUser!.email).toBe(userData.email);
+      expect(foundUser?.id).toBe(createdUser.id);
+      expect(foundUser?.email).toBe(userData.email);
     });
 
     it('should return null for non-existent id', async () => {
@@ -153,7 +153,7 @@ describe('UserRepository', () => {
       const foundUser = await userRepository.findByEmail(userData.email);
 
       expect(foundUser).toBeDefined();
-      expect(foundUser!.email).toBe(userData.email);
+      expect(foundUser?.email).toBe(userData.email);
     });
 
     it('should return null for non-existent email', async () => {
@@ -171,22 +171,27 @@ describe('UserRepository', () => {
       };
 
       const createdUser = await userRepository.create(userData);
-      
+
       const updateData = {
         first_name: 'Jane',
         last_name: 'Smith',
       };
 
-      const updatedUser = await userRepository.update(createdUser.id, updateData);
+      const updatedUser = await userRepository.update(
+        createdUser.id,
+        updateData
+      );
 
       expect(updatedUser).toBeDefined();
-      expect(updatedUser!.first_name).toBe('Jane');
-      expect(updatedUser!.last_name).toBe('Smith');
-      expect(updatedUser!.email).toBe(userData.email); // Should remain unchanged
+      expect(updatedUser?.first_name).toBe('Jane');
+      expect(updatedUser?.last_name).toBe('Smith');
+      expect(updatedUser?.email).toBe(userData.email); // Should remain unchanged
     });
 
     it('should return null for non-existent user', async () => {
-      const result = await userRepository.update('non-existent-id', { first_name: 'Test' });
+      const result = await userRepository.update('non-existent-id', {
+        first_name: 'Test',
+      });
       expect(result).toBeNull();
     });
   });
@@ -204,38 +209,59 @@ describe('UserRepository', () => {
     });
 
     it('should verify correct password', async () => {
-      const isValid = await userRepository.verifyPassword(userId, 'password123');
+      const isValid = await userRepository.verifyPassword(
+        userId,
+        'password123'
+      );
       expect(isValid).toBe(true);
     });
 
     it('should reject incorrect password', async () => {
-      const isValid = await userRepository.verifyPassword(userId, 'wrongpassword');
+      const isValid = await userRepository.verifyPassword(
+        userId,
+        'wrongpassword'
+      );
       expect(isValid).toBe(false);
     });
 
     it('should verify password by email', async () => {
-      const user = await userRepository.verifyPasswordByEmail('test@example.com', 'password123');
+      const user = await userRepository.verifyPasswordByEmail(
+        'test@example.com',
+        'password123'
+      );
       expect(user).toBeDefined();
-      expect(user!.id).toBe(userId);
+      expect(user?.id).toBe(userId);
     });
 
     it('should return null for incorrect email/password combination', async () => {
-      const user = await userRepository.verifyPasswordByEmail('test@example.com', 'wrongpassword');
+      const user = await userRepository.verifyPasswordByEmail(
+        'test@example.com',
+        'wrongpassword'
+      );
       expect(user).toBeNull();
     });
 
     it('should update password', async () => {
       const newPassword = 'newpassword456';
-      const updatedUser = await userRepository.updatePassword(userId, newPassword);
-      
+      const updatedUser = await userRepository.updatePassword(
+        userId,
+        newPassword
+      );
+
       expect(updatedUser).toBeDefined();
-      
+
       // Verify old password no longer works
-      const oldPasswordValid = await userRepository.verifyPassword(userId, 'password123');
+      const oldPasswordValid = await userRepository.verifyPassword(
+        userId,
+        'password123'
+      );
       expect(oldPasswordValid).toBe(false);
-      
+
       // Verify new password works
-      const newPasswordValid = await userRepository.verifyPassword(userId, newPassword);
+      const newPasswordValid = await userRepository.verifyPassword(
+        userId,
+        newPassword
+      );
       expect(newPasswordValid).toBe(true);
     });
   });
@@ -269,7 +295,8 @@ describe('UserRepository', () => {
       };
 
       await userRepository.updatePreferences(userId, preferences);
-      const retrievedPreferences = await userRepository.getUserPreferences(userId);
+      const retrievedPreferences =
+        await userRepository.getUserPreferences(userId);
 
       expect(retrievedPreferences).toEqual(preferences);
     });
@@ -295,10 +322,14 @@ describe('UserRepository', () => {
         },
       };
 
-      const updatedUser = await userRepository.updatePreferences(userId, preferences);
+      const updatedUser = await userRepository.updatePreferences(
+        userId,
+        preferences
+      );
       expect(updatedUser).toBeDefined();
 
-      const retrievedPreferences = await userRepository.getUserPreferences(userId);
+      const retrievedPreferences =
+        await userRepository.getUserPreferences(userId);
       expect(retrievedPreferences).toEqual(preferences);
     });
   });
@@ -325,7 +356,9 @@ describe('UserRepository', () => {
       const exists = await userRepository.emailExists('john@example.com');
       expect(exists).toBe(true);
 
-      const notExists = await userRepository.emailExists('nonexistent@example.com');
+      const notExists = await userRepository.emailExists(
+        'nonexistent@example.com'
+      );
       expect(notExists).toBe(false);
     });
 
@@ -350,8 +383,11 @@ describe('UserRepository', () => {
     });
 
     it('should find users with pagination', async () => {
-      const result = await userRepository.findAllPaginated({ page: 1, limit: 1 });
-      
+      const result = await userRepository.findAllPaginated({
+        page: 1,
+        limit: 1,
+      });
+
       expect(result.data).toHaveLength(1);
       expect(result.pagination.total).toBe(2);
       expect(result.pagination.totalPages).toBe(2);
@@ -369,9 +405,9 @@ describe('UserRepository', () => {
 
       const user = await userRepository.create(userData);
       const deleted = await userRepository.delete(user.id);
-      
+
       expect(deleted).toBe(true);
-      
+
       const foundUser = await userRepository.findById(user.id);
       expect(foundUser).toBeNull();
     });

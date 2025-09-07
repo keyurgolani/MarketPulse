@@ -1,5 +1,5 @@
 import cors from 'cors';
-import { Request } from 'express';
+import { Request, Response, NextFunction } from 'express';
 import { logger } from '../utils/logger';
 
 // CORS configuration interface
@@ -15,7 +15,7 @@ interface CorsConfig {
 // Default CORS configuration
 const defaultCorsConfig: CorsConfig = {
   origins: [
-    process.env.CORS_ORIGIN || 'http://localhost:5173',
+    process.env.CORS_ORIGIN ?? 'http://localhost:5173',
     'http://localhost:3000', // Alternative frontend port
     'http://127.0.0.1:5173',
     'http://127.0.0.1:3000',
@@ -41,12 +41,15 @@ const defaultCorsConfig: CorsConfig = {
 
 // Add production origins if in production
 if (process.env.NODE_ENV === 'production') {
-  const productionOrigins = process.env.PRODUCTION_ORIGINS?.split(',') || [];
+  const productionOrigins = process.env.PRODUCTION_ORIGINS?.split(',') ?? [];
   defaultCorsConfig.origins.push(...productionOrigins);
 }
 
 // Dynamic origin validation
-const originValidator = (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void): void => {
+const originValidator = (
+  origin: string | undefined,
+  callback: (err: Error | null, allow?: boolean) => void
+): void => {
   // Allow requests with no origin (mobile apps, Postman, etc.)
   if (!origin) {
     return callback(null, true);
@@ -68,11 +71,11 @@ const originValidator = (origin: string | undefined, callback: (err: Error | nul
   }
 
   // Log rejected origins for debugging
-  logger.warn('CORS: Origin rejected', { 
-    origin, 
-    allowedOrigins: defaultCorsConfig.origins 
+  logger.warn('CORS: Origin rejected', {
+    origin,
+    allowedOrigins: defaultCorsConfig.origins,
   });
-  
+
   callback(new Error(`Origin ${origin} not allowed by CORS policy`));
 };
 
@@ -88,7 +91,11 @@ export const corsMiddleware = cors({
 });
 
 // Preflight handler for complex requests
-export const preflightHandler = (req: Request, _res: any, next: any): void => {
+export const preflightHandler = (
+  req: Request,
+  _res: Response,
+  next: NextFunction
+): void => {
   if (req.method === 'OPTIONS') {
     logger.debug('CORS: Preflight request', {
       origin: req.get('Origin'),
@@ -100,7 +107,12 @@ export const preflightHandler = (req: Request, _res: any, next: any): void => {
 };
 
 // CORS error handler
-export const corsErrorHandler = (err: Error, req: Request, res: any, next: any): void => {
+export const corsErrorHandler = (
+  err: Error,
+  req: Request,
+  res: Response,
+  next: NextFunction
+): void => {
   if (err.message.includes('CORS')) {
     logger.error('CORS Error', {
       error: err.message,
@@ -108,7 +120,7 @@ export const corsErrorHandler = (err: Error, req: Request, res: any, next: any):
       method: req.method,
       url: req.url,
     });
-    
+
     res.status(403).json({
       success: false,
       error: 'CORS policy violation',

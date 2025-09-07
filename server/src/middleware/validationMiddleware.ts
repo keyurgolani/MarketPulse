@@ -1,4 +1,4 @@
-import { Request, Response, NextFunction } from 'express';
+import { Request, Response, NextFunction, RequestHandler } from 'express';
 import { z, ZodSchema, ZodError } from 'zod';
 import { ValidationError } from './errorHandler';
 import { logger } from '../utils/logger';
@@ -22,19 +22,19 @@ export const validate = (
   return (req: Request, _res: Response, next: NextFunction): void => {
     try {
       const data = req[target];
-      
+
       // Parse and validate the data
       const result = schema.parse(data);
-      
+
       // Replace the original data with validated/transformed data
-      (req as any)[target] = result;
-      
+      (req as unknown as Record<string, unknown>)[target] = result;
+
       logger.debug('Validation successful', {
         target,
         url: req.url,
         method: req.method,
       });
-      
+
       next();
     } catch (error) {
       if (error instanceof ZodError) {
@@ -44,18 +44,18 @@ export const validate = (
           method: req.method,
           errors: error.errors,
         });
-        
+
         // Transform Zod errors into a more user-friendly format
-        const validationErrors = error.errors.map(err => ({
+        const validationErrors = error.errors.map((err) => ({
           field: err.path.join('.'),
           message: err.message,
           code: err.code,
           received: 'received' in err ? err.received : undefined,
         }));
-        
+
         throw new ValidationError('Validation failed', validationErrors);
       }
-      
+
       // Re-throw other errors
       throw error;
     }
@@ -70,42 +70,45 @@ export const commonSchemas = {
     limit: z.coerce.number().int().min(1).max(100).default(20),
     offset: z.coerce.number().int().min(0).optional(),
   }),
-  
+
   // Asset symbol validation
   assetSymbol: z.object({
-    symbol: z.string()
+    symbol: z
+      .string()
       .regex(/^[A-Z]{1,5}$/, 'Symbol must be 1-5 uppercase letters')
-      .transform(s => s.toUpperCase()),
+      .transform((s) => s.toUpperCase()),
   }),
-  
+
   // ID parameter validation
   idParam: z.object({
     id: z.string().uuid('Invalid ID format'),
   }),
-  
+
   // Search query validation
   searchQuery: z.object({
     q: z.string().min(1).max(100).trim(),
     limit: z.coerce.number().int().min(1).max(50).default(10),
   }),
-  
+
   // Date range validation
-  dateRange: z.object({
-    startDate: z.string().datetime().optional(),
-    endDate: z.string().datetime().optional(),
-  }).refine(
-    (data) => {
-      if (data.startDate && data.endDate) {
-        return new Date(data.startDate) <= new Date(data.endDate);
+  dateRange: z
+    .object({
+      startDate: z.string().datetime().optional(),
+      endDate: z.string().datetime().optional(),
+    })
+    .refine(
+      (data) => {
+        if (data.startDate && data.endDate) {
+          return new Date(data.startDate) <= new Date(data.endDate);
+        }
+        return true;
+      },
+      {
+        message: 'Start date must be before end date',
+        path: ['dateRange'],
       }
-      return true;
-    },
-    {
-      message: 'Start date must be before end date',
-      path: ['dateRange'],
-    }
-  ),
-  
+    ),
+
   // Timeframe validation for charts
   timeframe: z.object({
     timeframe: z.enum(['1D', '1W', '1M', '3M', '6M', '1Y', '5Y']).default('1D'),
@@ -114,21 +117,32 @@ export const commonSchemas = {
 
 // Validation middleware for common patterns
 export const validatePagination = validate(commonSchemas.pagination, 'query');
-export const validateAssetSymbol = validate(commonSchemas.assetSymbol, 'params');
+export const validateAssetSymbol = validate(
+  commonSchemas.assetSymbol,
+  'params'
+);
 export const validateIdParam = validate(commonSchemas.idParam, 'params');
 export const validateSearchQuery = validate(commonSchemas.searchQuery, 'query');
 export const validateDateRange = validate(commonSchemas.dateRange, 'query');
 export const validateTimeframe = validate(commonSchemas.timeframe, 'query');
 
 // Body validation helpers
-export const validateBody = (schema: ZodSchema) => validate(schema, 'body');
-export const validateQuery = (schema: ZodSchema) => validate(schema, 'query');
-export const validateParams = (schema: ZodSchema) => validate(schema, 'params');
-export const validateHeaders = (schema: ZodSchema) => validate(schema, 'headers');
+export const validateBody = (schema: ZodSchema): RequestHandler =>
+  validate(schema, 'body');
+export const validateQuery = (schema: ZodSchema): RequestHandler =>
+  validate(schema, 'query');
+export const validateParams = (schema: ZodSchema): RequestHandler =>
+  validate(schema, 'params');
+export const validateHeaders = (schema: ZodSchema): RequestHandler =>
+  validate(schema, 'headers');
 
 // Sanitization middleware
-export const sanitizeInput = (req: Request, _res: Response, next: NextFunction): void => {
-  const sanitizeValue = (value: any): any => {
+export const sanitizeInput = (
+  req: Request,
+  _res: Response,
+  next: NextFunction
+): void => {
+  const sanitizeValue = (value: unknown): unknown => {
     if (typeof value === 'string') {
       // Basic XSS prevention - remove script tags and javascript: protocols
       return value
@@ -136,19 +150,19 @@ export const sanitizeInput = (req: Request, _res: Response, next: NextFunction):
         .replace(/javascript:/gi, '')
         .trim();
     }
-    
+
     if (Array.isArray(value)) {
       return value.map(sanitizeValue);
     }
-    
+
     if (value && typeof value === 'object') {
-      const sanitized: any = {};
+      const sanitized: Record<string, unknown> = {};
       for (const [key, val] of Object.entries(value)) {
         sanitized[key] = sanitizeValue(val);
       }
       return sanitized;
     }
-    
+
     return value;
   };
 
@@ -156,13 +170,13 @@ export const sanitizeInput = (req: Request, _res: Response, next: NextFunction):
   if (req.body) {
     req.body = sanitizeValue(req.body);
   }
-  
+
   if (req.query) {
-    req.query = sanitizeValue(req.query);
+    req.query = sanitizeValue(req.query) as typeof req.query;
   }
-  
+
   if (req.params) {
-    req.params = sanitizeValue(req.params);
+    req.params = sanitizeValue(req.params) as typeof req.params;
   }
 
   next();

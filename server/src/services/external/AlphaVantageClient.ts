@@ -50,7 +50,7 @@ export class AlphaVantageClient {
 
     this.client = axios.create({
       baseURL: this.baseURL,
-      timeout: parseInt(process.env.API_TIMEOUT || '10000'),
+      timeout: parseInt(process.env.API_TIMEOUT ?? '10000'),
       headers: {
         'User-Agent': 'MarketPulse/1.0',
       },
@@ -63,7 +63,9 @@ export class AlphaVantageClient {
     this.client.interceptors.request.use(
       (config) => {
         const startTime = Date.now();
-        (config as any).metadata = { startTime };
+        (
+          config as typeof config & { metadata: { startTime: number } }
+        ).metadata = { startTime };
         return config;
       },
       (error) => {
@@ -76,7 +78,12 @@ export class AlphaVantageClient {
       (response) => {
         const endTime = Date.now();
         const duration =
-          endTime - ((response.config as any).metadata?.startTime || endTime);
+          endTime -
+          ((
+            response.config as typeof response.config & {
+              metadata?: { startTime: number };
+            }
+          ).metadata?.startTime ?? endTime);
 
         logger.info('Alpha Vantage API request completed', {
           url: response.config.url,
@@ -89,7 +96,7 @@ export class AlphaVantageClient {
       async (error) => {
         const endTime = Date.now();
         const duration =
-          endTime - (error.config?.metadata?.startTime || endTime);
+          endTime - (error.config?.metadata?.startTime ?? endTime);
 
         logger.error('Alpha Vantage API error', {
           url: error.config?.url,
@@ -128,7 +135,7 @@ export class AlphaVantageClient {
   }
 
   private getCurrentApiKey(): string {
-    return this.apiKeys[this.currentKeyIndex] || this.apiKeys[0] || '';
+    return this.apiKeys[this.currentKeyIndex] ?? this.apiKeys[0] ?? '';
   }
 
   async getAsset(symbol: string): Promise<Asset> {
@@ -158,12 +165,13 @@ export class AlphaVantageClient {
       }
 
       return {
+        id: '', // Will be set by database
         symbol: quote['01. symbol'],
         name: quote['01. symbol'], // Alpha Vantage doesn't provide company name in quote
-        sector: undefined,
-        market_cap: undefined,
-        description: undefined,
+        type: 'stock',
         last_updated: new Date().toISOString(),
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
       };
     } catch (error) {
       logger.error('Error fetching asset from Alpha Vantage', {
@@ -241,16 +249,18 @@ export class AlphaVantageClient {
         throw new Error(`Alpha Vantage rate limit: ${response.data['Note']}`);
       }
 
-      const matches = response.data.bestMatches || [];
+      const matches = response.data.bestMatches ?? [];
 
       return matches.map(
         (match): Asset => ({
+          id: '', // Will be set by database
           symbol: match['1. symbol'],
           name: match['2. name'],
-          sector: undefined,
-          market_cap: undefined,
+          type: match['3. type'] ?? 'stock',
           description: `${match['3. type']} - ${match['4. region']}`,
           last_updated: new Date().toISOString(),
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
         })
       );
     } catch (error) {

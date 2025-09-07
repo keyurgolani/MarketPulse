@@ -23,14 +23,14 @@ export interface CacheItem<T> {
 
 export class CacheService {
   private redisClient: Redis | null = null;
-  private memoryCache: Map<string, CacheItem<any>> = new Map();
+  private memoryCache: Map<string, CacheItem<unknown>> = new Map();
   private readonly maxMemorySize: number;
   private readonly defaultTtl: number;
   private cleanupInterval: NodeJS.Timeout | null = null;
 
   constructor(config: CacheConfig = {}) {
-    this.maxMemorySize = config.memory?.maxSize || 1000;
-    this.defaultTtl = config.memory?.ttl || 300; // 5 minutes default
+    this.maxMemorySize = config.memory?.maxSize ?? 1000;
+    this.defaultTtl = config.memory?.ttl ?? 300; // 5 minutes default
 
     this.initializeRedis(config.redis);
     this.initializeMemoryCache();
@@ -40,26 +40,32 @@ export class CacheService {
     redisConfig?: CacheConfig['redis']
   ): Promise<void> {
     try {
-      if (redisConfig?.url || process.env.REDIS_URL) {
-        this.redisClient = new Redis(
-          redisConfig?.url || process.env.REDIS_URL!,
-          {
+      // Skip Redis initialization during tests
+      if (process.env.NODE_ENV === 'test') {
+        logger.info('Redis not configured, using memory cache only');
+        return;
+      }
+
+      if (redisConfig?.url ?? process.env.REDIS_URL) {
+        const redisUrl = redisConfig?.url ?? process.env.REDIS_URL;
+        if (redisUrl) {
+          this.redisClient = new Redis(redisUrl, {
             maxRetriesPerRequest: 3,
             lazyConnect: true,
-          }
-        );
-      } else if (redisConfig?.host || process.env.REDIS_HOST) {
-        const redisOptions: any = {
-          host: redisConfig?.host || process.env.REDIS_HOST,
-          port: redisConfig?.port || parseInt(process.env.REDIS_PORT || '6379'),
-          db: redisConfig?.db || parseInt(process.env.REDIS_DB || '0'),
+          });
+        }
+      } else if (redisConfig?.host ?? process.env.REDIS_HOST) {
+        const redisOptions: Record<string, unknown> = {
+          host: redisConfig?.host ?? process.env.REDIS_HOST,
+          port: redisConfig?.port ?? parseInt(process.env.REDIS_PORT ?? '6379'),
+          db: redisConfig?.db ?? parseInt(process.env.REDIS_DB ?? '0'),
           maxRetriesPerRequest: 3,
           lazyConnect: true,
         };
 
-        if (redisConfig?.password || process.env.REDIS_PASSWORD) {
+        if (redisConfig?.password ?? process.env.REDIS_PASSWORD) {
           redisOptions.password =
-            redisConfig?.password || process.env.REDIS_PASSWORD;
+            redisConfig?.password ?? process.env.REDIS_PASSWORD;
         }
 
         this.redisClient = new Redis(redisOptions);
@@ -181,7 +187,7 @@ export class CacheService {
       if (memoryItem) {
         if (memoryItem.expiresAt > Date.now()) {
           logger.debug('Cache hit (Memory)', { key });
-          return memoryItem.value;
+          return memoryItem.value as T;
         } else {
           // Remove expired item
           this.memoryCache.delete(key);
@@ -200,7 +206,7 @@ export class CacheService {
   }
 
   async set<T>(key: string, value: T, ttl?: number): Promise<void> {
-    const effectiveTtl = ttl || this.defaultTtl;
+    const effectiveTtl = ttl ?? this.defaultTtl;
     const expiresAt = Date.now() + effectiveTtl * 1000;
 
     try {
@@ -433,5 +439,21 @@ export class CacheService {
   }
 }
 
-// Global cache service instance
-export const cacheService = new CacheService();
+// Global cache service instance - lazily initialized
+let globalCacheService: CacheService | null = null;
+
+export const getCacheService = (): CacheService => {
+  globalCacheService ??= new CacheService();
+  return globalCacheService;
+};
+
+// For testing - allows cleanup of global instance
+export const cleanupGlobalCacheService = async (): Promise<void> => {
+  if (globalCacheService) {
+    await globalCacheService.disconnect();
+    globalCacheService = null;
+  }
+};
+
+// Backward compatibility
+export const cacheService = getCacheService();

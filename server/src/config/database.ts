@@ -9,6 +9,8 @@ export interface DatabaseConfig {
   verbose?: boolean;
 }
 
+type DatabaseParams = (string | number | boolean | null | undefined)[];
+
 export class Database {
   private db: sqlite3.Database | null = null;
   private config: DatabaseConfig;
@@ -25,24 +27,36 @@ export class Database {
         fs.mkdirSync(dataDir, { recursive: true });
       }
 
-      const mode = this.config.mode ?? sqlite3.OPEN_READWRITE | sqlite3.OPEN_CREATE;
-      
+      const mode =
+        this.config.mode ?? sqlite3.OPEN_READWRITE | sqlite3.OPEN_CREATE;
+
       this.db = new sqlite3.Database(this.config.filename, mode, (err) => {
         if (err) {
-          logger.error('Failed to connect to SQLite database', { error: err.message, filename: this.config.filename });
+          logger.error('Failed to connect to SQLite database', {
+            error: err.message,
+            filename: this.config.filename,
+          });
           reject(err);
         } else {
-          logger.info('Connected to SQLite database', { filename: this.config.filename });
-          
-          // Enable foreign key constraints
-          this.db!.run('PRAGMA foreign_keys = ON', (pragmaErr) => {
-            if (pragmaErr) {
-              logger.error('Failed to enable foreign key constraints', { error: pragmaErr.message });
-              reject(pragmaErr);
-            } else {
-              resolve();
-            }
+          logger.info('Connected to SQLite database', {
+            filename: this.config.filename,
           });
+
+          // Enable foreign key constraints
+          if (this.db) {
+            this.db.run('PRAGMA foreign_keys = ON', (pragmaErr) => {
+              if (pragmaErr) {
+                logger.error('Failed to enable foreign key constraints', {
+                  error: pragmaErr.message,
+                });
+                reject(pragmaErr);
+              } else {
+                resolve();
+              }
+            });
+          } else {
+            reject(new Error('Database connection is null'));
+          }
         }
       });
 
@@ -61,7 +75,9 @@ export class Database {
 
       this.db.close((err) => {
         if (err) {
-          logger.error('Failed to close database connection', { error: err.message });
+          logger.error('Failed to close database connection', {
+            error: err.message,
+          });
           reject(err);
         } else {
           logger.info('Database connection closed');
@@ -72,16 +88,23 @@ export class Database {
     });
   }
 
-  async run(sql: string, params: any[] = []): Promise<sqlite3.RunResult> {
+  async run(
+    sql: string,
+    params: DatabaseParams = []
+  ): Promise<sqlite3.RunResult> {
     return new Promise((resolve, reject) => {
       if (!this.db) {
         reject(new Error('Database not connected'));
         return;
       }
 
-      this.db.run(sql, params, function(err) {
+      this.db.run(sql, params, function (err) {
         if (err) {
-          logger.error('Database run error', { error: err.message, sql, params });
+          logger.error('Database run error', {
+            error: err.message,
+            sql,
+            params,
+          });
           reject(err);
         } else {
           resolve(this);
@@ -90,7 +113,10 @@ export class Database {
     });
   }
 
-  async get<T = any>(sql: string, params: any[] = []): Promise<T | undefined> {
+  async get<T = unknown>(
+    sql: string,
+    params: DatabaseParams = []
+  ): Promise<T | undefined> {
     return new Promise((resolve, reject) => {
       if (!this.db) {
         reject(new Error('Database not connected'));
@@ -99,7 +125,11 @@ export class Database {
 
       this.db.get(sql, params, (err, row) => {
         if (err) {
-          logger.error('Database get error', { error: err.message, sql, params });
+          logger.error('Database get error', {
+            error: err.message,
+            sql,
+            params,
+          });
           reject(err);
         } else {
           resolve(row as T);
@@ -108,7 +138,10 @@ export class Database {
     });
   }
 
-  async all<T = any>(sql: string, params: any[] = []): Promise<T[]> {
+  async all<T = unknown>(
+    sql: string,
+    params: DatabaseParams = []
+  ): Promise<T[]> {
     return new Promise((resolve, reject) => {
       if (!this.db) {
         reject(new Error('Database not connected'));
@@ -117,7 +150,11 @@ export class Database {
 
       this.db.all(sql, params, (err, rows) => {
         if (err) {
-          logger.error('Database all error', { error: err.message, sql, params });
+          logger.error('Database all error', {
+            error: err.message,
+            sql,
+            params,
+          });
           reject(err);
         } else {
           resolve(rows as T[]);
@@ -156,19 +193,23 @@ export class Database {
     }
   }
 
-  async healthCheck(): Promise<{ status: 'healthy' | 'unhealthy'; responseTime: number; error?: string }> {
+  async healthCheck(): Promise<{
+    status: 'healthy' | 'unhealthy';
+    responseTime: number;
+    error?: string;
+  }> {
     const startTime = Date.now();
-    
+
     try {
       await this.get('SELECT 1 as test');
       const responseTime = Date.now() - startTime;
       return { status: 'healthy', responseTime };
     } catch (error) {
       const responseTime = Date.now() - startTime;
-      return { 
-        status: 'unhealthy', 
-        responseTime, 
-        error: error instanceof Error ? error.message : 'Unknown error' 
+      return {
+        status: 'unhealthy',
+        responseTime,
+        error: error instanceof Error ? error.message : 'Unknown error',
       };
     }
   }

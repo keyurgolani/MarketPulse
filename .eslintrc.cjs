@@ -14,6 +14,7 @@ module.exports = {
     'dist',
     'node_modules',
     'server/**/*',
+    'coverage/**/*',
     '*.config.js',
     '*.config.ts',
     '*.config.cjs',
@@ -24,7 +25,7 @@ module.exports = {
   parserOptions: {
     ecmaVersion: 'latest',
     sourceType: 'module',
-    project: ['./tsconfig.app.json', './tsconfig.test.json'],
+    project: ['./tsconfig.app.json', './tsconfig.test.json', './tests/tsconfig.json'],
     ecmaFeatures: {
       jsx: true,
     },

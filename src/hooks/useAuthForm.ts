@@ -40,7 +40,10 @@ export const useLoginForm = (): {
   formData: LoginFormState;
   errors: Record<string, string>;
   isLoading: boolean;
+  isSubmitting: boolean;
+  updateField: (e: React.ChangeEvent<HTMLInputElement>) => void;
   handleChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  submitForm: () => Promise<boolean>;
   handleSubmit: (e: React.FormEvent) => Promise<void>;
   clearErrors: () => void;
 } => {
@@ -56,8 +59,8 @@ export const useLoginForm = (): {
     errors: {},
   });
 
-  // Update form field
-  const updateField = useCallback(
+  // Update form field by name and value
+  const updateFieldByName = useCallback(
     (field: keyof LoginFormState, value: string) => {
       setFormData((prev) => ({ ...prev, [field]: value }));
 
@@ -70,6 +73,15 @@ export const useLoginForm = (): {
       }
     },
     [submissionState.errors]
+  );
+
+  // Update field from event
+  const updateField = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const { name, value } = e.target;
+      updateFieldByName(name as keyof LoginFormState, value);
+    },
+    [updateFieldByName]
   );
 
   // Validate login form
@@ -117,19 +129,20 @@ export const useLoginForm = (): {
     }
   }, [formData, validateForm, login, clearError]);
 
-  // Reset form
-  const resetForm = useCallback(() => {
-    setFormData({ email: '', password: '' });
-    setSubmissionState({ isSubmitting: false, errors: {} });
-  }, []);
-
   return {
     formData,
-    updateField,
-    submitForm,
-    resetForm,
+    errors: submissionState.errors as Record<string, string>,
+    isLoading: submissionState.isSubmitting,
     isSubmitting: submissionState.isSubmitting,
-    errors: submissionState.errors,
+    updateField,
+    handleChange: updateField,
+    submitForm,
+    handleSubmit: async (e: React.FormEvent): Promise<void> => {
+      e.preventDefault();
+      await submitForm();
+    },
+    clearErrors: (): void =>
+      setSubmissionState((prev) => ({ ...prev, errors: {} })),
   };
 };
 
@@ -140,7 +153,10 @@ export const useRegisterForm = (): {
   formData: RegisterFormState;
   errors: Record<string, string>;
   isLoading: boolean;
+  isSubmitting: boolean;
+  updateField: (e: React.ChangeEvent<HTMLInputElement>) => void;
   handleChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  submitForm: () => Promise<boolean>;
   handleSubmit: (e: React.FormEvent) => Promise<void>;
   clearErrors: () => void;
 } => {
@@ -159,8 +175,8 @@ export const useRegisterForm = (): {
     errors: {},
   });
 
-  // Update form field
-  const updateField = useCallback(
+  // Update form field by name and value
+  const updateFieldByName = useCallback(
     (field: keyof RegisterFormState, value: string) => {
       setFormData((prev) => ({ ...prev, [field]: value }));
 
@@ -173,6 +189,15 @@ export const useRegisterForm = (): {
       }
     },
     [submissionState.errors]
+  );
+
+  // Update field from event
+  const updateField = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const { name, value } = e.target;
+      updateFieldByName(name as keyof RegisterFormState, value);
+    },
+    [updateFieldByName]
   );
 
   // Validate register form
@@ -255,24 +280,19 @@ export const useRegisterForm = (): {
     }
   }, [formData, validateForm, register, clearError]);
 
-  // Reset form
-  const resetForm = useCallback(() => {
-    setFormData({
-      email: '',
-      password: '',
-      confirmPassword: '',
-      first_name: '',
-      last_name: '',
-    });
-    setSubmissionState({ isSubmitting: false, errors: {} });
-  }, []);
-
   return {
     formData,
-    updateField,
-    submitForm,
-    resetForm,
+    errors: submissionState.errors as Record<string, string>,
+    isLoading: submissionState.isSubmitting,
     isSubmitting: submissionState.isSubmitting,
-    errors: submissionState.errors,
+    updateField,
+    handleChange: updateField,
+    submitForm,
+    handleSubmit: async (e: React.FormEvent): Promise<void> => {
+      e.preventDefault();
+      await submitForm();
+    },
+    clearErrors: (): void =>
+      setSubmissionState((prev) => ({ ...prev, errors: {} })),
   };
 };

@@ -232,7 +232,7 @@ export class InitialSchemaMigration extends BaseMigration {
       'assets',
       'widgets',
       'dashboards',
-      'users'
+      'users',
     ];
 
     for (const table of tables) {

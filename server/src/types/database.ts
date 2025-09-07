@@ -1,17 +1,74 @@
-// Base database record interface
-export interface BaseRecord {
+// Database row types for type-safe database operations
+
+export interface DashboardRow {
+  id: string;
+  user_id: string;
+  name: string;
+  description?: string;
+  layout?: string; // JSON string
+  widgets?: string; // JSON string
+  is_default: number; // SQLite boolean (0 or 1)
   created_at: string;
-  updated_at?: string;
+  updated_at: string;
 }
 
-// User interfaces
-export interface User extends BaseRecord {
+export interface UserRow {
   id: string;
   email: string;
   password_hash: string;
   first_name?: string;
   last_name?: string;
   preferences?: string; // JSON string
+  created_at: string;
+  updated_at: string;
+}
+
+export interface UserSessionRow {
+  id: string;
+  user_id: string;
+  token_hash: string;
+  expires_at: string;
+  created_at: string;
+}
+
+export interface AssetRow {
+  id: string;
+  symbol: string;
+  name: string;
+  type: string;
+  exchange?: string;
+  currency?: string;
+  sector?: string;
+  industry?: string;
+  market_cap?: number;
+  description?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface TestRow {
+  name: string;
+  value: number;
+}
+
+export interface TableInfoRow {
+  name: string;
+}
+
+export interface IndexInfoRow {
+  name: string;
+}
+
+// Application types (derived from database rows)
+export interface User {
+  id: string;
+  email: string;
+  password_hash: string;
+  first_name?: string;
+  last_name?: string;
+  preferences?: string; // JSON string in database
+  created_at: string;
+  updated_at: string;
 }
 
 export interface UserPreferences {
@@ -29,172 +86,71 @@ export interface UserPreferences {
   };
 }
 
-// Dashboard interfaces
-export interface Dashboard extends BaseRecord {
-  id: string;
-  user_id: string;
-  name: string;
-  description?: string;
-  is_default: boolean;
-  layout_config?: string; // JSON string
-}
-
-export interface DashboardLayout {
-  columns: number;
-  rows: number;
-  gap: number;
-  responsive: boolean;
-}
-
-// Widget interfaces
-export interface Widget extends BaseRecord {
-  id: string;
-  dashboard_id: string;
-  type: 'asset' | 'news' | 'chart' | 'summary';
-  position_config?: string; // JSON string
-  widget_config?: string; // JSON string
-}
-
-export interface WidgetPosition {
-  x: number;
-  y: number;
-  w: number;
-  h: number;
-}
-
-export interface AssetWidgetConfig {
-  symbol: string;
-  refreshInterval: number;
-  showChart: boolean;
-  chartTimeframe: string;
-}
-
-export interface NewsWidgetConfig {
-  sources: string[];
-  maxArticles: number;
-  showSentiment: boolean;
-  filterByAssets: string[];
-}
-
-export interface ChartWidgetConfig {
-  symbol: string;
-  chartType: 'line' | 'candlestick' | 'area';
-  timeframe: '1D' | '1W' | '1M' | '3M' | '6M' | '1Y' | '5Y';
-  indicators: string[];
-}
-
-export interface SummaryWidgetConfig {
-  watchlistId?: string;
-  metrics: string[];
-  refreshInterval: number;
-}
-
-// Asset interfaces
-export interface Asset {
-  symbol: string;
-  name: string;
-  sector?: string | undefined;
-  market_cap?: number | undefined;
-  description?: string | undefined;
-  last_updated: string;
-}
-
-export interface AssetPrice {
-  id: number;
-  symbol: string;
-  price: number;
-  change_amount?: number | undefined;
-  change_percent?: number | undefined;
-  volume?: number | undefined;
-  timestamp: string;
-}
-
-// News interfaces
-export interface NewsArticle extends BaseRecord {
-  id: string;
-  title: string;
-  content?: string;
-  summary?: string;
-  source: string;
-  author?: string;
-  url?: string;
-  published_at?: string;
-  sentiment_score?: number; // -1 to 1
-}
-
-export interface NewsAsset {
-  news_id: string;
-  asset_symbol: string;
-  relevance_score: number;
-}
-
-// Session interfaces
-export interface UserSession extends BaseRecord {
+export interface UserSession {
   id: string;
   user_id: string;
   token_hash: string;
   expires_at: string;
+  created_at: string;
+  updated_at?: string; // Some code expects this
 }
 
-// Watchlist interfaces
-export interface Watchlist extends BaseRecord {
+export interface Asset {
+  id: string;
+  symbol: string;
+  name: string;
+  type: string;
+  exchange?: string;
+  currency?: string;
+  sector?: string;
+  industry?: string;
+  market_cap?: number;
+  description?: string;
+  last_updated?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface AssetPrice {
+  id: string | number; // Can be number when creating (0), string when from DB
+  asset_id?: string; // Optional for creation
+  symbol?: string; // Required for creation, optional for DB results
+  price: number;
+  volume?: number;
+  change?: number; // For compatibility
+  change_amount?: number; // Schema expects this
+  change_percent?: number;
+  timestamp?: string; // Optional for creation
+  source?: string; // Optional for creation
+}
+
+export interface Dashboard {
   id: string;
   user_id: string;
   name: string;
   description?: string;
+  layout: DashboardLayout[];
+  widgets: DashboardWidget[];
+  layout_config?: string; // Some code expects this
+  is_default: boolean;
+  created_at: string;
+  updated_at: string;
 }
 
-export interface WatchlistAsset {
-  watchlist_id: string;
-  asset_symbol: string;
-  added_at: string;
+export interface DashboardLayout {
+  i: string;
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+  minW?: number;
+  minH?: number;
+  maxW?: number;
+  maxH?: number;
 }
 
-// Default dashboard configuration interfaces
-export interface DefaultDashboardConfig extends BaseRecord {
+export interface DashboardWidget {
   id: string;
-  name: string;
-  description?: string;
-  layout_config?: string; // JSON string
-  widget_configs?: string; // JSON string
-  is_active: boolean;
-}
-
-// System monitoring interfaces
-export interface SystemMetric {
-  id: number;
-  metric_type: string;
-  metric_value: number;
-  endpoint?: string;
-  user_id?: string;
-  timestamp: string;
-  metadata?: string; // JSON string
-}
-
-export interface ApiHealthStatus {
-  id: number;
-  service_name: string;
-  status: 'up' | 'down' | 'degraded';
-  response_time?: number;
-  error_message?: string;
-  last_check: string;
-}
-
-export interface UserPreferenceHistory {
-  id: number;
-  user_id: string;
-  preference_key: string;
-  old_value?: string;
-  new_value?: string;
-  changed_at: string;
-}
-
-export interface RateLimitTracking {
-  id: number;
-  user_id?: string;
-  ip_address?: string;
-  endpoint?: string;
-  request_count: number;
-  window_start: string;
-  last_request: string;
+  type: string;
+  config: Record<string, unknown>;
 }

@@ -1,8 +1,15 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { authService } from '../authService';
 
+// Type for testing private properties
+interface AuthServiceWithPrivates {
+  accessToken: string | null;
+  refreshToken: string | null;
+}
+
 // Mock fetch
 global.fetch = vi.fn();
+const mockFetch = fetch as ReturnType<typeof vi.fn>;
 
 // Mock localStorage
 const mockLocalStorage = {
@@ -20,10 +27,10 @@ describe('AuthService', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockLocalStorage.getItem.mockReturnValue(null);
-    
+
     // Reset service state
-    (authService as any).accessToken = null;
-    (authService as any).refreshToken = null;
+    (authService as unknown as AuthServiceWithPrivates).accessToken = null;
+    (authService as unknown as AuthServiceWithPrivates).refreshToken = null;
   });
 
   describe('register', () => {
@@ -53,7 +60,7 @@ describe('AuthService', () => {
         },
       };
 
-      (fetch as any).mockResolvedValue({
+      mockFetch.mockResolvedValue({
         ok: true,
         json: () => Promise.resolve(mockResponse),
       });
@@ -70,7 +77,10 @@ describe('AuthService', () => {
         })
       );
       expect(result.user.email).toBe('test@example.com');
-      expect(mockLocalStorage.setItem).toHaveBeenCalledWith('accessToken', 'access-token');
+      expect(mockLocalStorage.setItem).toHaveBeenCalledWith(
+        'accessToken',
+        'access-token'
+      );
     });
 
     it('should throw error on registration failure', async () => {
@@ -80,16 +90,19 @@ describe('AuthService', () => {
         password: 'password123',
       };
 
-      (fetch as any).mockResolvedValue({
+      mockFetch.mockResolvedValue({
         ok: false,
-        json: () => Promise.resolve({
-          success: false,
-          error: 'User already exists',
-        }),
+        json: () =>
+          Promise.resolve({
+            success: false,
+            error: 'User already exists',
+          }),
       });
 
       // Act & Assert
-      await expect(authService.register(registerData)).rejects.toThrow('User already exists');
+      await expect(authService.register(registerData)).rejects.toThrow(
+        'User already exists'
+      );
     });
   });
 
@@ -116,7 +129,7 @@ describe('AuthService', () => {
         },
       };
 
-      (fetch as any).mockResolvedValue({
+      mockFetch.mockResolvedValue({
         ok: true,
         json: () => Promise.resolve(mockResponse),
       });
@@ -133,7 +146,10 @@ describe('AuthService', () => {
         })
       );
       expect(result.user.email).toBe('test@example.com');
-      expect(mockLocalStorage.setItem).toHaveBeenCalledWith('accessToken', 'access-token');
+      expect(mockLocalStorage.setItem).toHaveBeenCalledWith(
+        'accessToken',
+        'access-token'
+      );
     });
 
     it('should throw error on login failure', async () => {
@@ -143,16 +159,19 @@ describe('AuthService', () => {
         password: 'wrong-password',
       };
 
-      (fetch as any).mockResolvedValue({
+      mockFetch.mockResolvedValue({
         ok: false,
-        json: () => Promise.resolve({
-          success: false,
-          error: 'Invalid credentials',
-        }),
+        json: () =>
+          Promise.resolve({
+            success: false,
+            error: 'Invalid credentials',
+          }),
       });
 
       // Act & Assert
-      await expect(authService.login(credentials)).rejects.toThrow('Invalid credentials');
+      await expect(authService.login(credentials)).rejects.toThrow(
+        'Invalid credentials'
+      );
     });
   });
 
@@ -160,7 +179,7 @@ describe('AuthService', () => {
     it('should logout user successfully', async () => {
       // Arrange
       mockLocalStorage.getItem.mockReturnValue('access-token');
-      (fetch as any).mockResolvedValue({
+      mockFetch.mockResolvedValue({
         ok: true,
         json: () => Promise.resolve({ success: true }),
       });
@@ -182,7 +201,7 @@ describe('AuthService', () => {
     it('should clear tokens even if logout request fails', async () => {
       // Arrange
       mockLocalStorage.getItem.mockReturnValue('access-token');
-      (fetch as any).mockRejectedValue(new Error('Network error'));
+      mockFetch.mockRejectedValue(new Error('Network error'));
 
       // Act
       await authService.logout();
@@ -200,10 +219,11 @@ describe('AuthService', () => {
         if (key === 'refreshToken') return 'refresh-token';
         return null;
       });
-      
+
       // Set the refresh token on the service instance
-      (authService as any).refreshToken = 'refresh-token';
-      
+      (authService as unknown as AuthServiceWithPrivates).refreshToken =
+        'refresh-token';
+
       const mockResponse = {
         success: true,
         data: {
@@ -215,7 +235,7 @@ describe('AuthService', () => {
         },
       };
 
-      (fetch as any).mockResolvedValue({
+      mockFetch.mockResolvedValue({
         ok: true,
         json: () => Promise.resolve(mockResponse),
       });
@@ -232,13 +252,16 @@ describe('AuthService', () => {
         })
       );
       expect(result.accessToken).toBe('new-access-token');
-      expect(mockLocalStorage.setItem).toHaveBeenCalledWith('accessToken', 'new-access-token');
+      expect(mockLocalStorage.setItem).toHaveBeenCalledWith(
+        'accessToken',
+        'new-access-token'
+      );
     });
 
     it('should throw error if no refresh token available', async () => {
       // Arrange
       mockLocalStorage.getItem.mockReturnValue(null);
-      (authService as any).refreshToken = null;
+      (authService as unknown as AuthServiceWithPrivates).refreshToken = null;
 
       // Act & Assert
       await expect(authService.refreshAccessToken()).rejects.toThrow(
@@ -254,10 +277,11 @@ describe('AuthService', () => {
         if (key === 'accessToken') return 'access-token';
         return null;
       });
-      
+
       // Set the access token on the service instance
-      (authService as any).accessToken = 'access-token';
-      
+      (authService as unknown as AuthServiceWithPrivates).accessToken =
+        'access-token';
+
       const mockResponse = {
         success: true,
         data: {
@@ -269,7 +293,7 @@ describe('AuthService', () => {
         },
       };
 
-      (fetch as any).mockResolvedValue({
+      mockFetch.mockResolvedValue({
         ok: true,
         json: () => Promise.resolve(mockResponse),
       });
@@ -297,9 +321,10 @@ describe('AuthService', () => {
         if (key === 'accessToken') return 'access-token';
         return null;
       });
-      
+
       // Set the access token on the service instance
-      (authService as any).accessToken = 'access-token';
+      (authService as unknown as AuthServiceWithPrivates).accessToken =
+        'access-token';
 
       // Act
       const result = authService.isAuthenticated();
@@ -311,7 +336,7 @@ describe('AuthService', () => {
     it('should return false if no access token', () => {
       // Arrange
       mockLocalStorage.getItem.mockReturnValue(null);
-      (authService as any).accessToken = null;
+      (authService as unknown as AuthServiceWithPrivates).accessToken = null;
 
       // Act
       const result = authService.isAuthenticated();

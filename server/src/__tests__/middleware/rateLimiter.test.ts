@@ -1,10 +1,10 @@
 import { Request, Response, NextFunction } from 'express';
-import { 
-  createRateLimiter, 
-  rateLimiter, 
-  strictRateLimiter, 
+import {
+  createRateLimiter,
+  rateLimiter,
+  strictRateLimiter,
   lenientRateLimiter,
-  cleanupRateLimiter 
+  cleanupRateLimiter,
 } from '../../middleware/rateLimiter';
 import { RateLimitError } from '../../middleware/errorHandler';
 
@@ -16,21 +16,21 @@ describe('Rate Limiter Middleware', () => {
 
   beforeEach(() => {
     setHeaderSpy = jest.fn();
-    
+
     mockRequest = {
       ip: '127.0.0.1',
       url: '/test',
       method: 'GET',
       get: jest.fn().mockReturnValue('test-user-agent'),
     };
-    
+
     mockResponse = {
       setHeader: setHeaderSpy,
       end: jest.fn(),
     };
-    
+
     mockNext = jest.fn();
-    
+
     jest.clearAllMocks();
   });
 
@@ -44,12 +44,15 @@ describe('Rate Limiter Middleware', () => {
         windowMs: 60000,
         maxRequests: 5,
       });
-      
+
       limiter(mockRequest as Request, mockResponse as Response, mockNext);
-      
+
       expect(setHeaderSpy).toHaveBeenCalledWith('X-RateLimit-Limit', 5);
       expect(setHeaderSpy).toHaveBeenCalledWith('X-RateLimit-Remaining', 4);
-      expect(setHeaderSpy).toHaveBeenCalledWith('X-RateLimit-Reset', expect.any(Number));
+      expect(setHeaderSpy).toHaveBeenCalledWith(
+        'X-RateLimit-Reset',
+        expect.any(Number)
+      );
       expect(mockNext).toHaveBeenCalled();
     });
 
@@ -58,14 +61,14 @@ describe('Rate Limiter Middleware', () => {
         windowMs: 60000,
         maxRequests: 2,
       });
-      
+
       // First two requests should pass
       limiter(mockRequest as Request, mockResponse as Response, mockNext);
       expect(mockNext).toHaveBeenCalledTimes(1);
-      
+
       limiter(mockRequest as Request, mockResponse as Response, mockNext);
       expect(mockNext).toHaveBeenCalledTimes(2);
-      
+
       // Third request should throw RateLimitError
       expect(() => {
         limiter(mockRequest as Request, mockResponse as Response, mockNext);
@@ -79,21 +82,27 @@ describe('Rate Limiter Middleware', () => {
         maxRequests: 5,
         keyGenerator: customKeyGenerator,
       });
-      
+
       limiter(mockRequest as Request, mockResponse as Response, mockNext);
-      
+
       expect(customKeyGenerator).toHaveBeenCalledWith(mockRequest);
     });
 
     it('should use user ID when available', () => {
-      (mockRequest as any).user = { id: 'user123' };
+      (mockRequest as Request).user = {
+        id: 'user123',
+        email: 'test@example.com',
+        password_hash: 'hash',
+        created_at: '2024-01-01T00:00:00Z',
+        updated_at: '2024-01-01T00:00:00Z',
+      };
       const limiter = createRateLimiter({
         windowMs: 60000,
         maxRequests: 5,
       });
-      
+
       limiter(mockRequest as Request, mockResponse as Response, mockNext);
-      
+
       expect(mockNext).toHaveBeenCalled();
     });
 
@@ -102,16 +111,16 @@ describe('Rate Limiter Middleware', () => {
         windowMs: 100, // Very short window for testing
         maxRequests: 1,
       });
-      
+
       // First request should pass
       limiter(mockRequest as Request, mockResponse as Response, mockNext);
       expect(mockNext).toHaveBeenCalledTimes(1);
-      
+
       // Second request should fail
       expect(() => {
         limiter(mockRequest as Request, mockResponse as Response, mockNext);
       }).toThrow(RateLimitError);
-      
+
       // After window expires, request should pass again
       setTimeout(() => {
         jest.clearAllMocks();
@@ -129,18 +138,18 @@ describe('Rate Limiter Middleware', () => {
         maxRequests: 1,
         skipSuccessfulRequests: true,
       });
-      
+
       // Mock successful response
       const mockEnd = jest.fn();
       mockResponse.end = mockEnd;
       mockResponse.statusCode = 200;
-      
+
       limiter(mockRequest as Request, mockResponse as Response, mockNext);
-      
+
       // Simulate response end
       const originalEnd = mockResponse.end as jest.Mock;
       originalEnd.call(mockResponse);
-      
+
       // Second request should still pass because first was successful
       jest.clearAllMocks();
       limiter(mockRequest as Request, mockResponse as Response, mockNext);
@@ -155,18 +164,18 @@ describe('Rate Limiter Middleware', () => {
         maxRequests: 1,
         skipFailedRequests: true,
       });
-      
+
       // Mock failed response
       const mockEnd = jest.fn();
       mockResponse.end = mockEnd;
       mockResponse.statusCode = 400;
-      
+
       limiter(mockRequest as Request, mockResponse as Response, mockNext);
-      
+
       // Simulate response end
       const originalEnd = mockResponse.end as jest.Mock;
       originalEnd.call(mockResponse);
-      
+
       // Second request should still pass because first failed
       jest.clearAllMocks();
       limiter(mockRequest as Request, mockResponse as Response, mockNext);
@@ -177,21 +186,29 @@ describe('Rate Limiter Middleware', () => {
   describe('predefined rate limiters', () => {
     it('should have correct configuration for default rate limiter', () => {
       rateLimiter(mockRequest as Request, mockResponse as Response, mockNext);
-      
+
       expect(setHeaderSpy).toHaveBeenCalledWith('X-RateLimit-Limit', 100);
       expect(mockNext).toHaveBeenCalled();
     });
 
     it('should have correct configuration for strict rate limiter', () => {
-      strictRateLimiter(mockRequest as Request, mockResponse as Response, mockNext);
-      
+      strictRateLimiter(
+        mockRequest as Request,
+        mockResponse as Response,
+        mockNext
+      );
+
       expect(setHeaderSpy).toHaveBeenCalledWith('X-RateLimit-Limit', 5);
       expect(mockNext).toHaveBeenCalled();
     });
 
     it('should have correct configuration for lenient rate limiter', () => {
-      lenientRateLimiter(mockRequest as Request, mockResponse as Response, mockNext);
-      
+      lenientRateLimiter(
+        mockRequest as Request,
+        mockResponse as Response,
+        mockNext
+      );
+
       expect(setHeaderSpy).toHaveBeenCalledWith('X-RateLimit-Limit', 1000);
       expect(mockNext).toHaveBeenCalled();
     });
@@ -203,12 +220,15 @@ describe('Rate Limiter Middleware', () => {
         windowMs: 60000,
         maxRequests: 10,
       });
-      
+
       limiter(mockRequest as Request, mockResponse as Response, mockNext);
-      
+
       expect(setHeaderSpy).toHaveBeenCalledWith('X-RateLimit-Limit', 10);
       expect(setHeaderSpy).toHaveBeenCalledWith('X-RateLimit-Remaining', 9);
-      expect(setHeaderSpy).toHaveBeenCalledWith('X-RateLimit-Reset', expect.any(Number));
+      expect(setHeaderSpy).toHaveBeenCalledWith(
+        'X-RateLimit-Reset',
+        expect.any(Number)
+      );
     });
 
     it('should update remaining count correctly', () => {
@@ -216,16 +236,16 @@ describe('Rate Limiter Middleware', () => {
         windowMs: 60000,
         maxRequests: 3,
       });
-      
+
       // First request
       limiter(mockRequest as Request, mockResponse as Response, mockNext);
       expect(setHeaderSpy).toHaveBeenCalledWith('X-RateLimit-Remaining', 2);
-      
+
       // Second request
       jest.clearAllMocks();
       limiter(mockRequest as Request, mockResponse as Response, mockNext);
       expect(setHeaderSpy).toHaveBeenCalledWith('X-RateLimit-Remaining', 1);
-      
+
       // Third request
       jest.clearAllMocks();
       limiter(mockRequest as Request, mockResponse as Response, mockNext);

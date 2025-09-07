@@ -2,6 +2,7 @@ import { AssetService } from '../../services/AssetService';
 import { AssetRepository } from '../../repositories/AssetRepository';
 import { CacheService } from '../../services/CacheService';
 import { Asset, AssetPrice } from '../../types/database';
+import { Database } from '../../config/database';
 
 // Mock dependencies
 jest.mock('../../repositories/AssetRepository');
@@ -29,29 +30,35 @@ describe('AssetService', () => {
   let mockCacheService: jest.Mocked<CacheService>;
 
   const mockAsset: Asset = {
+    id: 'asset-1',
     symbol: 'AAPL',
     name: 'Apple Inc.',
+    type: 'stock',
     sector: 'Technology',
     market_cap: 3000000000000,
     description: 'Apple Inc. designs, manufactures, and markets smartphones',
     last_updated: new Date().toISOString(),
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
   };
 
   const mockAssetPrice: AssetPrice = {
     id: 1,
+    asset_id: 'asset-1',
     symbol: 'AAPL',
     price: 152.5,
     change_amount: 1.5,
     change_percent: 0.99,
     volume: 1000000,
     timestamp: new Date().toISOString(),
+    source: 'test',
   };
 
   beforeEach(() => {
     jest.clearAllMocks();
 
     mockAssetRepository = new MockedAssetRepository(
-      {} as any
+      {} as Database
     ) as jest.Mocked<AssetRepository>;
     mockCacheService = new MockedCacheService() as jest.Mocked<CacheService>;
 
@@ -63,7 +70,10 @@ describe('AssetService', () => {
     });
 
     // Mock the providers array to include our mock provider
-    (assetService as any).providers = [mockProvider];
+    Object.defineProperty(assetService, 'providers', {
+      value: [mockProvider],
+      writable: true,
+    });
   });
 
   describe('getAsset', () => {
@@ -404,7 +414,10 @@ describe('AssetService', () => {
       };
 
       // Add second provider
-      (assetService as any).providers = [mockProvider, secondProvider];
+      Object.defineProperty(assetService, 'providers', {
+        value: [mockProvider, secondProvider],
+        writable: true,
+      });
 
       mockCacheService.get.mockResolvedValue(null);
       mockAssetRepository.findBySymbol.mockResolvedValue(null);

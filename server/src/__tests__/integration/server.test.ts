@@ -6,7 +6,7 @@ import { db } from '../../config/database';
 const createTestApp = () => {
   const app = express();
   app.use(express.json());
-  
+
   // Basic health endpoint
   app.get('/health', async (_req, res) => {
     try {
@@ -20,7 +20,7 @@ const createTestApp = () => {
         },
         timestamp: Date.now(),
       });
-    } catch (error) {
+    } catch {
       res.status(503).json({
         success: false,
         error: 'Health check failed',
@@ -28,7 +28,7 @@ const createTestApp = () => {
       });
     }
   });
-  
+
   return app;
 };
 
@@ -45,9 +45,7 @@ describe('Server Integration', () => {
   });
 
   it('should respond to health check', async () => {
-    const response = await request(app)
-      .get('/health')
-      .expect(200);
+    const response = await request(app).get('/health').expect(200);
 
     expect(response.body.success).toBe(true);
     expect(response.body.data.status).toBeDefined();

@@ -1,6 +1,7 @@
 import { Database, createDatabase } from '../../config/database';
 import { MigrationRunner } from '../../migrations/MigrationRunner';
 import { InitialSchemaMigration } from '../../migrations/001_initial_schema';
+import { TableInfoRow, IndexInfoRow } from '../../types/database';
 import fs from 'fs';
 
 describe('Database Setup Integration', () => {
@@ -19,7 +20,7 @@ describe('Database Setup Integration', () => {
 
   afterAll(async () => {
     await db.disconnect();
-    
+
     // Clean up test database
     if (fs.existsSync(testDbPath)) {
       fs.unlinkSync(testDbPath);
@@ -40,7 +41,7 @@ describe('Database Setup Integration', () => {
   it('should create all required tables', async () => {
     const tables = [
       'users',
-      'dashboards', 
+      'dashboards',
       'widgets',
       'assets',
       'asset_prices',
@@ -53,16 +54,16 @@ describe('Database Setup Integration', () => {
       'system_metrics',
       'api_health_status',
       'user_preference_history',
-      'rate_limit_tracking'
+      'rate_limit_tracking',
     ];
 
     for (const table of tables) {
-      const result = await db.get(
+      const result = await db.get<TableInfoRow>(
         "SELECT name FROM sqlite_master WHERE type='table' AND name=?",
         [table]
       );
       expect(result).toBeDefined();
-      expect(result.name).toBe(table);
+      expect(result?.name).toBe(table);
     }
   });
 
@@ -72,20 +73,20 @@ describe('Database Setup Integration', () => {
       db.run('INSERT INTO dashboards (id, user_id, name) VALUES (?, ?, ?)', [
         'test-id',
         'non-existent-user',
-        'Test Dashboard'
+        'Test Dashboard',
       ])
     ).rejects.toThrow();
   });
 
   it('should have proper indexes', async () => {
-    const indexes = await db.all(
+    const indexes = await db.all<IndexInfoRow>(
       "SELECT name FROM sqlite_master WHERE type='index' AND sql IS NOT NULL"
     );
-    
+
     // Should have created indexes
     expect(indexes.length).toBeGreaterThan(0);
-    
-    const indexNames = indexes.map(idx => idx.name);
+
+    const indexNames = indexes.map((idx) => idx.name);
     expect(indexNames).toContain('idx_dashboards_user_id');
     expect(indexNames).toContain('idx_widgets_dashboard_id');
     expect(indexNames).toContain('idx_asset_prices_symbol');

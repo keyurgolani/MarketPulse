@@ -1,6 +1,6 @@
-import { FullConfig } from '@playwright/test';
+// Global teardown for Playwright tests
 
-async function globalTeardown(config: FullConfig) {
+async function globalTeardown() {
   console.log('🧹 Starting global test teardown...');
   
   try {
