@@ -5,6 +5,7 @@ import { db } from '../config/database';
 import { MigrationRunner } from '../migrations/MigrationRunner';
 import { InitialSchemaMigration } from '../migrations/001_initial_schema';
 import { UpdateDashboardsSchemaMigration } from '../migrations/002_update_dashboards_schema';
+import { AddUpdatedAtToUserSessionsMigration } from '../migrations/003_add_updated_at_to_user_sessions';
 import { logger } from '../utils/logger';
 
 // Load environment variables
@@ -21,6 +22,7 @@ async function runMigrations(): Promise<void> {
     const migrationRunner = new MigrationRunner(db);
     migrationRunner.addMigration(new InitialSchemaMigration());
     migrationRunner.addMigration(new UpdateDashboardsSchemaMigration());
+    migrationRunner.addMigration(new AddUpdatedAtToUserSessionsMigration());
 
     // Run migrations
     await migrationRunner.runMigrations();
@@ -49,6 +51,7 @@ if (command === 'status') {
       const migrationRunner = new MigrationRunner(db);
       migrationRunner.addMigration(new InitialSchemaMigration());
       migrationRunner.addMigration(new UpdateDashboardsSchemaMigration());
+      migrationRunner.addMigration(new AddUpdatedAtToUserSessionsMigration());
 
       const status = await migrationRunner.getMigrationStatus();
       console.log('Migration Status:');
@@ -84,6 +87,7 @@ if (command === 'status') {
       const migrationRunner = new MigrationRunner(db);
       migrationRunner.addMigration(new InitialSchemaMigration());
       migrationRunner.addMigration(new UpdateDashboardsSchemaMigration());
+      migrationRunner.addMigration(new AddUpdatedAtToUserSessionsMigration());
 
       const migrationId = process.argv[3]; // Optional specific migration ID
       await migrationRunner.rollbackMigration(migrationId);
