@@ -4,8 +4,13 @@ import { logger } from '../utils/logger';
 import { createAssetService } from '../services/AssetService';
 import { AssetQuerySchema } from '../schemas/validation';
 
-// Initialize asset service
-const assetService = createAssetService();
+// Asset service will be initialized after environment variables are loaded
+let assetService: ReturnType<typeof createAssetService>;
+
+// Initialize asset service (called after environment variables are loaded)
+export const initializeAssetService = (): void => {
+  assetService = createAssetService();
+};
 
 // Validation schemas for request parameters
 const AssetSymbolSchema = z.object({

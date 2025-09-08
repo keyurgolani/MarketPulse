@@ -67,7 +67,24 @@ export class AssetRepository extends BaseRepository<
         description: validatedData.description,
       };
 
-      return await super.create(assetData);
+      // Custom create implementation for assets table (uses symbol as PK, not id)
+      const keys = Object.keys(assetData);
+      const values = Object.values(assetData);
+      const placeholders = keys.map(() => '?').join(', ');
+
+      const sql = `
+        INSERT INTO ${this.tableName} (${keys.join(', ')})
+        VALUES (${placeholders})
+      `;
+
+      await this.db.run(sql, values);
+
+      // Return the created asset using symbol as the key
+      const created = await this.findBySymbol(assetData.symbol);
+      if (!created) {
+        throw new Error('Failed to retrieve created asset');
+      }
+      return created;
     } catch (error) {
       logger.error('Error creating asset', { data, error });
       throw error;
@@ -98,7 +115,23 @@ export class AssetRepository extends BaseRepository<
         updateData.description = validatedData.description;
       }
 
-      return await super.update(symbol, updateData);
+      // Custom update implementation for assets table (uses symbol as PK, not id)
+      const keys = Object.keys(updateData);
+      const values = Object.values(updateData);
+
+      if (keys.length === 0) {
+        return await this.findBySymbol(symbol);
+      }
+
+      const setClause = keys.map((key) => `${key} = ?`).join(', ');
+      const sql = `
+        UPDATE ${this.tableName} 
+        SET ${setClause}, last_updated = CURRENT_TIMESTAMP
+        WHERE symbol = ?
+      `;
+
+      await this.db.run(sql, [...values, symbol]);
+      return await this.findBySymbol(symbol);
     } catch (error) {
       logger.error('Error updating asset', { symbol, data, error });
       throw error;

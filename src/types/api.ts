@@ -6,11 +6,7 @@ export interface ApiResponse<T> {
   code?: string;
   message?: string;
   timestamp: number;
-  metadata?: {
-    page?: number;
-    limit?: number;
-    total?: number;
-  };
+  metadata?: Partial<PaginationMetadata>;
 }
 
 // Error response interface
@@ -26,6 +22,15 @@ export interface PaginationParams {
   page?: number;
   limit?: number;
   offset?: number;
+}
+
+// Pagination metadata
+export interface PaginationMetadata {
+  page: number;
+  limit: number;
+  total: number;
+  hasNext: boolean;
+  hasPrev: boolean;
 }
 
 // Search parameters

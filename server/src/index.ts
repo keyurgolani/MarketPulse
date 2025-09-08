@@ -25,8 +25,14 @@ import authRoutes from './routes/auth';
 import dashboardRoutes from './routes/dashboard';
 import assetRoutes from './routes/assets';
 
+// Import controller initializers
+import { initializeAssetService } from './controllers/assetController';
+
 // Load environment variables
-config();
+config({ path: '.env' });
+
+// Initialize services after environment variables are loaded
+initializeAssetService();
 
 const app = express();
 const PORT = process.env.PORT ?? 3001;
