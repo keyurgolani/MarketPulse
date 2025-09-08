@@ -5,11 +5,17 @@ import { createAssetService } from '../services/AssetService';
 import { AssetQuerySchema } from '../schemas/validation';
 
 // Asset service will be initialized after environment variables are loaded
-let assetService: ReturnType<typeof createAssetService>;
+let assetService: ReturnType<typeof createAssetService> | null = null;
 
 // Initialize asset service (called after environment variables are loaded)
 export const initializeAssetService = (): void => {
   assetService = createAssetService();
+};
+
+// Get asset service instance (for testing and runtime)
+const getAssetService = (): ReturnType<typeof createAssetService> => {
+  assetService ??= createAssetService();
+  return assetService;
 };
 
 // Validation schemas for request parameters
@@ -30,7 +36,7 @@ export class AssetController {
     try {
       const { symbol } = AssetSymbolSchema.parse(req.params);
 
-      const asset = await assetService.getAsset(symbol);
+      const asset = await getAssetService().getAsset(symbol);
 
       logger.info('Asset retrieved successfully', {
         symbol,
@@ -87,7 +93,7 @@ export class AssetController {
     try {
       const { symbol } = AssetSymbolSchema.parse(req.params);
 
-      const price = await assetService.getAssetPrice(symbol);
+      const price = await getAssetService().getAssetPrice(symbol);
 
       logger.info('Asset price retrieved successfully', {
         symbol,
@@ -152,7 +158,7 @@ export class AssetController {
 
       const { symbols } = BatchRequestSchema.parse(req.body);
 
-      const assets = await assetService.getAssets(symbols);
+      const assets = await getAssetService().getAssets(symbols);
 
       logger.info('Multiple assets retrieved successfully', {
         symbolCount: symbols.length,
@@ -203,7 +209,7 @@ export class AssetController {
     try {
       const { q } = AssetSearchSchema.parse(req.query);
 
-      const assets = await assetService.searchAssets(q);
+      const assets = await getAssetService().searchAssets(q);
 
       logger.info('Asset search completed', {
         query: q,
@@ -253,7 +259,7 @@ export class AssetController {
    */
   static async getPopularAssets(req: Request, res: Response): Promise<void> {
     try {
-      const assets = await assetService.getPopularAssets();
+      const assets = await getAssetService().getPopularAssets();
 
       logger.info('Popular assets retrieved successfully', {
         count: assets.length,
@@ -296,9 +302,9 @@ export class AssetController {
       let assets;
 
       if (queryParams.search) {
-        assets = await assetService.searchAssets(queryParams.search);
+        assets = await getAssetService().searchAssets(queryParams.search);
       } else {
-        assets = await assetService.getPopularAssets();
+        assets = await getAssetService().getPopularAssets();
       }
 
       // Apply pagination
@@ -358,7 +364,7 @@ export class AssetController {
    */
   static async getProviderHealth(req: Request, res: Response): Promise<void> {
     try {
-      const health = await assetService.getProviderHealth();
+      const health = await getAssetService().getProviderHealth();
 
       logger.info('Provider health check completed', {
         providerCount: health.length,
@@ -401,7 +407,7 @@ export class AssetController {
       // Note: In a real implementation, you'd want to check for admin permissions
       const { pattern } = req.query;
 
-      await assetService.clearCache(pattern as string);
+      await getAssetService().clearCache(pattern as string);
 
       logger.info('Asset cache cleared', {
         pattern,

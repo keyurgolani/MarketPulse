@@ -1,5 +1,26 @@
 # Implementation Plan
 
+## CRITICAL: Quality Standards (MANDATORY)
+
+**NEVER BYPASS QUALITY GUARDRAILS**: Every task must pass ALL quality gates before completion:
+
+- ✅ All tests passing (zero failures)
+- ✅ Zero TypeScript errors
+- ✅ Zero ESLint warnings
+- ✅ Successful production build
+- ✅ Zero runtime errors
+- ✅ No regression in existing functionality
+
+**FORBIDDEN ACTIONS**:
+
+- ❌ Using `--no-verify` to bypass pre-commit hooks
+- ❌ Committing with failing tests
+- ❌ Ignoring or suppressing errors/warnings
+- ❌ Modifying quality tools to be less strict
+- ❌ Pushing broken code to remote repository
+
+**RESPONSIBILITY**: Fix ALL issues in the project, regardless of origin. The codebase must be in perfect working condition after every task.
+
 ## Overview
 
 This implementation plan follows a slice-by-slice approach where each slice represents a complete, end-to-end working feature. Each task must pass comprehensive quality gates (zero errors, zero warnings, full testing, no regression) before being committed to git.

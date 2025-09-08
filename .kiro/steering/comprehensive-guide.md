@@ -64,6 +64,24 @@ scripts/              # Build and deployment scripts
 
 ## Code Standards & Quality Gates
 
+### CRITICAL: Quality Guardrails Policy (MANDATORY - NO EXCEPTIONS)
+
+**NEVER BYPASS QUALITY GUARDRAILS**: Pre-commit hooks, test failures, linting errors, and build failures are MANDATORY quality gates. Bypassing them is strictly forbidden.
+
+**ZERO TOLERANCE FOR FAILING TESTS**: All tests must pass before any commit. Never use `--no-verify`, `--skip-ci`, or any mechanism to bypass failing tests.
+
+**COMPLETE ERROR RESOLUTION**: Fix ALL errors and warnings before committing. This includes:
+
+- TypeScript errors (zero tolerance)
+- ESLint warnings (zero tolerance)
+- Test failures (zero tolerance)
+- Build failures (zero tolerance)
+- Runtime errors (zero tolerance)
+
+**RESPONSIBILITY FOR ALL ISSUES**: You are responsible for fixing ANY error or warning in the project, regardless of whether you introduced it. The project must be in a clean, working state after every task.
+
+**GUARDRAIL INTEGRITY**: Never modify pre-commit hooks, test configurations, or quality tools to make them less strict. These exist to maintain code quality.
+
 ### Zero-Error Policy (Mandatory)
 
 - **TypeScript**: Zero errors, strict mode enabled, NEVER use `any` type

@@ -17,7 +17,10 @@ jest.mock('../../services/AssetService', () => ({
 }));
 
 // Now import the controller after mocking
-import { AssetController } from '../../controllers/assetController';
+import {
+  AssetController,
+  initializeAssetService,
+} from '../../controllers/assetController';
 
 // Mock auth middleware
 const mockAuthMiddleware = jest.fn();
@@ -54,6 +57,9 @@ describe('AssetController', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+
+    // Initialize the asset service for the controller
+    initializeAssetService();
 
     // Mock auth middleware to add user to request
     mockAuthMiddleware.mockImplementation(
